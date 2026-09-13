@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
   const [ledgerKey, setLedgerKey] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -13,7 +15,8 @@ export default function Home() {
       setFeedback("ACCESS_RESTRICTED // KEY REQUIRED FOR LEDGER VERIFICATION");
       return;
     }
-    setFeedback("VERIFICATION_FAILED // IDENTIFIER NOT FOUND IN COHORT B3_2026 INDEX");
+    const cleanKey = ledgerKey.trim().toUpperCase();
+    router.push(`/ledger/${encodeURIComponent(cleanKey)}`);
   };
 
   return (
