@@ -407,7 +407,7 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
         <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-200 pb-8">
           <div className="flex flex-col gap-3">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-neutral-200 bg-neutral-100 font-mono text-[10px] sm:text-xs text-neutral-700 tracking-widest uppercase self-start font-medium">
-              LONGITUDINAL AUDIT RECORD // COHORT B3_2026
+              LONGITUDINAL AUDIT RECORD // BATCH 03
             </div>
             <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-neutral-950">
               Student Execution Ledger
@@ -674,7 +674,7 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
                           1. STATE_TRANSITION: REGISTERED
                         </span>
                         <span className="text-neutral-500 text-[10px]">
-                          Automated cohort roster ingestion by SYSTEM_ENROLLMENT
+                          Automated Batch 3 roster ingestion by SYSTEM_ENROLLMENT
                         </span>
                       </div>
                     </div>

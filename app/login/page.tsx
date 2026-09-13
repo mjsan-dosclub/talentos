@@ -55,7 +55,7 @@ export default function LoginPage() {
           </Link>
 
           <div className="font-mono text-[11px] text-neutral-500 tracking-wider hidden sm:block">
-            AUTH_GATE: STRICT • COHORT: B3_2026
+            AUTH_GATE: STRICT • BATCH: 03
           </div>
         </div>
       </header>

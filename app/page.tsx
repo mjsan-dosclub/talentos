@@ -38,7 +38,7 @@ export default function Home() {
           {/* Right: System Metadata & Sign In Link */}
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="hidden sm:flex items-center gap-2 font-mono text-[11px] text-neutral-500 tracking-wider">
-              <span>COHORT: B3_2026</span>
+              <span>BATCH: 03</span>
               <span className="text-neutral-300">•</span>
               <span>INTEGRITY_CHECK: STRICT</span>
               <span className="text-neutral-300">•</span>
@@ -76,7 +76,7 @@ export default function Home() {
           <p className="text-sm sm:text-base md:text-lg text-neutral-600 max-w-3xl leading-relaxed">
             A longitudinal student development and talent intelligence system documenting
             real engineering output, behavioral consistency, and production evidence. Built
-            for elite cohorts across Tamil Nadu and global partners.
+            for Batch 3 across Tamil Nadu and global partners.
           </p>
         </section>
 
