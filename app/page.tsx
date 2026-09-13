@@ -46,6 +46,13 @@ export default function Home() {
             </div>
 
             <Link
+              href="/talent"
+              className="font-mono text-xs text-neutral-600 hover:text-neutral-900 tracking-wide font-medium hidden md:inline-block"
+            >
+              Talent Explorer
+            </Link>
+
+            <Link
               href="/admin"
               className="font-mono text-xs text-neutral-600 hover:text-neutral-900 tracking-wide font-medium"
             >
@@ -168,8 +175,21 @@ export default function Home() {
 
       {/* 5. Footer */}
       <footer className="border-t border-neutral-200 bg-white py-8 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto text-center font-mono text-[11px] sm:text-xs text-neutral-500 tracking-wider">
-          DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1
+        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px] sm:text-xs text-neutral-500 tracking-wider">
+          <div>DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1</div>
+          <div className="flex items-center gap-4">
+            <Link href="/submit" className="hover:text-neutral-900 transition-colors">
+              Submit Deliverable
+            </Link>
+            <span className="text-neutral-300">•</span>
+            <Link href="/talent" className="hover:text-neutral-900 transition-colors">
+              Talent Explorer
+            </Link>
+            <span className="text-neutral-300">•</span>
+            <Link href="/admin" className="hover:text-neutral-900 transition-colors">
+              Admin Console
+            </Link>
+          </div>
         </div>
       </footer>
     </div>

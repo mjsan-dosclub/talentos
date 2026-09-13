@@ -33,10 +33,14 @@ export default function LoginPage() {
     // State-based institutional authentication simulation
     setTimeout(() => {
       setIsAuthenticating(false);
-      // Derive clean identifier for the record (e.g. username part of email or formatted DOS_ID)
-      const sanitizedId = email.split("@")[0].toUpperCase();
-      const targetId = role === "member" ? `DOS-${sanitizedId}` : "AUDIT-VIEW";
-      router.push(`/record/${encodeURIComponent(targetId)}`);
+      if (role === "recruiter") {
+        router.push("/talent");
+      } else {
+        // Derive clean identifier for the record (e.g. username part of email or formatted DOS_ID)
+        const sanitizedId = email.split("@")[0].toUpperCase();
+        const targetId = email.includes("student") || email.includes("arun") ? "DOS-B3-001" : `DOS-${sanitizedId}`;
+        router.push(`/record/${encodeURIComponent(targetId)}`);
+      }
     }, 400);
   };
 

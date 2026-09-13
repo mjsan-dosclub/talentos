@@ -389,12 +389,24 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
           <div className="flex items-center gap-3">
             <Link
+              href="/submit"
+              className="font-mono text-xs text-neutral-900 border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 px-2.5 py-1 rounded transition-colors font-medium"
+            >
+              Submit Deliverable
+            </Link>
+            <Link
+              href="/talent"
+              className="font-mono text-xs text-neutral-600 hover:text-neutral-900 hidden sm:inline-block"
+            >
+              Recruiter Explorer
+            </Link>
+            <Link
               href="/admin"
-              className="font-mono text-xs text-neutral-500 hover:text-neutral-900 mr-2"
+              className="font-mono text-xs text-neutral-600 hover:text-neutral-900"
             >
               Admin Console
             </Link>
-            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded">
+            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden md:inline-block">
               MEMBER: {identifier}
             </span>
             <Link
@@ -730,6 +742,12 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                   >
                     {copyStatus ? "PROOF LINK COPIED!" : "COPY VERIFICATION LINK"}
                   </button>
+                  <Link
+                    href="/submit"
+                    className="py-2.5 px-3 border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 font-mono text-xs uppercase tracking-wider font-medium transition-colors text-center"
+                  >
+                    SUBMIT ARTIFACT
+                  </Link>
                   <button
                     type="button"
                     onClick={() => setSelectedWorkshop(null)}
