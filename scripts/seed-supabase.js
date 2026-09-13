@@ -259,6 +259,199 @@ async function seed() {
   if (subErr) throw subErr;
   console.log("✓ Seeded sample attendance and evidence submission for WS-14.");
 
+  // 7. Seed Student Technology Inventory (Step 11 & Step 06 Skills 360)
+  console.log("\n[7/10] Seeding Student Technology Inventory...");
+  const inventoryPayload = [
+    {
+      student_id: arunId,
+      tool_name: "Linux Kernel & Syscalls",
+      self_confidence: 4,
+      evidence_backed_maturity: "DEMONSTRATED",
+      assessed_level: "Demonstrated",
+      evidence_count: 6,
+    },
+    {
+      student_id: arunId,
+      tool_name: "Git Internals & Plumbing",
+      self_confidence: 5,
+      evidence_backed_maturity: "CONSISTENTLY_DEMONSTRATED",
+      assessed_level: "Consistent",
+      evidence_count: 14,
+    },
+    {
+      student_id: arunId,
+      tool_name: "B-Trees & LSM-Trees",
+      self_confidence: 4,
+      evidence_backed_maturity: "DEMONSTRATED",
+      assessed_level: "Demonstrated",
+      evidence_count: 5,
+    },
+    {
+      student_id: arunId,
+      tool_name: "PostgreSQL & Query Planners",
+      self_confidence: 4,
+      evidence_backed_maturity: "APPLIED",
+      assessed_level: "Progressing",
+      evidence_count: 4,
+    },
+    {
+      student_id: arunId,
+      tool_name: "Socket Programming & epoll",
+      self_confidence: 4,
+      evidence_backed_maturity: "DEMONSTRATED",
+      assessed_level: "Demonstrated",
+      evidence_count: 7,
+    },
+    {
+      student_id: arunId,
+      tool_name: "Raft Consensus Protocol",
+      self_confidence: 3,
+      evidence_backed_maturity: "APPLIED",
+      assessed_level: "Developing",
+      evidence_count: 3,
+    },
+    {
+      student_id: arunId,
+      tool_name: "Docker & Cgroups v2",
+      self_confidence: 4,
+      evidence_backed_maturity: "DEMONSTRATED",
+      assessed_level: "Demonstrated",
+      evidence_count: 6,
+    },
+    {
+      student_id: arunId,
+      tool_name: "OpenTelemetry & Tracing",
+      self_confidence: 4,
+      evidence_backed_maturity: "APPLIED",
+      assessed_level: "Progressing",
+      evidence_count: 4,
+    },
+    {
+      student_id: arunId,
+      tool_name: "Circuit Breakers & Jittered Backoff",
+      self_confidence: 4,
+      evidence_backed_maturity: "DEMONSTRATED",
+      assessed_level: "Demonstrated",
+      evidence_count: 5,
+    },
+    {
+      student_id: arunId,
+      tool_name: "GPU Compute & SIMD",
+      self_confidence: 2,
+      evidence_backed_maturity: "INTRODUCED",
+      assessed_level: "Growth Opportunity",
+      evidence_count: 1,
+    },
+  ];
+
+  const { error: invErr } = await supabaseAdmin
+    .from("student_technology_inventory")
+    .upsert(inventoryPayload, { onConflict: "student_id,tool_name" });
+  if (invErr) throw invErr;
+  console.log(`✓ Seeded ${inventoryPayload.length} skills into 'student_technology_inventory'.`);
+
+  // 8. Seed Structured Certifications
+  console.log("\n[8/10] Seeding Structured Certifications...");
+  const certsPayload = [
+    {
+      student_id: arunId,
+      title: "Linux Foundation Certified System Administrator (LFCS)",
+      provider: "Linux Foundation",
+      category: "Systems & Infrastructure",
+      level: "Intermediate",
+      completed_date: "2026-01-15",
+      credential_url: "https://www.credly.com/org/the-linux-foundation/badge/lfcs",
+      status: "VERIFIED",
+      verified_by: null,
+      verified_at: new Date(2026, 0, 20).toISOString(),
+    },
+    {
+      student_id: arunId,
+      title: "HashiCorp Certified: Terraform Associate",
+      provider: "HashiCorp",
+      category: "Infrastructure as Code",
+      level: "Associate",
+      completed_date: "2026-02-10",
+      credential_url: "https://www.credly.com/badges/hashicorp-terraform",
+      status: "VERIFIED",
+      verified_by: null,
+      verified_at: new Date(2026, 1, 14).toISOString(),
+    },
+    {
+      student_id: arunId,
+      title: "AWS Certified Solutions Architect - Associate",
+      provider: "Amazon Web Services",
+      category: "Cloud Architecture",
+      level: "Intermediate",
+      completed_date: "2026-05-02",
+      credential_url: "https://aws.amazon.com/verification/aws-csa-a",
+      status: "PENDING_VERIFICATION",
+      verified_by: null,
+      verified_at: null,
+    },
+  ];
+
+  const { error: certsErr } = await supabaseAdmin
+    .from("certifications")
+    .upsert(certsPayload);
+  if (certsErr) throw certsErr;
+  console.log(`✓ Seeded ${certsPayload.length} records into 'certifications'.`);
+
+  // 9. Seed External Assessments & Diagnostic Benchmarks
+  console.log("\n[9/10] Seeding External Assessments...");
+  const assessmentsPayload = [
+    {
+      student_id: arunId,
+      assessment_title: "Systems Engineering Baseline Diagnostic",
+      provider: "DOS Diagnostic Engine",
+      score_raw: "84/100",
+      proficiency_band: "Consistent",
+      deep_link: "https://audit.dosclub.org/assessments/baseline-01",
+      assessed_at: "2026-02-25T10:00:00Z",
+    },
+    {
+      student_id: arunId,
+      assessment_title: "Linux & Concurrency Practical Benchmark",
+      provider: "HackerRank Enterprise Systems",
+      score_raw: "92/100",
+      proficiency_band: "Demonstrated",
+      deep_link: "https://hackerrank.com/certificates/sample-concurrency",
+      assessed_at: "2026-04-18T14:30:00Z",
+    },
+  ];
+
+  const { error: assessErr } = await supabaseAdmin
+    .from("external_assessments")
+    .upsert(assessmentsPayload);
+  if (assessErr) throw assessErr;
+  console.log(`✓ Seeded ${assessmentsPayload.length} records into 'external_assessments'.`);
+
+  // 10. Seed Session Feedback Pulse for WS-14
+  console.log("\n[10/10] Seeding Session Feedback...");
+  const { data: attRecord } = await supabaseAdmin
+    .from("attendance_records")
+    .select("id")
+    .eq("student_id", arunId)
+    .eq("workshop_id", ws14Id)
+    .single();
+
+  if (attRecord) {
+    const { error: fbErr } = await supabaseAdmin.from("session_feedback").upsert(
+      [
+        {
+          attendance_id: attRecord.id,
+          rating: 4,
+          key_learning:
+            "Implemented token-bucket rate limiting and jittered exponential backoff. Learned how half-open states prevent thundering herd crashes.",
+          confidence_score: 5,
+        },
+      ],
+      { onConflict: "attendance_id" }
+    );
+    if (fbErr) throw fbErr;
+    console.log("✓ Seeded session feedback for WS-14.");
+  }
+
   console.log("\n===========================================");
   console.log("🎉 SUCCESS: All live Supabase tables seeded!");
   console.log("===========================================");

@@ -233,8 +233,14 @@ export default function AdminPage() {
             <span className="tracking-wider uppercase font-medium">DOS CLUB // TALENT_OS</span>
           </Link>
 
-          <div className="flex items-center gap-4">
-            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden sm:inline-block">
+          <div className="flex items-center gap-3 font-mono text-xs">
+            <Link href="/trainer" className="text-neutral-600 hover:text-neutral-900 hidden sm:inline-block">
+              Trainer Portal
+            </Link>
+            <Link href="/college" className="text-neutral-600 hover:text-neutral-900 hidden md:inline-block">
+              College Portal
+            </Link>
+            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden lg:inline-block">
               CLEARANCE: ROOT_ADMIN • BATCH: ACTIVE • DB: {isLiveDb ? "SUPABASE_LIVE" : "STANDBY"}
             </span>
             <Link

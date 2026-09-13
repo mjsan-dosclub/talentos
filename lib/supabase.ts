@@ -179,3 +179,70 @@ export interface AuditLog {
   reason: string;
   created_at: string;
 }
+
+export interface StudentTechnologyInventory {
+  id: string;
+  student_id: string;
+  tool_name: string;
+  self_confidence: number; // 1 to 5
+  evidence_backed_maturity: SkillMaturity; // INTRODUCED -> CONSISTENTLY_DEMONSTRATED
+  assessed_level: "Developing" | "Progressing" | "Consistent" | "Demonstrated" | "Growth Opportunity";
+  evidence_count: number;
+  updated_at: string;
+}
+
+export interface Certification {
+  id: string;
+  student_id: string;
+  title: string;
+  provider: string;
+  category: string;
+  level: string;
+  completed_date: string;
+  credential_url?: string | null;
+  file_path?: string | null;
+  status: VerificationStatus;
+  verified_by?: string | null;
+  verified_at?: string | null;
+  created_at: string;
+}
+
+export interface ExternalAssessment {
+  id: string;
+  student_id: string;
+  assessment_title: string;
+  provider: string;
+  score_raw: string;
+  proficiency_band: string;
+  deep_link?: string | null;
+  assessed_at: string;
+  created_at: string;
+}
+
+export interface SessionFeedback {
+  id: string;
+  attendance_id: string;
+  rating: number; // 1 to 4
+  key_learning: string;
+  confidence_score: number; // 1 to 5
+  created_at: string;
+}
+
+export interface NotificationDispatch {
+  id: string;
+  target_filter: any;
+  channel: string;
+  title: string;
+  content: string;
+  dispatched_by: string;
+  sent_count: number;
+  created_at: string;
+}
+
+export interface ActiveSessionToken {
+  id: string;
+  workshop_id: string;
+  token: string;
+  expires_at: string;
+  created_at: string;
+}

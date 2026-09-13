@@ -6,11 +6,11 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getStudentByIdOrEmail } from "@/lib/db";
 
-type UserRole = "member" | "recruiter";
+type UserRole = "student" | "trainer" | "college" | "admin";
 
 export default function LoginPage() {
   const router = useRouter();
-  const [role, setRole] = useState<UserRole>("member");
+  const [role, setRole] = useState<UserRole>("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
@@ -40,8 +40,12 @@ export default function LoginPage() {
       });
 
       if (authData?.session) {
-        if (role === "recruiter") {
-          router.push("/talent");
+        if (role === "trainer") {
+          router.push("/trainer");
+        } else if (role === "college") {
+          router.push("/college");
+        } else if (role === "admin") {
+          router.push("/admin");
         } else {
           const { student } = await getStudentByIdOrEmail(email.trim());
           const targetId = student?.dos_id || "DOS-B3-001";
@@ -50,21 +54,26 @@ export default function LoginPage() {
         return;
       }
 
-      // 2. Fallback: match institutional student profile or recruiter session
-      if (role === "member") {
-        const { student } = await getStudentByIdOrEmail(email.trim());
-        const targetId = student?.dos_id || (email.includes("student") ? "DOS-B3-001" : `DOS-${email.split("@")[0].toUpperCase()}`);
-        router.push(`/record/${encodeURIComponent(targetId)}`);
+      // 2. Fallback: match institutional profile
+      if (role === "trainer") {
+        router.push("/trainer");
+      } else if (role === "college") {
+        router.push("/college");
+      } else if (role === "admin") {
+        router.push("/admin");
       } else {
-        router.push("/talent");
+        const { student } = await getStudentByIdOrEmail(email.trim());
+        const targetId =
+          student?.dos_id ||
+          (email.includes("student") ? "DOS-B3-001" : `DOS-${email.split("@")[0].toUpperCase()}`);
+        router.push(`/record/${encodeURIComponent(targetId)}`);
       }
     } catch (err) {
       console.warn("Auth check fallback:", err);
-      if (role === "recruiter") {
-        router.push("/talent");
-      } else {
-        router.push("/record/DOS-B3-001");
-      }
+      if (role === "trainer") router.push("/trainer");
+      else if (role === "college") router.push("/college");
+      else if (role === "admin") router.push("/admin");
+      else router.push("/record/DOS-B3-001");
     } finally {
       setIsAuthenticating(false);
     }
@@ -114,35 +123,63 @@ export default function LoginPage() {
             </p>
           </div>
 
-          {/* Role Selector */}
-          <div className="grid grid-cols-2 border border-neutral-300 bg-neutral-100 text-xs font-mono p-0.5 rounded-xs">
+          {/* Role Selector (PRD Section 5 Roles) */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 border border-neutral-300 bg-neutral-100 text-[11px] font-mono p-0.5 rounded-xs gap-0.5">
             <button
               type="button"
               onClick={() => {
-                setRole("member");
+                setRole("student");
                 setStatusMessage(null);
               }}
-              className={`py-2 px-3 tracking-wider text-center transition-colors rounded-xs ${
-                role === "member"
+              className={`py-2 px-2 tracking-wider text-center transition-colors rounded-xs ${
+                role === "student"
                   ? "bg-white text-neutral-950 font-semibold shadow-2xs"
                   : "text-neutral-500 hover:text-neutral-800"
               }`}
             >
-              MEMBER
+              STUDENT
             </button>
             <button
               type="button"
               onClick={() => {
-                setRole("recruiter");
+                setRole("trainer");
                 setStatusMessage(null);
               }}
-              className={`py-2 px-3 tracking-wider text-center transition-colors rounded-xs ${
-                role === "recruiter"
+              className={`py-2 px-2 tracking-wider text-center transition-colors rounded-xs ${
+                role === "trainer"
                   ? "bg-white text-neutral-950 font-semibold shadow-2xs"
                   : "text-neutral-500 hover:text-neutral-800"
               }`}
             >
-              RECRUITER / AUDIT
+              TRAINER
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRole("college");
+                setStatusMessage(null);
+              }}
+              className={`py-2 px-2 tracking-wider text-center transition-colors rounded-xs ${
+                role === "college"
+                  ? "bg-white text-neutral-950 font-semibold shadow-2xs"
+                  : "text-neutral-500 hover:text-neutral-800"
+              }`}
+            >
+              COLLEGE
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setRole("admin");
+                setStatusMessage(null);
+              }}
+              className={`py-2 px-2 tracking-wider text-center transition-colors rounded-xs ${
+                role === "admin"
+                  ? "bg-white text-neutral-950 font-semibold shadow-2xs"
+                  : "text-neutral-500 hover:text-neutral-800"
+              }`}
+            >
+              ADMIN
             </button>
           </div>
 
@@ -153,7 +190,13 @@ export default function LoginPage() {
                 htmlFor="email"
                 className="font-mono text-[11px] uppercase tracking-wider text-neutral-700 font-medium"
               >
-                {role === "member" ? "MEMBER EMAIL ADDRESS" : "RECRUITER / AUDIT EMAIL"}
+                {role === "student"
+                  ? "STUDENT EMAIL ADDRESS"
+                  : role === "trainer"
+                  ? "TRAINER / FACULTY EMAIL"
+                  : role === "college"
+                  ? "COLLEGE COORDINATOR EMAIL"
+                  : "ORGANISER / ADMIN EMAIL"}
               </label>
               <div className="flex items-center border border-neutral-300 bg-white focus-within:border-neutral-700 transition-colors shadow-2xs">
                 <span className="pl-3.5 text-neutral-400 font-mono text-xs select-none">@</span>
@@ -163,7 +206,15 @@ export default function LoginPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={role === "member" ? "student@dosclub.org" : "recruiter@enterprise.com"}
+                  placeholder={
+                    role === "student"
+                      ? "arun@student.dosclub.org"
+                      : role === "trainer"
+                      ? "faculty@dosclub.org"
+                      : role === "college"
+                      ? "coordinator@annauniv.edu"
+                      : "admin@dosclub.org"
+                  }
                   spellCheck={false}
                   autoComplete="email"
                   className="w-full bg-transparent px-3 py-2.5 font-mono text-xs text-neutral-900 placeholder:text-neutral-400 tracking-wider focus:outline-none"
@@ -205,8 +256,16 @@ export default function LoginPage() {
               className="mt-2 w-full font-mono text-xs tracking-wider uppercase py-3 bg-neutral-900 text-white hover:bg-neutral-800 transition-colors duration-150 font-medium disabled:opacity-50 shadow-2xs"
             >
               {isAuthenticating
-                ? "AUTHENTICATING // CHECKING RECORD..."
-                : `AUTHENTICATE AS ${role === "member" ? "MEMBER" : "RECRUITER"}`}
+                ? "AUTHENTICATING // CHECKING CLEARANCE..."
+                : `AUTHENTICATE AS ${
+                    role === "student"
+                      ? "STUDENT"
+                      : role === "trainer"
+                      ? "TRAINER"
+                      : role === "college"
+                      ? "COLLEGE COORDINATOR"
+                      : "ADMIN"
+                  }`}
             </button>
           </form>
 

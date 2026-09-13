@@ -46,10 +46,17 @@ export default function Home() {
             </div>
 
             <Link
-              href="/talent"
+              href="/trainer"
               className="font-mono text-xs text-neutral-600 hover:text-neutral-900 tracking-wide font-medium hidden md:inline-block"
             >
-              Talent Explorer
+              Trainer Portal
+            </Link>
+
+            <Link
+              href="/college"
+              className="font-mono text-xs text-neutral-600 hover:text-neutral-900 tracking-wide font-medium hidden lg:inline-block"
+            >
+              College Portal
             </Link>
 
             <Link
@@ -146,7 +153,7 @@ export default function Home() {
                   setRecordKey(e.target.value);
                   if (feedback) setFeedback(null);
                 }}
-                placeholder="ENTER DOS_ID, EMAIL, OR RECRUITER RECORD KEY"
+                placeholder="ENTER DOS_ID (E.G. DOS-B3-001) OR EMAIL"
                 spellCheck={false}
                 autoComplete="off"
                 className="w-full bg-transparent px-3.5 py-3 font-mono text-xs text-neutral-900 placeholder:text-neutral-400 uppercase tracking-wider focus:outline-none"
@@ -160,7 +167,7 @@ export default function Home() {
             </div>
 
             <p className="font-mono text-[11px] sm:text-xs text-neutral-500 tracking-wide leading-normal">
-              Authorized institutional leads, recruiters, and registered Members only.
+              Authorized institutional leads, college coordinators, trainers, and registered Members only.
               Public registration is closed.
             </p>
 
@@ -178,12 +185,12 @@ export default function Home() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px] sm:text-xs text-neutral-500 tracking-wider">
           <div>DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1</div>
           <div className="flex items-center gap-4">
-            <Link href="/submit" className="hover:text-neutral-900 transition-colors">
-              Submit Deliverable
+            <Link href="/trainer" className="hover:text-neutral-900 transition-colors">
+              Trainer Portal
             </Link>
             <span className="text-neutral-300">•</span>
-            <Link href="/talent" className="hover:text-neutral-900 transition-colors">
-              Talent Explorer
+            <Link href="/college" className="hover:text-neutral-900 transition-colors">
+              College Portal
             </Link>
             <span className="text-neutral-300">•</span>
             <Link href="/admin" className="hover:text-neutral-900 transition-colors">
