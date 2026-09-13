@@ -223,20 +223,30 @@ export default function AdminPage() {
             </p>
           </div>
 
-          {/* Quick Metrics (Strictly factual counts, NO composite scoring) */}
-          <div className="grid grid-cols-3 gap-3 border border-neutral-200 bg-white p-4 font-mono text-xs w-full md:w-auto shadow-2xs">
-            <div className="flex flex-col">
-              <span className="text-neutral-500 text-[10px]">TOTAL MEMBERS</span>
-              <span className="text-base font-semibold text-neutral-900">{members.length}</span>
+          {/* Quick Metrics & Session Auditor Action */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
+            <div className="grid grid-cols-3 gap-3 border border-neutral-200 bg-white p-4 font-mono text-xs shadow-2xs">
+              <div className="flex flex-col">
+                <span className="text-neutral-500 text-[10px]">TOTAL MEMBERS</span>
+                <span className="text-base font-semibold text-neutral-900">{members.length}</span>
+              </div>
+              <div className="flex flex-col border-l border-neutral-200 pl-3">
+                <span className="text-neutral-500 text-[10px]">WORKSHOPS</span>
+                <span className="text-base font-semibold text-neutral-900">27</span>
+              </div>
+              <div className="flex flex-col border-l border-neutral-200 pl-3">
+                <span className="text-neutral-500 text-[10px]">BATCH</span>
+                <span className="text-base font-semibold text-emerald-700">ACTIVE</span>
+              </div>
             </div>
-            <div className="flex flex-col border-l border-neutral-200 pl-3">
-              <span className="text-neutral-500 text-[10px]">WORKSHOPS</span>
-              <span className="text-base font-semibold text-neutral-900">27</span>
-            </div>
-            <div className="flex flex-col border-l border-neutral-200 pl-3">
-              <span className="text-neutral-500 text-[10px]">BATCH</span>
-              <span className="text-base font-semibold text-emerald-700">ACTIVE</span>
-            </div>
+
+            <Link
+              href="/admin/sessions"
+              className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-neutral-900 text-white font-mono text-xs uppercase tracking-wider font-semibold rounded hover:bg-neutral-800 transition-colors shrink-0 shadow-xs"
+            >
+              <span>Live Session Auditor</span>
+              <span className="text-neutral-400">&rarr;</span>
+            </Link>
           </div>
         </section>
 
