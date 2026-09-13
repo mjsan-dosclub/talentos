@@ -1,115 +1,123 @@
 # DOS Club TalentOS
 
-> **A Longitudinal Student Development & Talent Intelligence System**  
-> *DeScience Open Source Club • Singapore // Chennai*
+**Student Growth. Learning Evidence. Talent Intelligence.**  
+*DeScience Open Source Club • Singapore // Chennai*
+
+DOS Club TalentOS is the operating platform for the Descience Open Source Club student-development ecosystem. TalentOS is designed to capture a student's journey over time — from onboarding and baseline assessments through workshops, attendance, learning evidence, certifications, projects, trainer observations, and eventual industry readiness.
+
+TalentOS is **not** designed as a conventional LMS, college portal, or certificate issuer. It is designed as an immutable talent operating system capturing real engineering output, behavioral consistency, and production evidence.
 
 ---
 
-## Overview
+## 1. The Three Core Principles
 
-**TalentOS** is an institutional talent intelligence platform designed to make a student's real engineering output visible over a 27-workshop curriculum. 
-
-Instead of relying on résumés, inflated credentials, or participation certificates, TalentOS maintains an immutable audit record of real code commits, production deliverables, and timely session execution across active Batches.
-
----
-
-## The Three Core Principles
-
-1. **01 / OBSERVE**: Dynamic geofencing and zero-grace session windows. We record real-time presence and timely execution, not excuses.
+1. **01 / OBSERVE**: Dynamic geofencing and zero-grace session windows. Real-time presence and timely execution are recorded, not excuses.
 2. **02 / EVIDENCE**: No participation certificates. Repositories, artifacts, and practical deliverables undergo systematic audit.
-3. **03 / EVOLVE**: Designed to surface longitudinal consistency. Potential is proven through sustained output over months across 27 workshops.
+3. **03 / EVOLVE**: Surfaces longitudinal consistency. Potential is proven through sustained output over months across 27 workshops.
 
 ---
 
-## Architectural Rules & Invariants
+## 2. Invariant Rules & PRD Constraints
 
-As enforced in [`PROJECT_RULES.md`](./PROJECT_RULES.md):
-
-1. **Strict Adherence to 9 Lifecycle States Only**:
-   - `REGISTERED`: Enrolled in session record.
-   - `CHECKED_IN`: Verified presence inside geofenced window.
-   - `LATE`: Presence recorded past zero-grace cutoff.
-   - `INCOMPLETE`: Session attended but practical deliverable missing or failed audit.
-   - `COMPLETED`: Full session presence and production deliverable verified.
-   - `ABSENT_UNCONFIRMED`: Unannounced absence.
-   - `ABSENT_CONFIRMED`: Pre-notified absence.
-   - `EXCUSED`: Faculty-approved absence.
-   - `MANUALLY_CONFIRMED`: Faculty-audited verification.
-
-2. **Zero Composite or Algorithmic Scoring**:
-   - No "Talent Scores", weighted averages, or artificial percentage grades.
-   - All evaluation is grounded in factual counts, commit hashes, pull requests, and verifiable milestones.
-
-3. **Schema & Role Integrity**:
-   - Never invent unauthorized database tables, speculative roles, or unapproved fields.
+- **Strict 9 Lifecycle States Only**: `REGISTERED`, `CHECKED_IN`, `LATE`, `INCOMPLETE`, `COMPLETED`, `ABSENT_UNCONFIRMED`, `ABSENT_CONFIRMED`, `EXCUSED`, `MANUALLY_CONFIRMED`.
+- **Zero Composite or Algorithmic Scoring**: Strictly NO "Talent Scores", weighted percentages, or AI ratings. Every candidate is represented by raw, factual counts and verified commit SHAs.
+- **Developmental Growth Language**: Uses progression language (`Developing`, `Progressing`, `Consistent`, `Demonstrated`, `Growth Opportunity`) rather than punitive grades (`Fail`, `Weak`).
+- **Three Distinct Skill Dimensions**: Maintains three unmerged dimensions for skills: Self-Reported Confidence (1–5), Audited Exposure Count, and Evidence-Backed Maturity (`Introduced` $\rightarrow$ `Consistently Demonstrated`).
+- **Recruiter Portal Excluded from V1**: Per PRD Section 27, Recruiter access is deferred to V2.
 
 ---
 
-## Project Structure
+## 3. Canonical Repository Structure
 
+```text
+dosclub-talentos/
+│
+├── README.md                          # Platform documentation & repository overview
+├── .gitignore                         # Git exclusion rules
+├── .env.example                       # Environment variable configuration template
+├── CONTRIBUTING.md                    # Contributor guide & engineering invariants
+├── CHANGELOG.md                       # Release journal & milestone changelog
+│
+├── docs/                              # Canonical system documentation
+│   ├── product/
+│   │   ├── product-principles.md      # Ground truth, factual output, growth language
+│   │   ├── v1-scope.md                # V1 release scope vs deferred features
+│   │   ├── product-decisions.md       # Architectural decisions & rejected alternatives
+│   │   └── open-decisions.md          # Open questions & V2 roadmap
+│   │
+│   ├── architecture/
+│   │   ├── system-architecture.md     # High-level architecture, topology & data flow
+│   │   ├── data-model.md              # Relational schema, ERD & table definitions
+│   │   ├── permissions.md             # Role-based access control (RBAC) matrix
+│   │   ├── attendance-flow.md         # Geofencing, rotating QR tokens & audit logs
+│   │   ├── notification-architecture.md# Multi-channel batch dispatching
+│   │   └── security-and-audit.md      # SHA-256 proofs & immutable audit logs
+│   │
+│   ├── design/
+│   │   ├── design-principles.md       # Editorial humanist light design & typography
+│   │   ├── landing-page.md            # Curiosity-driven gatekeeper UX
+│   │   └── navigation.md              # Route topology & responsive layout
+│   │
+│   └── development/
+│       ├── ai-development-rules.md    # Mandatory rules for human & AI engineers
+│       ├── git-workflow.md            # Branching, conventional commits & PR checks
+│       ├── environments.md            # Local, Staging, and Production setups
+│       └── testing-strategy.md        # Static typing, webpack builds & contract tests
+│
+├── apps/                              # Applications & Services
+│   ├── web/                           # Next.js 16 Web Application & App Router UI
+│   └── api/                           # Background worker daemon & job processors
+│
+├── packages/                          # Modular Shared Packages
+│   ├── ui/                            # Design tokens & UI primitive constants
+│   ├── database/                      # Supabase client helpers & database types
+│   ├── shared/                        # TypeScript types, enums & developmental bands
+│   └── config/                        # Base tsconfig & shared lint configurations
+│
+├── migrations/                        # Supabase PostgreSQL DDL & RLS Policies
+│   ├── 001_initial_schema.sql         # Tables, enums, constraints & foreign keys
+│   └── 002_rls_and_policies.sql       # Row Level Security policies
+│
+├── scripts/                           # Administrative & Seeding Scripts
+│   └── seed-supabase.js               # 10-table live Supabase seeding script
+│
+└── tests/                             # Automated Test Harness
+    └── e2e-contract.test.js           # Live contract verification against Supabase
 ```
-talentos/
-├── app/
-│   ├── globals.css              # Tailwind CSS v4 styling & Inter humanist enterprise theme
-│   ├── layout.tsx               # Root layout with Inter & JetBrains Mono typography
-│   ├── page.tsx                 # Public landing page with gatekeeper access terminal
-│   ├── login/
-│   │   └── page.tsx             # Email & password authentication for Members and Recruiters
-│   ├── submit/
-│   │   └── page.tsx             # Student deliverable submission & hermetic verification
-│   ├── talent/
-│   │   └── page.tsx             # Institutional recruiter explorer & factual audit dossiers
-│   ├── admin/
-│   │   ├── page.tsx             # Leadership console: interactive enrollment & CSV roster import
-│   │   └── sessions/
-│   │       └── page.tsx         # Live workshop session auditor & geofence controller
-│   └── record/
-│       └── [id]/
-│           └── page.tsx         # Longitudinal 27-workshop student audit record & verification drawer
-├── PROJECT_RULES.md             # Invariant system rules
-├── ARCHITECTURE.md              # Engineering and pedagogy manual
-├── package.json
-└── tsconfig.json
-```
 
 ---
 
-## Getting Started
+## 4. Quick Start
 
-### Prerequisites
-- **Node.js**: `>= 20.9.0`
-- **npm**: `>= 10`
+### 1. Prerequisites
+- Node.js 20+
+- Remote Supabase project with PostgreSQL enabled
 
-### Installation & Development
-
+### 2. Setup Environment
 ```bash
-# Clone repository
-git clone https://github.com/descienceosclub/talentos.git
-cd talentos
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
+cp .env.example .env.local
+# Populate NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, and SUPABASE_SERVICE_ROLE_KEY
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+### 3. Run Database Migrations & Seeds
+```bash
+node scripts/seed-supabase.js
+```
 
----
+### 4. Development Server
+```bash
+npm run dev
+# Server listening on http://localhost:3000
+```
 
-## Available Routes
+### 5. Verification Harness
+```bash
+# Type check
+./node_modules/.bin/tsc --project tsconfig.json --noEmit
 
-- **`/`**: Public landing page featuring the institutional status bar, core principles, and gatekeeper lookup terminal.
-- **`/login`**: Secure authentication portal for **Members** and **Recruiters / Auditors** using Email ID and Password.
-- **`/submit`**: Student deliverable submission & hermetic CI verification portal for the 27 workshops.
-- **`/talent`**: Institutional recruiter talent intelligence explorer with factual workshop evidence (zero composite scores).
-- **`/admin`**: Root administration console to enroll new members manually or bulk-import via CSV/text, manage batches, and audit records.
-- **`/admin/sessions`**: Live workshop session auditor with real-time geofence attendance countdown and state transition controls across the 9 approved lifecycle states.
-- **`/record/[id]`**: Student audit record displaying the 27-workshop chronological timeline, commit evidence, geofence status, and interactive verification drawer.
+# Production build
+./node_modules/.bin/next build --webpack
 
----
-
-## License & Attribution
-
-Developed by **DeScience Open Source Club** (Singapore // Chennai). All rights reserved.
+# Contract tests
+node tests/e2e-contract.test.js
+```

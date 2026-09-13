@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@talentos/*": ["./packages/*/src/index.ts"]
     }
   },
   "include": [
