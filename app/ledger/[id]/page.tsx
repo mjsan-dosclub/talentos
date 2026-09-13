@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
 
 // STRICT INVARIANT STATES FROM PROJECT_RULES.md
@@ -25,6 +25,9 @@ interface WorkshopRecord {
   geofenceVerified?: boolean;
   commitHash?: string;
   repoArtifact?: string;
+  geofenceCoordinates?: string;
+  testOutcome?: string;
+  peerReviewSignoff?: string;
 }
 
 // 27-Workshop Curriculum Audit Trail
@@ -39,6 +42,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "7b2c9a1",
     repoArtifact: "dos-club/ws01-kernel-namespaces",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 42m / 120m limit)",
+    testOutcome: "PASSED (14/14 hermetic container test specs)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 2,
@@ -50,6 +56,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "3f98e02",
     repoArtifact: "dos-club/ws02-git-internals",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 38m / 120m limit)",
+    testOutcome: "PASSED (18/18 commit graph verification tests)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 3,
@@ -61,6 +70,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "9a41d77",
     repoArtifact: "dos-club/ws03-lsm-trees",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 29m / 120m limit)",
+    testOutcome: "PASSED (22/22 concurrent read/write test specs)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 4,
@@ -72,6 +84,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "a8f3c1d",
     repoArtifact: "dos-club/ws04-query-optimizer",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 55m / 120m limit)",
+    testOutcome: "PASSED (16/16 query planner cost model tests)",
+    peerReviewSignoff: "Faculty Lead (Flagged: Arrived 11 min past zero-grace window)",
   },
   {
     index: 5,
@@ -83,6 +98,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "c0183ee",
     repoArtifact: "dos-club/ws05-socket-epoll",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 41m / 120m limit)",
+    testOutcome: "PASSED (20/20 non-blocking echo benchmark tests)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 6,
@@ -92,6 +110,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     state: "EXCUSED",
     checkInTime: "FACULTY_AUTHORIZED_LEAVE",
     geofenceVerified: false,
+    geofenceCoordinates: "EXEMPT // ACADEMIC OLYMPIAD PARTICIPATION",
+    testOutcome: "DEFERRED AUDIT // LAB ASSIGNMENT IN PROGRESS",
+    peerReviewSignoff: "Approved by Institutional Dean on 2026-04-03",
   },
   {
     index: 7,
@@ -103,6 +124,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "45f9a0c",
     repoArtifact: "dos-club/ws07-raft-consensus",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 31m / 120m limit)",
+    testOutcome: "PASSED (30/30 network partition resilience tests)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 8,
@@ -114,6 +138,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "8b23f11",
     repoArtifact: "dos-club/ws08-container-runtime",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 45m / 120m limit)",
+    testOutcome: "PASSED (15/15 cgroup isolation & namespace tests)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 9,
@@ -125,6 +152,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "51d20ab",
     repoArtifact: "dos-club/ws09-grpc-schemas",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Verified via MAC Address Beacon)",
+    testOutcome: "PASSED (19/19 backwards compatibility test suites)",
+    peerReviewSignoff: "Manual verification confirmed by Lead Auditor",
   },
   {
     index: 10,
@@ -136,6 +166,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "fe298b4",
     repoArtifact: "dos-club/ws10-tls-handshake",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 28m / 120m limit)",
+    testOutcome: "PASSED (25/25 timing attack & signature test suites)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 11,
@@ -147,6 +180,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "FAIL_AUDIT // TEST_SUITE_TIMEOUT",
     repoArtifact: "dos-club/ws11-broker-offsets",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 35m / 120m limit)",
+    testOutcome: "FAILED (Consumer offset lock deadlock on rebalance test #12)",
+    peerReviewSignoff: "Audit Rejected: Code deliverable failed automated CI",
   },
   {
     index: 12,
@@ -158,6 +194,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "31cb809",
     repoArtifact: "dos-club/ws12-otel-tracing",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 30m / 120m limit)",
+    testOutcome: "PASSED (16/16 W3C TraceContext propagation tests)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 13,
@@ -169,6 +208,9 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     geofenceVerified: true,
     commitHash: "70a55ef",
     repoArtifact: "dos-club/ws13-hermetic-builds",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 39m / 120m limit)",
+    testOutcome: "PASSED (Identical bit-for-bit SHA256 build artifact check)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
   },
   {
     index: 14,
@@ -178,8 +220,11 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     state: "CHECKED_IN",
     checkInTime: "2026-05-31T09:01:45Z",
     geofenceVerified: true,
-    commitHash: "IN_REVIEW // CODE_SUBMITTED",
+    commitHash: "IN_REVIEW // PR_SUBMITTED #44",
     repoArtifact: "dos-club/ws14-circuit-breakers",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 34m / 120m limit)",
+    testOutcome: "IN_EVALUATION (18/20 tests passed, awaiting stress run)",
+    peerReviewSignoff: "Pending second peer review audit",
   },
   {
     index: 15,
@@ -300,6 +345,17 @@ function getStateBadge(state: ApprovedState) {
 export default function LedgerPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const identifier = decodeURIComponent(resolvedParams.id || "DOS-2026-B3-042");
+  const [selectedWorkshop, setSelectedWorkshop] = useState<WorkshopRecord | null>(null);
+  const [copyStatus, setCopyStatus] = useState(false);
+
+  // Close drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedWorkshop(null);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Raw counts - STRICTLY ZERO COMPOSITE OR ALGORITHMIC SCORES (Rule 3)
   const completedCount = WORKSHOP_CURRICULUM.filter(
@@ -311,10 +367,16 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
   const excusedCount = WORKSHOP_CURRICULUM.filter((w) => w.state === "EXCUSED").length;
   const registeredCount = WORKSHOP_CURRICULUM.filter((w) => w.state === "REGISTERED").length;
 
+  const handleCopyProof = (code: string) => {
+    navigator.clipboard?.writeText(`https://talentos.dosclub.org/ledger/${identifier}?ws=${code}`);
+    setCopyStatus(true);
+    setTimeout(() => setCopyStatus(false), 2000);
+  };
+
   return (
     <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
       {/* Top Header */}
-      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
           <Link
             href="/"
@@ -383,7 +445,7 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
               CHRONOLOGICAL WORKSHOP EVIDENCE (27 SESSIONS)
             </h2>
             <span className="font-mono text-[11px] text-neutral-500">
-              GEOFENCE: DYNAMIC 120m • ZERO-GRACE
+              CLICK ANY ROW TO INSPECT AUDIT PROOF
             </span>
           </div>
 
@@ -391,15 +453,24 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
             {WORKSHOP_CURRICULUM.map((ws) => (
               <div
                 key={ws.index}
-                className="p-4 sm:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-neutral-50/80 transition-colors"
+                onClick={() => setSelectedWorkshop(ws)}
+                className="p-4 sm:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-neutral-50/80 transition-colors cursor-pointer group"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    setSelectedWorkshop(ws);
+                  }
+                }}
               >
                 {/* Left: Code, Title, Topic */}
                 <div className="flex items-start gap-3 sm:gap-4 max-w-xl">
-                  <span className="font-mono text-xs text-neutral-500 mt-0.5 shrink-0">
+                  <span className="font-mono text-xs text-neutral-500 mt-0.5 shrink-0 group-hover:text-neutral-900 transition-colors">
                     {ws.code}
                   </span>
                   <div className="flex flex-col gap-1">
-                    <div className="text-sm font-medium text-neutral-900">
+                    <div className="text-sm font-medium text-neutral-900 group-hover:text-black">
                       {ws.title}
                     </div>
                     <div className="text-xs text-neutral-500">
@@ -413,7 +484,7 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
                   {/* Artifact / Git Evidence */}
                   <div className="flex flex-col items-start md:items-end text-[11px]">
                     {ws.repoArtifact ? (
-                      <span className="text-neutral-800 font-medium hover:text-black">
+                      <span className="text-neutral-800 font-medium group-hover:underline">
                         {ws.repoArtifact}
                       </span>
                     ) : (
@@ -443,6 +514,11 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
                   >
                     {ws.state}
                   </div>
+
+                  {/* Visual inspect indicator */}
+                  <span className="text-neutral-400 group-hover:text-neutral-900 text-xs hidden sm:inline-block font-mono">
+                    &rarr;
+                  </span>
                 </div>
               </div>
             ))}
@@ -466,6 +542,201 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
           </button>
         </section>
       </main>
+
+      {/* Slide-out Deliverable Artifact & Verification Drawer */}
+      {selectedWorkshop && (
+        <div className="fixed inset-0 z-50 overflow-hidden">
+          {/* Backdrop */}
+          <div
+            onClick={() => setSelectedWorkshop(null)}
+            className="fixed inset-0 bg-neutral-950/30 backdrop-blur-2xs transition-opacity"
+            aria-hidden="true"
+          />
+
+          <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <aside className="w-screen max-w-xl bg-white border-l border-neutral-200 shadow-2xl flex flex-col justify-between overflow-y-auto">
+              {/* Drawer Header */}
+              <div className="p-6 border-b border-neutral-200 bg-neutral-50/70 sticky top-0 z-10">
+                <div className="flex justify-between items-start gap-4">
+                  <div className="flex flex-col gap-2">
+                    <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded border border-neutral-200 bg-white font-mono text-[10px] text-neutral-600 tracking-wider uppercase font-medium">
+                      AUDIT DOSSIER // {selectedWorkshop.code}
+                    </div>
+                    <h3 className="text-lg font-semibold text-neutral-950">
+                      {selectedWorkshop.title}
+                    </h3>
+                    <p className="text-xs text-neutral-500 font-mono">
+                      {selectedWorkshop.topic}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWorkshop(null)}
+                    className="p-1.5 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-200/60 rounded border border-neutral-200 font-mono text-xs transition-colors shrink-0"
+                    aria-label="Close dossier"
+                  >
+                    ESC ✕
+                  </button>
+                </div>
+              </div>
+
+              {/* Drawer Body: Factual Evidence Sections */}
+              <div className="p-6 flex flex-col gap-6 flex-1 text-xs">
+                {/* 1. Status Invariant */}
+                <div className="flex justify-between items-center p-3.5 border border-neutral-200 bg-neutral-50/50 rounded-xs">
+                  <span className="font-mono text-[11px] text-neutral-600 font-medium uppercase tracking-wider">
+                    CURRENT APPROVED LIFECYCLE STATE:
+                  </span>
+                  <span
+                    className={`px-2.5 py-1 rounded border text-[11px] uppercase tracking-wider ${getStateBadge(
+                      selectedWorkshop.state
+                    )}`}
+                  >
+                    {selectedWorkshop.state}
+                  </span>
+                </div>
+
+                {/* 2. Zero-Grace Geofenced Presence Audit */}
+                <div className="flex flex-col gap-2 border border-neutral-200 p-4 bg-white">
+                  <span className="font-mono text-[11px] font-semibold text-neutral-900 tracking-wider uppercase">
+                    01 / ZERO-GRACE PRESENCE AUDIT
+                  </span>
+                  <div className="flex flex-col gap-2 font-mono text-[11px] text-neutral-600 pt-2 border-t border-neutral-100">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">SCHEDULED WINDOW:</span>
+                      <span className="text-neutral-800">09:00:00 UTC - 09:05:00 UTC</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">RECORDED CHECK-IN:</span>
+                      <span className="text-neutral-800 font-medium">
+                        {selectedWorkshop.checkInTime || "NO_PRESENCE_RECORDED"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">GEOFENCE STATUS:</span>
+                      <span className={selectedWorkshop.geofenceVerified ? "text-emerald-700 font-medium" : "text-neutral-500"}>
+                        {selectedWorkshop.geofenceVerified ? "VERIFIED (IN-BOUNDS)" : "NOT_APPLICABLE"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">LOCATION LOG:</span>
+                      <span className="text-neutral-700">
+                        {selectedWorkshop.geofenceCoordinates || "STANDARD CLASSROOM BEACON"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 3. Production Code & Deliverable Evidence */}
+                <div className="flex flex-col gap-2 border border-neutral-200 p-4 bg-white">
+                  <span className="font-mono text-[11px] font-semibold text-neutral-900 tracking-wider uppercase">
+                    02 / CODE ARTIFACT & DELIVERABLE EVIDENCE
+                  </span>
+                  <div className="flex flex-col gap-2 font-mono text-[11px] text-neutral-600 pt-2 border-t border-neutral-100">
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">REPOSITORY:</span>
+                      <span className="text-neutral-900 font-medium">
+                        {selectedWorkshop.repoArtifact || "NO_REPOSITORY_BOUND"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">COMMIT SHA:</span>
+                      <span className="text-neutral-800 font-mono">
+                        {selectedWorkshop.commitHash || "N/A"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">TEST SUITE RUN:</span>
+                      <span className="text-neutral-800">
+                        {selectedWorkshop.testOutcome || "UPCOMING_OR_NOT_STARTED"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-neutral-400">AUDIT SIGN-OFF:</span>
+                      <span className="text-neutral-800">
+                        {selectedWorkshop.peerReviewSignoff || "PENDING_SCHEDULED_EVALUATION"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4. Immutable Lifecycle Audit Journal */}
+                <div className="flex flex-col gap-2 border border-neutral-200 p-4 bg-white">
+                  <span className="font-mono text-[11px] font-semibold text-neutral-900 tracking-wider uppercase">
+                    03 / LIFECYCLE EVENT JOURNAL
+                  </span>
+                  <div className="flex flex-col gap-3 font-mono text-[11px] pt-2 border-t border-neutral-100">
+                    <div className="flex items-start gap-2.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-neutral-400 mt-1.5 shrink-0" />
+                      <div className="flex flex-col">
+                        <span className="text-neutral-800 font-medium">
+                          1. STATE_TRANSITION: REGISTERED
+                        </span>
+                        <span className="text-neutral-500 text-[10px]">
+                          Automated cohort roster ingestion by SYSTEM_ENROLLMENT
+                        </span>
+                      </div>
+                    </div>
+
+                    {selectedWorkshop.checkInTime && selectedWorkshop.checkInTime !== "UPCOMING" && (
+                      <div className="flex items-start gap-2.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-sky-500 mt-1.5 shrink-0" />
+                        <div className="flex flex-col">
+                          <span className="text-neutral-800 font-medium">
+                            2. STATE_TRANSITION: CHECKED_IN
+                          </span>
+                          <span className="text-neutral-500 text-[10px]">
+                            Presence timestamped by GEOFENCE_ATTENDANCE_ENGINE
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {selectedWorkshop.state !== "REGISTERED" && selectedWorkshop.state !== "CHECKED_IN" && (
+                      <div className="flex items-start gap-2.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 mt-1.5 shrink-0" />
+                        <div className="flex flex-col">
+                          <span className="text-neutral-800 font-medium">
+                            3. STATE_TRANSITION: {selectedWorkshop.state}
+                          </span>
+                          <span className="text-neutral-500 text-[10px]">
+                            Deliverable verification audited by AUTOMATED_HARNESS
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Drawer Footer Actions */}
+              <div className="p-6 border-t border-neutral-200 bg-neutral-50/70 flex flex-col gap-3">
+                <div className="flex justify-between items-center font-mono text-[10px] text-neutral-500">
+                  <span>CRYPTOGRAPHIC PROOF DIGEST</span>
+                  <span>SHA-256 VERIFIED</span>
+                </div>
+                <div className="flex gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => handleCopyProof(selectedWorkshop.code)}
+                    className="flex-1 py-2.5 px-3 bg-neutral-900 text-white hover:bg-neutral-800 font-mono text-xs uppercase tracking-wider font-medium transition-colors text-center"
+                  >
+                    {copyStatus ? "PROOF LINK COPIED!" : "COPY VERIFICATION LINK"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedWorkshop(null)}
+                    className="py-2.5 px-4 border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 font-mono text-xs uppercase tracking-wider font-medium transition-colors"
+                  >
+                    CLOSE
+                  </button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <footer className="border-t border-neutral-200 bg-white py-8 px-4 sm:px-6">
