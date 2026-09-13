@@ -181,7 +181,6 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     commitHash: "IN_REVIEW // CODE_SUBMITTED",
     repoArtifact: "dos-club/ws14-circuit-breakers",
   },
-  // Upcoming workshops (15 through 27) registered in ledger
   {
     index: 15,
     code: "WS-15",
@@ -278,23 +277,23 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
 function getStateBadge(state: ApprovedState) {
   switch (state) {
     case "COMPLETED":
-      return "border-emerald-700/60 bg-emerald-950/40 text-emerald-400";
+      return "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold";
     case "CHECKED_IN":
-      return "border-sky-700/60 bg-sky-950/40 text-sky-400";
+      return "border-sky-300 bg-sky-50 text-sky-800 font-semibold";
     case "LATE":
-      return "border-amber-700/60 bg-amber-950/40 text-amber-400";
+      return "border-amber-300 bg-amber-50 text-amber-800 font-semibold";
     case "INCOMPLETE":
-      return "border-orange-700/60 bg-orange-950/40 text-orange-400";
+      return "border-orange-300 bg-orange-50 text-orange-800 font-semibold";
     case "EXCUSED":
-      return "border-purple-700/60 bg-purple-950/40 text-purple-400";
+      return "border-purple-300 bg-purple-50 text-purple-800 font-semibold";
     case "MANUALLY_CONFIRMED":
-      return "border-emerald-600/60 bg-emerald-950/30 text-emerald-300";
+      return "border-teal-300 bg-teal-50 text-teal-800 font-semibold";
     case "ABSENT_CONFIRMED":
     case "ABSENT_UNCONFIRMED":
-      return "border-red-800/60 bg-red-950/40 text-red-400";
+      return "border-red-300 bg-red-50 text-red-800 font-semibold";
     case "REGISTERED":
     default:
-      return "border-neutral-800 bg-neutral-900/50 text-neutral-500";
+      return "border-neutral-200 bg-neutral-100 text-neutral-500 font-normal";
   }
 }
 
@@ -313,26 +312,26 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
   const registeredCount = WORKSHOP_CURRICULUM.filter((w) => w.state === "REGISTERED").length;
 
   return (
-    <div className="min-h-screen bg-[#0A0D12] text-neutral-200 font-sans selection:bg-neutral-800 selection:text-neutral-100 flex flex-col justify-between">
+    <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
       {/* Top Header */}
-      <header className="border-b border-neutral-800/80 bg-[#0A0D12]/90 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
           <Link
             href="/"
-            className="inline-flex items-center gap-2.5 font-mono text-xs text-neutral-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-2.5 font-mono text-xs text-neutral-600 hover:text-neutral-900 transition-colors"
           >
-            <span className="text-neutral-600">&larr;</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-500 shrink-0" />
+            <span className="text-neutral-400">&larr;</span>
+            <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
             <span className="tracking-wider uppercase font-medium">DOS CLUB // TALENT_OS</span>
           </Link>
 
           <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] text-neutral-400 border border-neutral-800 bg-neutral-900/60 px-2.5 py-1 rounded">
+            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded">
               IDENTIFIER: {identifier}
             </span>
             <Link
               href="/login"
-              className="font-mono text-xs text-neutral-400 hover:text-neutral-200"
+              className="font-mono text-xs text-neutral-500 hover:text-neutral-900 font-medium"
             >
               Sign Out
             </Link>
@@ -343,36 +342,36 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
       {/* Main Ledger Content */}
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 flex flex-col gap-10">
         {/* Ledger Dossier Header */}
-        <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-800 pb-8">
+        <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-200 pb-8">
           <div className="flex flex-col gap-3">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-neutral-800 bg-neutral-900/60 font-mono text-[10px] sm:text-xs text-neutral-400 tracking-widest uppercase self-start">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-neutral-200 bg-neutral-100 font-mono text-[10px] sm:text-xs text-neutral-700 tracking-widest uppercase self-start font-medium">
               LONGITUDINAL AUDIT RECORD // COHORT B3_2026
             </div>
-            <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-neutral-100">
+            <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-neutral-950">
               Student Execution Ledger
             </h1>
-            <p className="font-mono text-xs sm:text-sm text-neutral-400">
-              DOS_ID: <span className="text-neutral-200 font-medium">{identifier}</span> • REGION: TAMIL NADU // GLOBAL
+            <p className="font-mono text-xs sm:text-sm text-neutral-600">
+              MEMBER_ID: <span className="text-neutral-900 font-semibold">{identifier}</span> • REGION: TAMIL NADU // GLOBAL
             </p>
           </div>
 
           {/* Raw Factual Counts (NO composite scores or percentages) */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border border-neutral-800 bg-[#0C1017]/60 p-4 font-mono text-xs w-full md:w-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border border-neutral-200 bg-white p-4 font-mono text-xs w-full md:w-auto shadow-2xs">
             <div className="flex flex-col">
               <span className="text-neutral-500 text-[10px]">COMPLETED</span>
-              <span className="text-base font-semibold text-emerald-400">{completedCount} / 27</span>
+              <span className="text-base font-semibold text-emerald-700">{completedCount} / 27</span>
             </div>
-            <div className="flex flex-col border-l border-neutral-800 pl-3">
+            <div className="flex flex-col border-l border-neutral-200 pl-3">
               <span className="text-neutral-500 text-[10px]">IN EVALUATION</span>
-              <span className="text-base font-semibold text-sky-400">{inProgressCount}</span>
+              <span className="text-base font-semibold text-sky-700">{inProgressCount}</span>
             </div>
-            <div className="flex flex-col border-l border-neutral-800 pl-3">
+            <div className="flex flex-col border-l border-neutral-200 pl-3">
               <span className="text-neutral-500 text-[10px]">EXCUSED</span>
-              <span className="text-base font-semibold text-purple-400">{excusedCount}</span>
+              <span className="text-base font-semibold text-purple-700">{excusedCount}</span>
             </div>
-            <div className="flex flex-col border-l border-neutral-800 pl-3">
+            <div className="flex flex-col border-l border-neutral-200 pl-3">
               <span className="text-neutral-500 text-[10px]">SCHEDULED</span>
-              <span className="text-base font-semibold text-neutral-400">{registeredCount}</span>
+              <span className="text-base font-semibold text-neutral-600">{registeredCount}</span>
             </div>
           </div>
         </section>
@@ -380,19 +379,19 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
         {/* 27-Workshop Audit Table */}
         <section aria-label="Workshop Timeline" className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
-            <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-400 font-medium">
+            <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-700 font-semibold">
               CHRONOLOGICAL WORKSHOP EVIDENCE (27 SESSIONS)
             </h2>
-            <span className="font-mono text-[11px] text-neutral-600">
+            <span className="font-mono text-[11px] text-neutral-500">
               GEOFENCE: DYNAMIC 120m • ZERO-GRACE
             </span>
           </div>
 
-          <div className="border border-neutral-800 bg-[#0C1017]/40 divide-y divide-neutral-800">
+          <div className="border border-neutral-200 bg-white divide-y divide-neutral-200 shadow-2xs">
             {WORKSHOP_CURRICULUM.map((ws) => (
               <div
                 key={ws.index}
-                className="p-4 sm:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-neutral-900/20 transition-colors"
+                className="p-4 sm:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-neutral-50/80 transition-colors"
               >
                 {/* Left: Code, Title, Topic */}
                 <div className="flex items-start gap-3 sm:gap-4 max-w-xl">
@@ -400,7 +399,7 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
                     {ws.code}
                   </span>
                   <div className="flex flex-col gap-1">
-                    <div className="text-sm font-medium text-neutral-200">
+                    <div className="text-sm font-medium text-neutral-900">
                       {ws.title}
                     </div>
                     <div className="text-xs text-neutral-500">
@@ -414,11 +413,11 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
                   {/* Artifact / Git Evidence */}
                   <div className="flex flex-col items-start md:items-end text-[11px]">
                     {ws.repoArtifact ? (
-                      <span className="text-neutral-400 hover:text-neutral-200">
+                      <span className="text-neutral-800 font-medium hover:text-black">
                         {ws.repoArtifact}
                       </span>
                     ) : (
-                      <span className="text-neutral-600">NO_ARTIFACT_SUBMITTED</span>
+                      <span className="text-neutral-400">NO_ARTIFACT_SUBMITTED</span>
                     )}
 
                     {ws.commitHash && (
@@ -432,7 +431,7 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
                   <div className="hidden lg:flex flex-col items-end text-[11px] text-neutral-500">
                     <span>{ws.checkInTime ? ws.checkInTime.slice(0, 19).replace("T", " ") : "UPCOMING"}</span>
                     {ws.geofenceVerified && (
-                      <span className="text-emerald-500 text-[10px]">GEO_VERIFIED</span>
+                      <span className="text-emerald-700 text-[10px] font-semibold">GEO_VERIFIED</span>
                     )}
                   </div>
 
@@ -451,9 +450,9 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
         </section>
 
         {/* Audit Verification Footer Stamp */}
-        <section className="border border-neutral-800 bg-neutral-950/80 p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono text-xs">
+        <section className="border border-neutral-200 bg-white p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono text-xs shadow-2xs">
           <div className="flex flex-col gap-1">
-            <span className="text-neutral-300 font-medium">CRYPTOGRAPHIC AUDIT LEDGER STAMP</span>
+            <span className="text-neutral-900 font-semibold">CRYPTOGRAPHIC AUDIT LEDGER STAMP</span>
             <span className="text-neutral-500 text-[11px]">
               SHA-256: 4a8b79e1c2d0f3a6e8b7c9a2d1f4e5a8b7c9a2d1f4e5a8b7c9a2d1f4e5a8b7c9
             </span>
@@ -461,7 +460,7 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
           <button
             type="button"
             onClick={() => window.print()}
-            className="px-4 py-2 bg-neutral-800 text-neutral-200 hover:bg-neutral-200 hover:text-neutral-950 transition-colors uppercase tracking-wider text-[11px] font-medium"
+            className="px-4 py-2 bg-neutral-900 text-white hover:bg-neutral-800 transition-colors uppercase tracking-wider text-[11px] font-medium shadow-2xs"
           >
             PRINT AUDIT LEDGER
           </button>
@@ -469,8 +468,8 @@ export default function LedgerPage({ params }: { params: Promise<{ id: string }>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-800/80 py-8 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto text-center font-mono text-[11px] text-neutral-500 tracking-wider">
+      <footer className="border-t border-neutral-200 bg-white py-8 px-4 sm:px-6">
+        <div className="max-w-6xl mx-auto text-center font-mono text-[11px] sm:text-xs text-neutral-500 tracking-wider">
           DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1
         </div>
       </footer>

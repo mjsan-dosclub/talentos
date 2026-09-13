@@ -37,6 +37,7 @@ Every workshop session or deliverable must strictly resolve to one of the 9 inva
 - All records are displayed as factual evidence: timestamps, commit hashes, pull requests, and verified state transitions. Recruiters and faculty evaluate actual longitudinal consistency rather than artificial scores.
 
 ### C. Database & Role Integrity
+- Authenticate all roles (Members and Recruiters/Auditors) using standard institutional Email ID and Password credentials.
 - Never invent unauthorized database tables, unvetted roles, or speculative fields. All schema extensions require formal product decisions.
 
 ---
@@ -48,16 +49,17 @@ The repository follows Next.js App Router conventions with Tailwind CSS v4:
 ```
 talentos/
 ├── app/
-│   ├── globals.css          # Tailwind CSS v4 inline themes and dark palette
+│   ├── globals.css          # Tailwind CSS v4 inline themes & light palette
 │   ├── layout.tsx           # Root institutional layout with Geist Sans & Mono
-│   ├── page.tsx             # Public unauthenticated landing page & ledger portal
+│   ├── page.tsx             # Public landing page with gatekeeper access terminal
 │   ├── login/
-│   │   └── page.tsx         # Institutional gatekeeper authentication portal
+│   │   └── page.tsx         # Email & password authentication for Members and Recruiters
 │   └── ledger/
 │       └── [id]/
 │           └── page.tsx     # Student longitudinal 27-workshop audit ledger
 ├── PROJECT_RULES.md         # Invariant system rules and approved states
 ├── ARCHITECTURE.md          # System architecture and engineering manual
+├── README.md                # Project overview and team getting-started guide
 ├── package.json             # Dependencies and scripts
 └── tsconfig.json            # Strict TypeScript configuration
 ```
@@ -66,7 +68,7 @@ talentos/
 
 ## 4. UI & Visual Tone
 
-- **Color Palette**: Ultra-dark institutional tone (`bg-[#0A0D12]`, borders `border-neutral-800`, text `text-neutral-200` / `text-neutral-400`).
+- **Color Palette**: Crisp, light editorial enterprise tone (inspired by Stripe Press and Linear light mode: background `bg-[#FBFBFB]`, borders `border-neutral-200`, text `text-neutral-900` / `text-neutral-600`).
 - **Typography**: Clean sans-serif (`Geist`) for headlines and narrative; crisp monospace (`Geist Mono`) for ledger keys, hashes, states, and system metadata.
 - **Anti-Patterns**:
   - No purple/cyan glowing SaaS gradients.
@@ -80,4 +82,4 @@ talentos/
 Students following this repository learn:
 1. **Atomic Git Commits**: Every feature, bugfix, and architecture change is documented with conventional commit messages (`feat:`, `fix:`, `docs:`).
 2. **Strict Invariant Modeling**: How to build software around immutable business rules (e.g. 9 finite lifecycle states) rather than loose string states.
-3. **Audit-Grade UI**: How to build high-trust enterprise and institutional interfaces (comparable to Linear or Stripe Press) without relying on trendy templates.
+3. **Audit-Grade UI**: How to build high-trust enterprise and institutional interfaces without relying on trendy templates.
