@@ -132,16 +132,17 @@ export const FALLBACK_WORKSHOPS: Workshop[] = WORKSHOP_TOPICS_27.map((topic, idx
  */
 export async function getStudents(): Promise<{ students: Student[]; isLiveDb: boolean }> {
   try {
-    const { data, error } = await supabase
-      .from("students")
-      .select("*")
-      .order("created_at", { ascending: true });
-
-    if (!error && data && data.length > 0) {
-      return { students: data as Student[], isLiveDb: true };
+    if (typeof window !== "undefined") {
+      const res = await fetch("/api/students");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.students && json.students.length > 0) {
+          return { students: json.students, isLiveDb: true };
+        }
+      }
     }
   } catch (err) {
-    console.warn("Supabase fetch fallback:", err);
+    console.warn("API students fetch fallback:", err);
   }
 
   return { students: FALLBACK_STUDENTS, isLiveDb: false };
@@ -154,25 +155,22 @@ export async function getStudentByIdOrEmail(query: string): Promise<{ student: S
   const clean = query.trim().toLowerCase();
 
   try {
-    const { data, error } = await supabase
-      .from("students")
-      .select("*")
-      .or(`dos_id.ilike.${clean},email.ilike.${clean}`)
-      .limit(1)
-      .maybeSingle();
-
-    if (!error && data) {
-      return { student: data as Student, isLiveDb: true };
+    const { students, isLiveDb } = await getStudents();
+    const found = students.find(
+      (s) => s.dos_id.toLowerCase() === clean || s.email.toLowerCase() === clean
+    );
+    if (found) {
+      return { student: found, isLiveDb };
     }
   } catch (err) {
-    console.warn("Supabase lookup fallback:", err);
+    console.warn("Student lookup fallback:", err);
   }
 
-  const found = FALLBACK_STUDENTS.find(
+  const fallback = FALLBACK_STUDENTS.find(
     (s) => s.dos_id.toLowerCase() === clean || s.email.toLowerCase() === clean
   ) || null;
 
-  return { student: found, isLiveDb: false };
+  return { student: fallback, isLiveDb: false };
 }
 
 /**
@@ -180,16 +178,17 @@ export async function getStudentByIdOrEmail(query: string): Promise<{ student: S
  */
 export async function getWorkshops(): Promise<{ workshops: Workshop[]; isLiveDb: boolean }> {
   try {
-    const { data, error } = await supabase
-      .from("workshops")
-      .select("*")
-      .order("session_number", { ascending: true });
-
-    if (!error && data && data.length > 0) {
-      return { workshops: data as Workshop[], isLiveDb: true };
+    if (typeof window !== "undefined") {
+      const res = await fetch("/api/workshops");
+      if (res.ok) {
+        const json = await res.json();
+        if (json.workshops && json.workshops.length > 0) {
+          return { workshops: json.workshops, isLiveDb: true };
+        }
+      }
     }
   } catch (err) {
-    console.warn("Supabase workshops fallback:", err);
+    console.warn("API workshops fetch fallback:", err);
   }
 
   return { workshops: FALLBACK_WORKSHOPS, isLiveDb: false };
@@ -200,13 +199,14 @@ export async function getWorkshops(): Promise<{ workshops: Workshop[]; isLiveDb:
  */
 export async function getAttendanceForStudent(studentId: string): Promise<AttendanceRecord[]> {
   try {
-    const { data, error } = await supabase
-      .from("attendance_records")
-      .select("*")
-      .eq("student_id", studentId);
-
-    if (!error && data && data.length > 0) {
-      return data as AttendanceRecord[];
+    if (typeof window !== "undefined") {
+      const res = await fetch(`/api/attendance?student_id=${encodeURIComponent(studentId)}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json.attendance && json.attendance.length > 0) {
+          return json.attendance as AttendanceRecord[];
+        }
+      }
     }
   } catch (err) {
     console.warn("Supabase attendance fallback:", err);
@@ -244,17 +244,21 @@ export async function enrollStudent(newStudent: Omit<Student, "id" | "created_at
   const studentPayload: Student = { ...newStudent, id, created_at };
 
   try {
-    const { data, error } = await supabase
-      .from("students")
-      .insert([studentPayload])
-      .select()
-      .maybeSingle();
-
-    if (!error && data) {
-      return { student: data as Student, isLiveDb: true };
+    if (typeof window !== "undefined") {
+      const res = await fetch("/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newStudent),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.student) {
+          return { student: json.student, isLiveDb: true };
+        }
+      }
     }
   } catch (err) {
-    console.warn("Supabase enroll fallback to client state:", err);
+    console.warn("API enrollStudent fallback:", err);
   }
 
   return { student: studentPayload, isLiveDb: false };
@@ -283,17 +287,21 @@ export async function submitEvidence(submission: {
   };
 
   try {
-    const { data, error } = await supabase
-      .from("evidence_submissions")
-      .upsert([payload], { onConflict: "workshop_id,student_id" })
-      .select()
-      .maybeSingle();
-
-    if (!error && data) {
-      return { submission: data as EvidenceSubmission, isLiveDb: true };
+    if (typeof window !== "undefined") {
+      const res = await fetch("/api/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submission),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.submission) {
+          return { submission: json.submission, isLiveDb: true };
+        }
+      }
     }
   } catch (err) {
-    console.warn("Supabase submitEvidence fallback to client state:", err);
+    console.warn("API submitEvidence fallback:", err);
   }
 
   return { submission: payload, isLiveDb: false };
