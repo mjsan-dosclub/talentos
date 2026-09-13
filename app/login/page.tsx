@@ -33,10 +33,10 @@ export default function LoginPage() {
     // State-based institutional authentication simulation
     setTimeout(() => {
       setIsAuthenticating(false);
-      // Derive clean identifier for the ledger (e.g. username part of email or formatted DOS_ID)
+      // Derive clean identifier for the record (e.g. username part of email or formatted DOS_ID)
       const sanitizedId = email.split("@")[0].toUpperCase();
       const targetId = role === "member" ? `DOS-${sanitizedId}` : "AUDIT-VIEW";
-      router.push(`/ledger/${encodeURIComponent(targetId)}`);
+      router.push(`/record/${encodeURIComponent(targetId)}`);
     }, 400);
   };
 
@@ -54,8 +54,16 @@ export default function LoginPage() {
             <span className="tracking-wider uppercase font-medium">DOS CLUB // TALENT_OS</span>
           </Link>
 
-          <div className="font-mono text-[11px] text-neutral-500 tracking-wider hidden sm:block">
-            AUTH_GATE: STRICT • BATCH: 03
+          <div className="flex items-center gap-4">
+            <Link
+              href="/admin"
+              className="font-mono text-xs text-neutral-500 hover:text-neutral-900"
+            >
+              Admin Console
+            </Link>
+            <div className="font-mono text-[11px] text-neutral-500 tracking-wider hidden sm:block">
+              AUTH_GATE: STRICT • BATCH: ACTIVE
+            </div>
           </div>
         </div>
       </header>
@@ -167,7 +175,7 @@ export default function LoginPage() {
               className="mt-2 w-full font-mono text-xs tracking-wider uppercase py-3 bg-neutral-900 text-white hover:bg-neutral-800 transition-colors duration-150 font-medium disabled:opacity-50 shadow-2xs"
             >
               {isAuthenticating
-                ? "AUTHENTICATING // CHECKING LEDGER..."
+                ? "AUTHENTICATING // CHECKING RECORD..."
                 : `AUTHENTICATE AS ${role === "member" ? "MEMBER" : "RECRUITER"}`}
             </button>
           </form>

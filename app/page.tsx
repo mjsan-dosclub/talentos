@@ -6,22 +6,22 @@ import { useRouter } from "next/navigation";
 
 export default function Home() {
   const router = useRouter();
-  const [ledgerKey, setLedgerKey] = useState("");
+  const [recordKey, setRecordKey] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ledgerKey.trim()) {
-      setFeedback("ACCESS_RESTRICTED // KEY OR EMAIL REQUIRED FOR LEDGER VERIFICATION");
+    if (!recordKey.trim()) {
+      setFeedback("ACCESS_RESTRICTED // KEY OR EMAIL REQUIRED FOR RECORD VERIFICATION");
       return;
     }
-    const cleanKey = ledgerKey.trim().toUpperCase();
-    router.push(`/ledger/${encodeURIComponent(cleanKey)}`);
+    const cleanKey = recordKey.trim().toUpperCase();
+    router.push(`/record/${encodeURIComponent(cleanKey)}`);
   };
 
   return (
     <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
-      {/* 1. Top Navigation / Ledger Bar */}
+      {/* 1. Top Navigation / Record Bar */}
       <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
           {/* Left: Status Indicator & Brand */}
@@ -35,15 +35,22 @@ export default function Home() {
             </span>
           </div>
 
-          {/* Right: System Metadata & Sign In Link */}
+          {/* Right: System Metadata, Admin Link & Sign In Link */}
           <div className="flex items-center gap-4 sm:gap-6">
             <div className="hidden sm:flex items-center gap-2 font-mono text-[11px] text-neutral-500 tracking-wider">
-              <span>BATCH: 03</span>
+              <span>BATCH: ACTIVE</span>
               <span className="text-neutral-300">•</span>
               <span>INTEGRITY_CHECK: STRICT</span>
               <span className="text-neutral-300">•</span>
               <span>ACCESS: RESTRICTED</span>
             </div>
+
+            <Link
+              href="/admin"
+              className="font-mono text-xs text-neutral-600 hover:text-neutral-900 tracking-wide font-medium"
+            >
+              Admin Console
+            </Link>
 
             <Link
               href="/login"
@@ -61,7 +68,7 @@ export default function Home() {
         <section aria-label="Overview" className="flex flex-col items-start gap-6 max-w-4xl">
           {/* Small bordered badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded border border-neutral-200 bg-neutral-100 font-mono text-[10px] sm:text-xs text-neutral-700 tracking-widest uppercase font-medium">
-            CONFIDENTIAL LEDGER // NOT AN OPEN PORTAL
+            CONFIDENTIAL RECORD // NOT AN OPEN PORTAL
           </div>
 
           {/* Headline */}
@@ -76,7 +83,7 @@ export default function Home() {
           <p className="text-sm sm:text-base md:text-lg text-neutral-600 max-w-3xl leading-relaxed">
             A longitudinal student development and talent intelligence system documenting
             real engineering output, behavioral consistency, and production evidence. Built
-            for Batch 3 across Tamil Nadu and global partners.
+            for elite batches across Tamil Nadu and global partners.
           </p>
         </section>
 
@@ -127,12 +134,12 @@ export default function Home() {
               </div>
               <input
                 type="text"
-                value={ledgerKey}
+                value={recordKey}
                 onChange={(e) => {
-                  setLedgerKey(e.target.value);
+                  setRecordKey(e.target.value);
                   if (feedback) setFeedback(null);
                 }}
-                placeholder="ENTER DOS_ID, EMAIL, OR RECRUITER LEDGER KEY"
+                placeholder="ENTER DOS_ID, EMAIL, OR RECRUITER RECORD KEY"
                 spellCheck={false}
                 autoComplete="off"
                 className="w-full bg-transparent px-3.5 py-3 font-mono text-xs text-neutral-900 placeholder:text-neutral-400 uppercase tracking-wider focus:outline-none"
@@ -141,7 +148,7 @@ export default function Home() {
                 type="submit"
                 className="font-mono text-xs tracking-wider uppercase px-5 py-3 bg-neutral-900 text-white hover:bg-neutral-800 transition-colors duration-150 shrink-0 font-medium border-t sm:border-t-0 sm:border-l border-neutral-200"
               >
-                Verify Ledger
+                Verify Record
               </button>
             </div>
 

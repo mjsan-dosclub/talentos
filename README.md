@@ -1,7 +1,7 @@
 # DOS Club TalentOS
 
 > **A Longitudinal Student Development & Talent Intelligence System**  
-> *DeScience Open Source Club • Singapore // Chennai • Cohort B3_2026*
+> *DeScience Open Source Club • Singapore // Chennai*
 
 ---
 
@@ -9,7 +9,7 @@
 
 **TalentOS** is an institutional talent intelligence platform designed to make a student's real engineering output visible over a 27-workshop curriculum. 
 
-Instead of relying on résumés, inflated credentials, or participation certificates, TalentOS maintains an immutable audit ledger of real code commits, production deliverables, and timely session execution.
+Instead of relying on résumés, inflated credentials, or participation certificates, TalentOS maintains an immutable audit record of real code commits, production deliverables, and timely session execution across active Batches.
 
 ---
 
@@ -26,7 +26,7 @@ Instead of relying on résumés, inflated credentials, or participation certific
 As enforced in [`PROJECT_RULES.md`](./PROJECT_RULES.md):
 
 1. **Strict Adherence to 9 Lifecycle States Only**:
-   - `REGISTERED`: Enrolled in session ledger.
+   - `REGISTERED`: Enrolled in session record.
    - `CHECKED_IN`: Verified presence inside geofenced window.
    - `LATE`: Presence recorded past zero-grace cutoff.
    - `INCOMPLETE`: Session attended but practical deliverable missing or failed audit.
@@ -50,14 +50,16 @@ As enforced in [`PROJECT_RULES.md`](./PROJECT_RULES.md):
 ```
 talentos/
 ├── app/
-│   ├── globals.css              # Tailwind CSS v4 styling & light institutional theme
-│   ├── layout.tsx               # Root layout with Geist Sans & Geist Mono fonts
+│   ├── globals.css              # Tailwind CSS v4 styling & Inter humanist enterprise theme
+│   ├── layout.tsx               # Root layout with Inter & JetBrains Mono typography
 │   ├── page.tsx                 # Public landing page with gatekeeper access terminal
 │   ├── login/
 │   │   └── page.tsx             # Email & password authentication for Members and Recruiters
-│   └── ledger/
+│   ├── admin/
+│   │   └── page.tsx             # Leadership console: interactive enrollment & CSV roster import
+│   └── record/
 │       └── [id]/
-│           └── page.tsx         # Longitudinal 27-workshop student audit ledger
+│           └── page.tsx         # Longitudinal 27-workshop student audit record & verification drawer
 ├── PROJECT_RULES.md             # Invariant system rules
 ├── ARCHITECTURE.md              # Engineering and pedagogy manual
 ├── package.json
@@ -92,9 +94,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## Available Routes
 
-- **`/`**: Public landing page featuring the institutional ledger bar, core principles, and gatekeeper lookup terminal.
+- **`/`**: Public landing page featuring the institutional status bar, core principles, and gatekeeper lookup terminal.
 - **`/login`**: Secure authentication portal for **Members** and **Recruiters / Auditors** using Email ID and Password.
-- **`/ledger/[id]`**: Student audit ledger displaying the 27-workshop chronological timeline, commit evidence, geofence status, and factual completion counts.
+- **`/admin`**: Root administration console to enroll new members manually or bulk-import via CSV/text, manage batches, and audit records.
+- **`/record/[id]`**: Student audit record displaying the 27-workshop chronological timeline, commit evidence, geofence status, and interactive verification drawer.
 
 ---
 
