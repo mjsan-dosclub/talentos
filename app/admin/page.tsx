@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { getStudents, enrollStudent, SEED_GROUP_ID } from "@/lib/db";
 
 interface Member {
   id: string;
@@ -75,6 +76,26 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState<IngestionTab>("form");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedBatch, setSelectedBatch] = useState<string>("ALL");
+  const [isLiveDb, setIsLiveDb] = useState(false);
+
+  useEffect(() => {
+    getStudents().then(({ students, isLiveDb: live }) => {
+      setIsLiveDb(live);
+      if (live && students.length > 0) {
+        const mapped: Member[] = students.map((s, idx) => ({
+          id: s.dos_id,
+          fullName: s.full_name,
+          email: s.email,
+          institution: s.department || "Anna University Hub",
+          githubHandle: s.email.split("@")[0],
+          batch: "Batch 3",
+          region: "Tamil Nadu",
+          completedWorkshops: Math.max(10, 14 - idx),
+        }));
+        setMembers(mapped);
+      }
+    });
+  }, []);
 
   // Form State
   const [fullName, setFullName] = useState("");
@@ -91,7 +112,7 @@ export default function AdminPage() {
   const [csvFeedback, setCsvFeedback] = useState<string | null>(null);
 
   // Handle Form Submission
-  const handleAddMember = (e: React.FormEvent) => {
+  const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormFeedback(null);
 
@@ -120,6 +141,25 @@ export default function AdminPage() {
     setDosId("");
     setInstitution("");
     setGithubHandle("");
+
+    // Persist to Supabase Database
+    try {
+      const res = await enrollStudent({
+        dos_id: newMember.id,
+        group_id: SEED_GROUP_ID,
+        full_name: newMember.fullName,
+        email: newMember.email,
+        department: newMember.institution,
+        course: "Systems Engineering",
+        year_of_study: 3,
+        is_archived: false,
+      });
+      if (res.isLiveDb) {
+        setIsLiveDb(true);
+      }
+    } catch (err) {
+      console.warn("Database persist notice:", err);
+    }
   };
 
   // Handle CSV Ingestion
@@ -195,7 +235,7 @@ export default function AdminPage() {
 
           <div className="flex items-center gap-4">
             <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden sm:inline-block">
-              CLEARANCE: ROOT_ADMIN • BATCH: ACTIVE
+              CLEARANCE: ROOT_ADMIN • BATCH: ACTIVE • DB: {isLiveDb ? "SUPABASE_LIVE" : "STANDBY"}
             </span>
             <Link
               href="/login"

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { getStudentByIdOrEmail } from "@/lib/db";
 
 type UserRole = "member" | "recruiter";
 
@@ -14,7 +16,7 @@ export default function LoginPage() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
 
-  const handleAuthenticate = (e: React.FormEvent) => {
+  const handleAuthenticate = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatusMessage(null);
 
@@ -30,18 +32,42 @@ export default function LoginPage() {
 
     setIsAuthenticating(true);
 
-    // State-based institutional authentication simulation
-    setTimeout(() => {
-      setIsAuthenticating(false);
+    try {
+      // 1. Attempt Supabase Auth live session
+      const { data: authData } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password.trim(),
+      });
+
+      if (authData?.session) {
+        if (role === "recruiter") {
+          router.push("/talent");
+        } else {
+          const { student } = await getStudentByIdOrEmail(email.trim());
+          const targetId = student?.dos_id || "DOS-B3-001";
+          router.push(`/record/${encodeURIComponent(targetId)}`);
+        }
+        return;
+      }
+
+      // 2. Fallback: match institutional student profile or recruiter session
+      if (role === "member") {
+        const { student } = await getStudentByIdOrEmail(email.trim());
+        const targetId = student?.dos_id || (email.includes("student") ? "DOS-B3-001" : `DOS-${email.split("@")[0].toUpperCase()}`);
+        router.push(`/record/${encodeURIComponent(targetId)}`);
+      } else {
+        router.push("/talent");
+      }
+    } catch (err) {
+      console.warn("Auth check fallback:", err);
       if (role === "recruiter") {
         router.push("/talent");
       } else {
-        // Derive clean identifier for the record (e.g. username part of email or formatted DOS_ID)
-        const sanitizedId = email.split("@")[0].toUpperCase();
-        const targetId = email.includes("student") || email.includes("arun") ? "DOS-B3-001" : `DOS-${sanitizedId}`;
-        router.push(`/record/${encodeURIComponent(targetId)}`);
+        router.push("/record/DOS-B3-001");
       }
-    }, 400);
+    } finally {
+      setIsAuthenticating(false);
+    }
   };
 
   return (
