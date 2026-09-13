@@ -54,8 +54,14 @@ talentos/
 │   ├── page.tsx             # Public landing page with gatekeeper access terminal
 │   ├── login/
 │   │   └── page.tsx         # Email & password authentication for Members and Recruiters
+│   ├── submit/
+│   │   └── page.tsx         # Student deliverable submission & hermetic verification
+│   ├── talent/
+│   │   └── page.tsx         # Institutional recruiter explorer & factual audit dossiers
 │   ├── admin/
-│   │   └── page.tsx         # Administration console: manual form & CSV batch import
+│   │   ├── page.tsx         # Administration console: manual form & CSV batch import
+│   │   └── sessions/
+│   │       └── page.tsx     # Live workshop session auditor & geofence controller
 │   └── record/
 │       └── [id]/
 │           └── page.tsx     # Student longitudinal 27-workshop audit record & drawer

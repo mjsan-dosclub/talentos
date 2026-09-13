@@ -55,8 +55,14 @@ talentos/
 │   ├── page.tsx                 # Public landing page with gatekeeper access terminal
 │   ├── login/
 │   │   └── page.tsx             # Email & password authentication for Members and Recruiters
+│   ├── submit/
+│   │   └── page.tsx             # Student deliverable submission & hermetic verification
+│   ├── talent/
+│   │   └── page.tsx             # Institutional recruiter explorer & factual audit dossiers
 │   ├── admin/
-│   │   └── page.tsx             # Leadership console: interactive enrollment & CSV roster import
+│   │   ├── page.tsx             # Leadership console: interactive enrollment & CSV roster import
+│   │   └── sessions/
+│   │       └── page.tsx         # Live workshop session auditor & geofence controller
 │   └── record/
 │       └── [id]/
 │           └── page.tsx         # Longitudinal 27-workshop student audit record & verification drawer
@@ -96,7 +102,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 - **`/`**: Public landing page featuring the institutional status bar, core principles, and gatekeeper lookup terminal.
 - **`/login`**: Secure authentication portal for **Members** and **Recruiters / Auditors** using Email ID and Password.
+- **`/submit`**: Student deliverable submission & hermetic CI verification portal for the 27 workshops.
+- **`/talent`**: Institutional recruiter talent intelligence explorer with factual workshop evidence (zero composite scores).
 - **`/admin`**: Root administration console to enroll new members manually or bulk-import via CSV/text, manage batches, and audit records.
+- **`/admin/sessions`**: Live workshop session auditor with real-time geofence attendance countdown and state transition controls across the 9 approved lifecycle states.
 - **`/record/[id]`**: Student audit record displaying the 27-workshop chronological timeline, commit evidence, geofence status, and interactive verification drawer.
 
 ---
