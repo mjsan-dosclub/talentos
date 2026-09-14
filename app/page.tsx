@@ -261,7 +261,7 @@ export default function Home() {
               {/* Status Badge */}
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#FAFAF9] border border-neutral-200 mb-6 font-mono text-[11px] font-semibold text-neutral-700 tracking-wider">
                 <span className="w-2 h-2 rounded-full bg-[#E25C38]" />
-                <span>PRIORITY INTAKE // 40-SEAT STRICT CAP</span>
+                <span>PRIORITY CLEARANCE // COHORT INTAKE ACTIVE</span>
               </div>
 
               {/* Headline */}
@@ -272,7 +272,7 @@ export default function Home() {
 
               {/* Subhead */}
               <p className="mt-6 text-base sm:text-lg text-neutral-600 leading-relaxed max-w-2xl">
-                While your peers wait in crowded campus placement lines trading boilerplate resumes, DOS Club members bypass the line entirely. TalentOS is your verified flight recorder—translating months of private engineering rigor into unarguable production telemetry. Stop applying. Get cleared.
+                While your peers wait in crowded campus placement lines trading boilerplate resumes, DOS Club members bypass the line entirely. TalentOS is your verified flight recorder: translating months of private engineering rigor into unarguable production telemetry. Stop applying. Get cleared.
               </p>
 
               {/* Action Bar */}
@@ -420,7 +420,7 @@ export default function Home() {
                 </a>
                 <div>
                   <div className="text-[11px] font-bold text-[#14171A]">Scan for Lounge Pass</div>
-                  <div className="text-[10px] text-neutral-500 font-mono">B2C Cohort Intake</div>
+                  <div className="text-[10px] text-neutral-500 font-mono">Direct Intake Active</div>
                 </div>
               </div>
             </div>
@@ -429,7 +429,7 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          MODULE 3: TELEMETRY METRICS STRIP
+          MODULE 3: TELEMETRY METRIC STRIP
           ========================================================================= */}
       <section className="bg-[#FAFAF9] border-y border-neutral-200 py-8 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
@@ -442,13 +442,13 @@ export default function Home() {
           <Reveal delay={100}>
             <div className="text-3xl sm:text-4xl font-extrabold text-[#14171A] tracking-tight">0%</div>
             <div className="text-xs font-semibold text-neutral-600 mt-1 uppercase tracking-wider">
-              Proxy Attendance (Geofenced)
+              Proxy Tolerance (Geofenced + Rolling Verification)
             </div>
           </Reveal>
           <Reveal delay={200}>
-            <div className="text-3xl sm:text-4xl font-extrabold text-[#E25C38] tracking-tight">40 Seats</div>
+            <div className="text-3xl sm:text-4xl font-extrabold text-[#E25C38] tracking-tight">Micro-Groups</div>
             <div className="text-xs font-semibold text-neutral-600 mt-1 uppercase tracking-wider">
-              Strict Cohort Cap
+              Focused Cohort Mentoring
             </div>
           </Reveal>
           <Reveal delay={300}>
@@ -570,7 +570,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-xs font-bold text-[#14171A] hover:text-[#E25C38] transition-colors"
                 >
-                  <span>Skip the queue. Claim 1 of 40 B2C Seats</span>
+                  <span>Skip the queue. Enter the Talent Lounge</span>
                   <span>&rarr;</span>
                 </a>
               </div>
@@ -580,11 +580,11 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          MODULE 5: B2C DIRECT ADMISSION CALLOUT
+          MODULE 5: DIRECT STUDENT INTAKE
           ========================================================================= */}
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="bg-[#FAFAF9] border-2 border-[#E25C38]/30 p-8 sm:p-12 rounded-3xl relative overflow-hidden">
+          <Reveal className="bg-[#FAFAF9] border-2 border-[#E25C38]/30 p-8 sm:p-10 rounded-3xl relative overflow-hidden">
             <div className="max-w-3xl space-y-5">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white border border-neutral-200 text-xs font-mono font-semibold text-neutral-700 uppercase tracking-wider">
                 <span>DIRECT CANDIDATE PIPELINE</span>
@@ -595,19 +595,21 @@ export default function Home() {
               </h2>
 
               <p className="text-base sm:text-lg text-neutral-600 leading-relaxed">
-                You don&apos;t need to wait for your college to partner with DOS Club. Individual student builders are admitted directly into closed cohorts strictly capped at 40 seats. Gain priority clearance to private build sprints, global exposure, and verified talent dossiers.
+                You do not need to wait for your college to partner with DOS Club. Individual student builders are admitted directly into active cohorts organized into focused micro-teams. Gain priority clearance to private build sprints, global exposure, and verified talent dossiers.
               </p>
 
-              <div className="pt-3">
+              <div className="pt-3 flex flex-col sm:flex-row sm:items-center gap-4">
                 <a
                   href="https://membership.descienceosclub.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2.5 bg-[#E25C38] hover:bg-[#CC4F2E] text-white px-7 py-3.5 rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase transition-all shadow-sm active:scale-95"
+                  className="inline-flex items-center gap-2.5 bg-[#E25C38] hover:bg-[#CC4F2E] text-white px-7 py-3.5 rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase transition-all shadow-sm active:scale-95 text-center justify-center"
                 >
-                  <span>Apply for B2C Membership at membership.descienceosclub.com</span>
-                  <ArrowRightIcon className="w-4 h-4" />
+                  <span>Apply directly at membership.descienceosclub.com -&gt;</span>
                 </a>
+                <span className="text-xs text-neutral-500 font-medium">
+                  Intake open for upcoming cohort calibration.
+                </span>
               </div>
             </div>
           </Reveal>
@@ -978,11 +980,11 @@ export default function Home() {
           <Reveal className="bg-white border border-neutral-200 rounded-3xl p-8 sm:p-12 shadow-sm relative">
             <div className="text-4xl text-[#E25C38] font-serif mb-4 leading-none">&ldquo;</div>
             <p className="text-base sm:text-xl font-medium text-[#14171A] leading-relaxed">
-              While everyone else in my department was panicking over 45-minute campus interviews and blasting 300 identical resumes, my DOS Club dossier already proved months of production code, late-night debugging, and hackathon execution. I didn&apos;t have to pitch myself—the telemetry spoke for me.
+              While everyone else in my department was panicking over 45-minute campus interviews and blasting 300 identical resumes, my DOS Club dossier already proved months of production code, late-night debugging, and hackathon execution. I didn&apos;t have to pitch myself: the telemetry spoke for me.
             </p>
             <div className="mt-6 pt-6 border-t border-neutral-100 flex items-center justify-between">
               <span className="font-mono text-xs font-bold uppercase tracking-wider text-neutral-500">
-                BATCH 2 COHORT MEMBER • DEPLOYED IN GLOBAL AI TEAM
+                BATCH 2 COHORT MEMBER : DEPLOYED IN GLOBAL AI TEAM
               </span>
               <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-mono text-[10px] font-bold border border-emerald-200">
                 VERIFIED STATUS
@@ -1001,7 +1003,7 @@ export default function Home() {
             &ldquo;Potential cannot be measured in a 45-minute interview or a paper resume. It reveals itself through months of consistent execution.&rdquo;
           </blockquote>
           <p className="mt-6 text-xs sm:text-sm font-mono uppercase tracking-widest text-neutral-500">
-            TalentOS Operating Framework • Descience Open Source Club
+            TalentOS Operating Framework : Descience Open Source Club
           </p>
         </Reveal>
       </section>
@@ -1082,10 +1084,10 @@ export default function Home() {
                     onChange={(e) => setRequestForm({ ...requestForm, role: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
                   >
-                    <option value="Engineering Student (Year 1-2)">Engineering Student (Year 1–2)</option>
-                    <option value="Engineering Student (Year 3-4)">Engineering Student (Year 3–4)</option>
+                    <option value="Engineering Student (Year 1-2)">Engineering Student (Year 1-2)</option>
+                    <option value="Engineering Student (Year 3-4)">Engineering Student (Year 3-4)</option>
                     <option value="Recent Engineering Graduate">Recent Engineering Graduate</option>
-                    <option value="Early Professional (0-2 YOE)">Early Professional / Junior Dev (0–2 YOE)</option>
+                    <option value="Early Professional (0-2 YOE)">Early Professional / Junior Dev (0-2 YOE)</option>
                     <option value="Senior Engineer (2+ YOE)">Senior Engineer / Lead (2+ YOE)</option>
                     <option value="Self-Taught Builder">Self-Taught Builder / Open Source</option>
                     <option value="Other">Other / Non-Traditional</option>
@@ -1121,7 +1123,7 @@ export default function Home() {
                     disabled={requestStatus === "submitting"}
                     className="w-full bg-[#E25C38] text-white py-3.5 px-8 rounded-full font-semibold hover:bg-[#CC4F2E] transition-all shadow-sm active:scale-98 disabled:opacity-50 cursor-pointer"
                   >
-                    {requestStatus === "submitting" ? "Processing..." : "Submit Access Request →"}
+                    {requestStatus === "submitting" ? "Processing..." : "Submit Access Request ->"}
                   </button>
                 </div>
 
@@ -1133,7 +1135,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-[#E25C38] hover:underline font-semibold"
                   >
-                    Apply directly for B2C Membership at membership.descienceosclub.com &rarr;
+                    Apply directly at membership.descienceosclub.com -&gt;
                   </a>
                 </p>
               </form>
@@ -1152,7 +1154,7 @@ export default function Home() {
             <div className="font-mono text-xs font-bold uppercase tracking-widest text-neutral-500 mb-5">
               OPERATING HUBS &amp; GLOBAL COHORT REACH
             </div>
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-xs font-mono text-neutral-600">
               {[
                 "Singapore",
                 "Japan",
@@ -1163,11 +1165,11 @@ export default function Home() {
                 "UK",
                 "US",
               ].map((country, idx) => (
-                <span
-                  key={idx}
-                  className="px-4 py-1.5 rounded-full bg-[#FAFAF9] border border-neutral-200 text-xs font-medium text-neutral-700 shadow-2xs"
-                >
-                  {country}
+                <span key={idx} className="flex items-center gap-2 sm:gap-3">
+                  <span className="px-3.5 py-1.5 rounded-full bg-[#FAFAF9] border border-neutral-200 text-xs font-medium text-neutral-700 shadow-2xs">
+                    {country}
+                  </span>
+                  {idx < 7 && <span className="text-neutral-400 font-bold select-none">.</span>}
                 </span>
               ))}
             </div>
