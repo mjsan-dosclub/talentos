@@ -12,7 +12,9 @@ import {
   AcademicCapIcon,
   XIcon,
   CheckIcon,
+  CalendarIcon,
 } from "@/components/Icons";
+import WorkshopCalendar from "@/components/WorkshopCalendar";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 
 interface CollegeStudent {
@@ -138,7 +140,7 @@ const INITIAL_ABSENCES: AbsenceCase[] = [
 ];
 
 export default function CollegeCoordinatorPage() {
-  const [activeTab, setActiveTab] = useState<"students" | "workshops" | "exceptions">("students");
+  const [activeTab, setActiveTab] = useState<"students" | "workshops" | "exceptions" | "calendar">("students");
   const [students, setStudents] = useState<CollegeStudent[]>(INITIAL_COLLEGE_STUDENTS);
   const [absences, setAbsences] = useState<AbsenceCase[]>(INITIAL_ABSENCES);
   const [searchQuery, setSearchQuery] = useState("");
@@ -185,6 +187,7 @@ export default function CollegeCoordinatorPage() {
       title: "Campus Operations",
       items: [
         { id: "students", label: "Campus Students", icon: <UsersIcon className="w-4 h-4" />, count: students.length },
+        { id: "calendar", label: "Workshop Calendar", icon: <CalendarIcon className="w-4 h-4" />, badge: "CALENDAR" },
         { id: "workshops", label: "27-Workshop Matrix", icon: <ChartBarIcon className="w-4 h-4" />, count: 27 },
         { id: "exceptions", label: "Absence Exceptions", icon: <ScaleIcon className="w-4 h-4" />, count: pendingExceptionsCount },
       ],
@@ -297,9 +300,10 @@ export default function CollegeCoordinatorPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 gap-4 text-xs font-semibold">
+        <div className="flex border-b border-slate-200 gap-4 text-xs font-semibold overflow-x-auto">
           {[
             { id: "students", label: `Campus Students Roster (${students.length})`, icon: <UsersIcon className="w-4 h-4" /> },
+            { id: "calendar", label: "Workshop Calendar & Schedule", icon: <CalendarIcon className="w-4 h-4" /> },
             { id: "workshops", label: "Multi-Workshop Attendance (27 Sessions)", icon: <ChartBarIcon className="w-4 h-4" /> },
             { id: "exceptions", label: `Absence Exceptions (${pendingExceptionsCount})`, icon: <ScaleIcon className="w-4 h-4" /> },
           ].map((t) => (
@@ -581,6 +585,18 @@ export default function CollegeCoordinatorPage() {
               </table>
             </div>
           </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 4: WORKSHOP CALENDAR & SCHEDULE                                       */}
+        {/* ========================================================================= */}
+        {activeTab === "calendar" && (
+          <WorkshopCalendar
+            role="COLLEGE_ADMIN"
+            institutionName="Anna University Campus Hub"
+            title="Anna University Workshop Itinerary & Calendar"
+            subtitle="Upcoming and completed technical workshop sessions for Anna University Campus Hub. Direct sync with Google and Apple Calendar."
+          />
         )}
       </main>
     </div>

@@ -16,12 +16,16 @@ import {
   RadioIcon,
   FileTextIcon,
   BellIcon,
+  CalendarIcon,
+  SparklesIcon,
 } from "@/components/Icons";
 import PopupsTab from "@/components/admin/PopupsTab";
 import LandingCmsTab from "@/components/admin/LandingCmsTab";
 import EnquiriesTab from "@/components/admin/EnquiriesTab";
 import PushNotificationsTab from "@/components/admin/PushNotificationsTab";
 import NotificationEngineTab from "@/components/admin/NotificationEngineTab";
+import WorkshopScheduleTab from "@/components/admin/WorkshopScheduleTab";
+import CaseStudiesCmsTab from "@/components/admin/CaseStudiesCmsTab";
 
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 import { formatConfigDateTime } from "@/lib/datetime";
@@ -494,11 +498,13 @@ function AdminHubContent() {
       title: "Curriculum & Execution",
       items: [
         { id: "workshops", label: "Workshops (27)", icon: <BoltIcon className="w-4 h-4" />, count: workshops.length },
+        { id: "schedule", label: "Workshop Schedule & Calendar", icon: <CalendarIcon className="w-4 h-4" />, badge: "LIVE CALENDAR" },
       ],
     },
     {
       title: "Content & Broadcast",
       items: [
+        { id: "casestudies", label: "Case Studies Blog CMS", icon: <SparklesIcon className="w-4 h-4" />, badge: "BLOG" },
         { id: "notifications", label: "Notification Engine", icon: <BellIcon className="w-4 h-4" />, badge: "3-WAY" },
         { id: "popups", label: "Flash News & Popups", icon: <RadioIcon className="w-4 h-4" />, badge: "LIVE" },
         { id: "cms", label: "Landing Page CMS", icon: <FileTextIcon className="w-4 h-4" /> },
@@ -1070,6 +1076,20 @@ function AdminHubContent() {
           {/* ========================================================================= */}
           {activeTab === "push" && (
             <PushNotificationsTab onToast={triggerToast} />
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 11: MULTI-COLLEGE WORKSHOP SCHEDULE & CALENDAR                        */}
+          {/* ========================================================================= */}
+          {activeTab === "schedule" && (
+            <WorkshopScheduleTab />
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 12: CASE STUDIES BLOG CMS                                             */}
+          {/* ========================================================================= */}
+          {activeTab === "casestudies" && (
+            <CaseStudiesCmsTab />
           )}
         </main>
 

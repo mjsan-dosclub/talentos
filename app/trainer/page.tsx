@@ -16,7 +16,9 @@ import {
   CheckIcon,
   ClockIcon,
   SearchIcon,
+  CalendarIcon,
 } from "@/components/Icons";
+import WorkshopCalendar from "@/components/WorkshopCalendar";
 
 interface ParticipantState {
   student: Student;
@@ -151,6 +153,7 @@ export default function TrainerDashboardPage() {
       title: "Live Operations",
       items: [
         { id: "session", label: "Workshop Cockpit", icon: <BoltIcon className="w-4 h-4" /> },
+        { id: "schedule", label: "Teaching Itinerary & Calendar", icon: <CalendarIcon className="w-4 h-4" />, badge: "ITINERARY" },
         { id: "roster", label: "Student Roster", icon: <UsersIcon className="w-4 h-4" />, count: participants.length },
         { id: "standouts", label: "Standout Recognitions", icon: <StarIcon className="w-4 h-4" />, count: standoutCount },
       ],
@@ -204,8 +207,17 @@ export default function TrainerDashboardPage() {
             </div>
           )}
 
-          {/* Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
+          {activeTab === "schedule" ? (
+            <WorkshopCalendar
+              role="TRAINER"
+              trainerName="Priya Sundaram"
+              title="Expert Teaching Itinerary & Calendar"
+              subtitle="Your assigned workshops across university hubs. Verify upcoming delivery dates, student cohorts, and campus venues."
+            />
+          ) : (
+            <>
+              {/* Section Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
             <div>
               <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-semibold mb-1">
                 Technical Expert Lead Cockpit
@@ -442,6 +454,8 @@ export default function TrainerDashboardPage() {
               </div>
             </div>
           </div>
+        </>
+      )}
         </main>
       </div>
 

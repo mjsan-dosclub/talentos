@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { getCaseStudies, getCaseStudyBySlug, addCaseStudy } from "@/lib/casestudies";
+import { getCaseStudies, getCaseStudyBySlug, addCaseStudy, updateCaseStudy, deleteCaseStudy } from "@/lib/casestudies";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PATCH, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
 };
 
@@ -71,6 +71,61 @@ export async function POST(request: Request) {
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: err?.message || "Failed to create case study" },
+      { status: 500, headers: CORS_HEADERS }
+    );
+  }
+}
+
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id, ...updates } = body;
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Missing case study ID" },
+        { status: 400, headers: CORS_HEADERS }
+      );
+    }
+
+    const updated = updateCaseStudy(id, updates);
+    if (!updated) {
+      return NextResponse.json(
+        { success: false, error: "Case study not found" },
+        { status: 404, headers: CORS_HEADERS }
+      );
+    }
+
+    return NextResponse.json(
+      { success: true, casestudy: updated },
+      { status: 200, headers: CORS_HEADERS }
+    );
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: err?.message || "Failed to update case study" },
+      { status: 500, headers: CORS_HEADERS }
+    );
+  }
+}
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: "Missing case study ID" },
+        { status: 400, headers: CORS_HEADERS }
+      );
+    }
+
+    const deleted = deleteCaseStudy(id);
+    return NextResponse.json(
+      { success: deleted, deletedId: id },
+      { status: deleted ? 200 : 404, headers: CORS_HEADERS }
+    );
+  } catch (err: any) {
+    return NextResponse.json(
+      { success: false, error: err?.message || "Failed to delete case study" },
       { status: 500, headers: CORS_HEADERS }
     );
   }

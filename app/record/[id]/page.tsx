@@ -37,7 +37,9 @@ import {
   EditIcon,
   CheckIcon,
   XIcon,
+  CalendarIcon,
 } from "@/components/Icons";
+import WorkshopCalendar from "@/components/WorkshopCalendar";
 
 // STRICT INVARIANT STATES FROM PROJECT_RULES.md
 type ApprovedState =
@@ -443,8 +445,8 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
   const [student, setStudent] = useState<Student | null>(null);
   const [isLoadingStudent, setIsLoadingStudent] = useState(true);
 
-  // Tab State: "journey" | "skills" | "certifications" | "assessments"
-  const [activeTab, setActiveTab] = useState<"journey" | "skills" | "certifications" | "assessments">("journey");
+  // Tab State: "journey" | "skills" | "certifications" | "assessments" | "calendar"
+  const [activeTab, setActiveTab] = useState<"journey" | "skills" | "certifications" | "assessments" | "calendar">("journey");
 
   // Drawer & Modal State
   const [selectedWorkshop, setSelectedWorkshop] = useState<WorkshopRecord | null>(null);
@@ -586,6 +588,14 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
   const studentYear = student?.year_of_study || 3;
 
+  const studentInstitution =
+    (student as any)?.institution ||
+    (identifier === "DOS-B3-002"
+      ? "PSG College of Technology Hub"
+      : identifier === "DOS-B3-003"
+      ? "Thiagarajar College of Engineering Hub"
+      : "Anna University Campus Hub");
+
   // Longitudinal Counts
   const completedCount = WORKSHOP_CURRICULUM.filter(
     (w) => w.state === "COMPLETED" || w.state === "MANUALLY_CONFIRMED"
@@ -716,6 +726,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
       title: "Student Dossier",
       items: [
         { id: "journey", label: "Curriculum Journey", icon: <AcademicCapIcon className="w-4 h-4" />, count: completedCount },
+        { id: "calendar", label: "Workshop Calendar", icon: <CalendarIcon className="w-4 h-4" />, badge: "SCHEDULE" },
         { id: "skills", label: "Skills & Tools", icon: <WrenchIcon className="w-4 h-4" />, count: skills.length },
         { id: "certifications", label: "Certifications", icon: <AwardIcon className="w-4 h-4" />, count: certifications.length },
         { id: "assessments", label: "Assessments & Honors", icon: <StarIcon className="w-4 h-4" />, count: assessments.length },
@@ -967,6 +978,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
           <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto">
             {[
               { id: "journey", label: "Curriculum Journey", icon: <AcademicCapIcon className="w-4 h-4" />, count: 27 },
+              { id: "calendar", label: "Workshop Calendar", icon: <CalendarIcon className="w-4 h-4" />, count: "NEW" },
               { id: "skills", label: "Skills & Tools", icon: <WrenchIcon className="w-4 h-4" />, count: skills.length },
               { id: "certifications", label: "Certifications", icon: <AwardIcon className="w-4 h-4" />, count: certifications.length },
               { id: "assessments", label: "Assessments & Honors", icon: <StarIcon className="w-4 h-4" />, count: assessments.length },
@@ -1122,6 +1134,21 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                   </div>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* ===================================================================== */}
+          {/* TAB: WORKSHOP CALENDAR & SCHEDULE                                     */}
+          {/* ===================================================================== */}
+          {activeTab === "calendar" && (
+            <section aria-label="Campus Workshop Calendar" className="flex flex-col gap-4">
+              <WorkshopCalendar
+                role="STUDENT"
+                institutionName={studentInstitution}
+                studentName={studentName}
+                title="Your Campus Workshop Schedule & Calendar"
+                subtitle="Track your college's upcoming workshops, recently completed sessions, and sync directly with your Google and Apple Calendar."
+              />
             </section>
           )}
 

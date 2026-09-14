@@ -32,6 +32,12 @@ export interface CaseStudy {
   commitHash: string;
   prUrl?: string;
   featured?: boolean;
+  shortDescription?: string;
+  bannerImage?: string;
+  socialShareImage?: string;
+  metaTitle?: string;
+  metaKeywords?: string;
+  status?: "DRAFT" | "PUBLISHED";
 }
 
 export const INITIAL_CASE_STUDIES: CaseStudy[] = [
@@ -199,7 +205,24 @@ export function addCaseStudy(newStudy: Omit<CaseStudy, "id">): CaseStudy {
   const study: CaseStudy = {
     ...newStudy,
     id: `cs-${Date.now().toString(36)}`,
+    status: newStudy.status || "PUBLISHED",
   };
   caseStudiesStore.unshift(study);
   return study;
+}
+
+export function updateCaseStudy(id: string, updates: Partial<CaseStudy>): CaseStudy | null {
+  const index = caseStudiesStore.findIndex((cs) => cs.id === id || cs.slug === id);
+  if (index === -1) return null;
+  caseStudiesStore[index] = {
+    ...caseStudiesStore[index],
+    ...updates,
+  };
+  return caseStudiesStore[index];
+}
+
+export function deleteCaseStudy(id: string): boolean {
+  const initialLen = caseStudiesStore.length;
+  caseStudiesStore = caseStudiesStore.filter((cs) => cs.id !== id && cs.slug !== id);
+  return caseStudiesStore.length < initialLen;
 }
