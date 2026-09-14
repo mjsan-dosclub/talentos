@@ -2,45 +2,148 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import SessionBar from "@/components/SessionBar";
+import AppHeader from "@/components/AppHeader";
+import { WORKSHOP_TOPICS_27 } from "@/lib/db";
+
+interface CollegeStudent {
+  dosId: string;
+  fullName: string;
+  email: string;
+  department: string;
+  year: number;
+  completedWorkshops: number;
+  attendanceRate: number;
+  lastAttended: string;
+  status: "ACTIVE" | "DEFENSE_READY";
+}
 
 interface AbsenceCase {
   dosId: string;
   studentName: string;
   department: string;
+  sessionCode: string;
+  sessionTitle: string;
+  date: string;
   provisionalStatus: "ABSENT_UNCONFIRMED" | "EXCUSED" | "ABSENT_CONFIRMED";
   confirmationNote?: string;
 }
 
-const INITIAL_ABSENCES: AbsenceCase[] = [
+const INITIAL_COLLEGE_STUDENTS: CollegeStudent[] = [
+  {
+    dosId: "DOS-B3-001",
+    fullName: "Arunachalam Sundaram",
+    email: "arun@student.dosclub.org",
+    department: "Computer Technology",
+    year: 3,
+    completedWorkshops: 14,
+    attendanceRate: 94.2,
+    lastAttended: "WS-14: Resilient Microservices",
+    status: "ACTIVE",
+  },
+  {
+    dosId: "DOS-B3-005",
+    fullName: "Siddharth Rajan",
+    email: "siddharth@student.dosclub.org",
+    department: "Computer Applications",
+    year: 4,
+    completedWorkshops: 12,
+    attendanceRate: 85.7,
+    lastAttended: "WS-13: Paxos Algorithm",
+    status: "ACTIVE",
+  },
   {
     dosId: "DOS-B3-006",
-    studentName: "Naveen Raj",
+    fullName: "Naveen Raj S.",
+    email: "naveen@student.dosclub.org",
     department: "Computer Science & Engineering",
-    provisionalStatus: "ABSENT_UNCONFIRMED",
+    year: 3,
+    completedWorkshops: 13,
+    attendanceRate: 88.5,
+    lastAttended: "WS-13: Paxos Algorithm",
+    status: "ACTIVE",
   },
   {
     dosId: "DOS-B3-007",
-    studentName: "Ananya Swaminathan",
+    fullName: "Ananya Swaminathan",
+    email: "ananya@student.dosclub.org",
     department: "Information Technology",
+    year: 4,
+    completedWorkshops: 14,
+    attendanceRate: 96.0,
+    lastAttended: "WS-14: Resilient Microservices",
+    status: "DEFENSE_READY",
+  },
+  {
+    dosId: "DOS-B3-008",
+    fullName: "Karthik Sundar",
+    email: "karthik.s@student.dosclub.org",
+    department: "Electronics & Communication",
+    year: 3,
+    completedWorkshops: 11,
+    attendanceRate: 78.5,
+    lastAttended: "WS-12: Vector Clocks",
+    status: "ACTIVE",
+  },
+  {
+    dosId: "DOS-B3-009",
+    fullName: "Janani Balaji",
+    email: "janani@student.dosclub.org",
+    department: "Computer Technology",
+    year: 3,
+    completedWorkshops: 14,
+    attendanceRate: 92.5,
+    lastAttended: "WS-14: Resilient Microservices",
+    status: "ACTIVE",
+  },
+];
+
+const INITIAL_ABSENCES: AbsenceCase[] = [
+  {
+    dosId: "DOS-B3-006",
+    studentName: "Naveen Raj S.",
+    department: "Computer Science & Engineering",
+    sessionCode: "WS-14",
+    sessionTitle: "Resilient Microservices & Circuit Breakers",
+    date: "14 Sep 2026",
     provisionalStatus: "ABSENT_UNCONFIRMED",
   },
   {
     dosId: "DOS-B3-008",
     studentName: "Karthik Sundar",
     department: "Electronics & Communication",
+    sessionCode: "WS-13",
+    sessionTitle: "Paxos Algorithm & Quorum Lease",
+    date: "07 Sep 2026",
+    provisionalStatus: "ABSENT_UNCONFIRMED",
+  },
+  {
+    dosId: "DOS-B3-008",
+    studentName: "Karthik Sundar",
+    department: "Electronics & Communication",
+    sessionCode: "WS-14",
+    sessionTitle: "Resilient Microservices & Circuit Breakers",
+    date: "14 Sep 2026",
     provisionalStatus: "ABSENT_UNCONFIRMED",
   },
 ];
 
 export default function CollegeCoordinatorPage() {
+  const [activeTab, setActiveTab] = useState<"students" | "workshops" | "exceptions">("students");
+  const [students, setStudents] = useState<CollegeStudent[]>(INITIAL_COLLEGE_STUDENTS);
   const [absences, setAbsences] = useState<AbsenceCase[]>(INITIAL_ABSENCES);
-  const [notification, setNotification] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [deptFilter, setDeptFilter] = useState("All");
+  const [toast, setToast] = useState<string | null>(null);
 
-  const handleConfirmException = (dosId: string, status: "EXCUSED" | "ABSENT_CONFIRMED", note: string) => {
+  const triggerToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  const handleConfirmException = (dosId: string, sessionCode: string, status: "EXCUSED" | "ABSENT_CONFIRMED", note: string) => {
     setAbsences((prev) =>
       prev.map((a) => {
-        if (a.dosId === dosId) {
+        if (a.dosId === dosId && a.sessionCode === sessionCode) {
           return {
             ...a,
             provisionalStatus: status,
@@ -51,215 +154,381 @@ export default function CollegeCoordinatorPage() {
       })
     );
 
-    setNotification(`COLLEGE_AUDIT // Status for ${dosId} confirmed as ${status} (${note})`);
-    setTimeout(() => setNotification(null), 3500);
+    triggerToast(`CONFIRMED // ${dosId} marked as ${status} for ${sessionCode} (${note})`);
   };
 
-  const excusedCount = absences.filter((a) => a.provisionalStatus === "EXCUSED").length;
-  const unconfirmedCount = absences.filter((a) => a.provisionalStatus === "ABSENT_UNCONFIRMED").length;
+  const filteredStudents = students.filter((s) => {
+    const matchesSearch =
+      s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.dosId.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      s.department.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesDept = deptFilter === "All" || s.department === deptFilter;
+    return matchesSearch && matchesDept;
+  });
+
+  const pendingExceptionsCount = absences.filter((a) => a.provisionalStatus === "ABSENT_UNCONFIRMED").length;
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
-      {/* Header */}
-      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2.5 font-mono text-xs text-neutral-600 hover:text-neutral-900 transition-colors"
-          >
-            <span className="text-neutral-400">&larr;</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
-            <span className="tracking-wider uppercase font-medium">DOS CLUB // TALENT_OS</span>
-          </Link>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col justify-between">
+      <AppHeader />
 
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden sm:inline-block">
-              INSTITUTION: ANNA UNIVERSITY (AU-DOS-01)
-            </span>
-            <SessionBar />
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 flex flex-col gap-8">
-        {/* Title */}
-        <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-neutral-200 pb-6">
-          <div className="flex flex-col gap-2">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-neutral-200 bg-neutral-100 font-mono text-[10px] sm:text-xs text-neutral-700 tracking-widest uppercase self-start font-medium">
-              COLLEGE COORDINATOR PORTAL // SECTIONS 5 & 13
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950">
-              Institutional Attendance & Exception Review
-            </h1>
-            <p className="font-mono text-xs text-neutral-600">
-              Zero routine administration: review session attendance summaries and confirm excused absences in one click.
-            </p>
-          </div>
-
-          {/* Institutional Stats */}
-          <div className="grid grid-cols-3 gap-3 border border-neutral-200 bg-white p-3 font-mono text-xs shadow-2xs">
-            <div className="flex flex-col">
-              <span className="text-neutral-500 text-[10px]">REGISTERED</span>
-              <span className="text-base font-semibold text-neutral-900">40</span>
-            </div>
-            <div className="flex flex-col border-l border-neutral-200 pl-3">
-              <span className="text-neutral-500 text-[10px]">PRESENT</span>
-              <span className="text-base font-semibold text-emerald-700">37</span>
-            </div>
-            <div className="flex flex-col border-l border-neutral-200 pl-3">
-              <span className="text-neutral-500 text-[10px]">UNCONFIRMED</span>
-              <span className="text-base font-semibold text-amber-700">{unconfirmedCount}</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Notification Banner */}
-        {notification && (
-          <div className="p-3 border border-neutral-300 bg-neutral-900 text-white font-mono text-xs tracking-wider flex items-center gap-2 shadow-xs">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
-            <span>{notification}</span>
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+        {/* Toast Alert */}
+        {toast && (
+          <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium rounded-lg shadow-sm flex items-center justify-between">
+            <span>{toast}</span>
+            <button onClick={() => setToast(null)} className="text-emerald-700 font-bold hover:text-emerald-950">
+              ✕
+            </button>
           </div>
         )}
 
-        {/* Workshop Summary Card */}
-        <section className="border border-neutral-200 bg-white p-6 shadow-2xs flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-neutral-200 pb-3">
-            <div>
-              <span className="font-mono text-[10px] uppercase text-neutral-500 block">
-                LATEST COMPLETED WORKSHOP
+        {/* Campus Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
+          <div className="flex flex-col gap-1.5">
+            <div className="flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20" />
+              <span className="font-mono text-xs font-bold text-slate-500 uppercase tracking-wider">
+                AU-DOS-01 • CAMPUS HUB
               </span>
-              <h2 className="text-lg font-semibold text-neutral-950">
-                WS-14: Resilient Microservices & Circuit Breakers
-              </h2>
             </div>
-            <span className="font-mono text-xs bg-neutral-100 border border-neutral-200 px-2.5 py-1 rounded font-medium text-neutral-700">
-              Batch 3 • Group Alpha
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+              Anna University & DOS Club Hub
+            </h1>
+            <p className="text-xs text-slate-500">
+              Coordinator: <strong className="text-slate-700">Dr. K. Ramanathan (Dean of Engineering)</strong> • Chennai, Tamil Nadu
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => triggerToast("EXPORT // Student attendance roster downloaded (CSV)")}
+              className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors shadow-2xs"
+            >
+              Export Campus Roster (CSV)
+            </button>
+          </div>
+        </div>
+
+        {/* Metric Cards (HubSpot Style) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-1">
+            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
+              Enrolled Campus Students
             </span>
+            <span className="text-2xl font-bold text-slate-900">42</span>
+            <span className="text-[11px] text-emerald-600 font-medium">Batch 3 - Systems Engineering</span>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 font-mono text-xs py-2">
-            <div>
-              <span className="text-neutral-500 text-[10px] block">DATE & TIME</span>
-              <span className="text-neutral-900 font-medium">Sunday, 09:00 - 12:00 UTC</span>
-            </div>
-            <div>
-              <span className="text-neutral-500 text-[10px] block">VENUE</span>
-              <span className="text-neutral-900 font-medium">AU Campus / Chennai Hub</span>
-            </div>
-            <div>
-              <span className="text-neutral-500 text-[10px] block">TRAINER</span>
-              <span className="text-neutral-900 font-medium">DeScience Faculty Lead</span>
-            </div>
-            <div>
-              <span className="text-neutral-500 text-[10px] block">ATTENDANCE SOURCE</span>
-              <span className="text-neutral-900 font-medium">QR (35) + Trainer Manual (2)</span>
-            </div>
-          </div>
-        </section>
-
-        {/* Exception Confirmation Table (PRD Section 13) */}
-        <section className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <div>
-              <h3 className="font-mono text-xs uppercase tracking-wider text-neutral-900 font-semibold">
-                ABSENCE CONFIRMATION QUEUE ({unconfirmedCount} PENDING)
-              </h3>
-              <p className="font-mono text-[11px] text-neutral-500 mt-0.5">
-                Confirm institutional justification (e.g. lab examination, university event) so records reflect accurately.
-              </p>
-            </div>
-
-            {excusedCount > 0 && (
-              <span className="font-mono text-xs text-purple-700 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded font-medium">
-                {excusedCount} Excused by College
-              </span>
-            )}
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-1">
+            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
+              Average Cohort Attendance
+            </span>
+            <span className="text-2xl font-bold text-emerald-600">91.4%</span>
+            <span className="text-[11px] text-slate-500 font-medium">Across 14 completed sessions</span>
           </div>
 
-          <div className="border border-neutral-200 bg-white divide-y divide-neutral-200 shadow-2xs">
-            {absences.map((a) => (
-              <div
-                key={a.dosId}
-                className="p-4 sm:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-neutral-50/50 transition-colors"
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-1">
+            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
+              Workshops Executed
+            </span>
+            <span className="text-2xl font-bold text-slate-900">14 / 27</span>
+            <span className="text-[11px] text-blue-600 font-medium">Next: WS-15 Distributed Tracing</span>
+          </div>
+
+          <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-1">
+            <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
+              Absence Exceptions
+            </span>
+            <span className="text-2xl font-bold text-amber-600">{pendingExceptionsCount} Pending</span>
+            <span className="text-[11px] text-slate-500 font-medium">Requires coordinator sign-off</span>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex border-b border-slate-200 gap-4 text-xs font-semibold">
+          {[
+            { id: "students", label: `Campus Students Roster (${students.length})`, icon: "👥" },
+            { id: "workshops", label: "Multi-Workshop Attendance (27 Sessions)", icon: "📊" },
+            { id: "exceptions", label: `Absence Exceptions (${pendingExceptionsCount})`, icon: "⚖️" },
+          ].map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as any)}
+              className={`pb-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+                activeTab === t.id
+                  ? "border-slate-900 text-slate-900 font-bold"
+                  : "border-transparent text-slate-500 hover:text-slate-800"
+              }`}
+            >
+              <span>{t.icon}</span>
+              <span>{t.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* ========================================================================= */}
+        {/* TAB 1: CAMPUS STUDENTS ROSTER                                             */}
+        {/* ========================================================================= */}
+        {activeTab === "students" && (
+          <div className="flex flex-col gap-4">
+            {/* Search and Filters */}
+            <div className="flex flex-col sm:flex-row gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-xs">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search campus students by name, DOS ID, or department..."
+                className="flex-1 border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800"
+              />
+
+              <select
+                value={deptFilter}
+                onChange={(e) => setDeptFilter(e.target.value)}
+                className="border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-700 bg-white"
               >
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-semibold text-neutral-950">
-                      {a.studentName}
-                    </span>
-                    <span className="font-mono text-[10px] text-neutral-500 border border-neutral-200 px-1.5 py-0.5 rounded-2xs bg-neutral-50">
-                      {a.dosId}
-                    </span>
-                  </div>
-                  <div className="font-mono text-[11px] text-neutral-500">
-                    {a.department}
-                    {a.confirmationNote && (
-                      <span className="text-purple-700 ml-2 font-medium">
-                        • Confirmed: {a.confirmationNote}
-                      </span>
-                    )}
-                  </div>
-                </div>
+                <option value="All">All Departments</option>
+                <option value="Computer Technology">Computer Technology</option>
+                <option value="Information Technology">Information Technology</option>
+                <option value="Computer Applications">Computer Applications</option>
+                <option value="Electronics & Communication">Electronics & Communication</option>
+                <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+              </select>
+            </div>
 
-                <div className="flex flex-wrap items-center gap-2 font-mono text-xs self-end md:self-center">
-                  <span
-                    className={`px-2 py-0.5 text-[10px] font-semibold border rounded-2xs ${
-                      a.provisionalStatus === "EXCUSED"
-                        ? "bg-purple-50 text-purple-800 border-purple-300"
-                        : a.provisionalStatus === "ABSENT_CONFIRMED"
-                        ? "bg-neutral-200 text-neutral-800 border-neutral-300"
-                        : "bg-amber-50 text-amber-800 border-amber-300"
-                    }`}
-                  >
-                    {a.provisionalStatus}
-                  </span>
-
-                  {a.provisionalStatus === "ABSENT_UNCONFIRMED" ? (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleConfirmException(a.dosId, "EXCUSED", "Department Lab Examination")
-                        }
-                        className="px-2.5 py-1 text-[11px] border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 rounded-2xs transition-colors"
-                      >
-                        EXCUSE: LAB EXAM
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleConfirmException(a.dosId, "EXCUSED", "University Symposium Duty")
-                        }
-                        className="px-2.5 py-1 text-[11px] border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 rounded-2xs transition-colors"
-                      >
-                        EXCUSE: SYMPOSIUM
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() =>
-                          handleConfirmException(a.dosId, "ABSENT_CONFIRMED", "Unexcused Absence Confirmed")
-                        }
-                        className="px-2.5 py-1 text-[11px] border border-neutral-300 bg-neutral-50 hover:bg-neutral-100 text-neutral-600 rounded-2xs transition-colors"
-                      >
-                        CONFIRM ABSENT
-                      </button>
-                    </>
-                  ) : (
-                    <span className="text-[11px] text-neutral-400">AUDIT VERIFIED ✓</span>
-                  )}
-                </div>
-              </div>
-            ))}
+            {/* Students Table */}
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="py-3.5 px-4">Student Member</th>
+                    <th className="py-3.5 px-4">DOS ID</th>
+                    <th className="py-3.5 px-4">Department & Year</th>
+                    <th className="py-3.5 px-4 text-center">Completed Sessions</th>
+                    <th className="py-3.5 px-4 text-center">Attendance %</th>
+                    <th className="py-3.5 px-4">Last Attended Workshop</th>
+                    <th className="py-3.5 px-4 text-right">Student 360</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {filteredStudents.map((s) => (
+                    <tr key={s.dosId} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs">
+                            {s.fullName.charAt(0)}
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-slate-900">{s.fullName}</span>
+                            <span className="text-[11px] text-slate-400">{s.email}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="py-3 px-4 font-mono font-medium text-slate-700">
+                        {s.dosId}
+                      </td>
+                      <td className="py-3 px-4">
+                        <span className="text-slate-800">{s.department}</span>
+                        <span className="text-[11px] text-slate-400 block">Year {s.year}</span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
+                          {s.completedWorkshops} / 27
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span
+                          className={`font-mono font-bold text-xs ${
+                            s.attendanceRate >= 90
+                              ? "text-emerald-700"
+                              : s.attendanceRate >= 80
+                              ? "text-blue-700"
+                              : "text-amber-700"
+                          }`}
+                        >
+                          {s.attendanceRate.toFixed(1)}%
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-600 text-[11px]">
+                        {s.lastAttended}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <Link
+                          href={`/record/${encodeURIComponent(s.dosId)}`}
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold"
+                        >
+                          Inspect 360 &rarr;
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </section>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 2: MULTI-WORKSHOP ATTENDANCE BREAKDOWN                                 */}
+        {/* ========================================================================= */}
+        {activeTab === "workshops" && (
+          <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+            <table className="w-full text-left text-xs">
+              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                <tr>
+                  <th className="py-3.5 px-4">Workshop</th>
+                  <th className="py-3.5 px-4">Curriculum Title</th>
+                  <th className="py-3.5 px-4 text-center">Attended / Total</th>
+                  <th className="py-3.5 px-4 text-center">Campus Rate</th>
+                  <th className="py-3.5 px-4 text-center">Status</th>
+                  <th className="py-3.5 px-4 text-right">Venue Mode</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {WORKSHOP_TOPICS_27.map((topic, i) => {
+                  const num = i + 1;
+                  const code = `WS-${String(num).padStart(2, "0")}`;
+                  const isCompleted = num < 14;
+                  const isLive = num === 14;
+                  const attendedCount = isCompleted ? 39 + (num % 4) : isLive ? 38 : 0;
+                  const rate = isCompleted ? (attendedCount / 42) * 100 : isLive ? 90.5 : 0;
+
+                  return (
+                    <tr key={code} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3 px-4 font-mono font-bold text-slate-800">{code}</td>
+                      <td className="py-3 px-4 font-semibold text-slate-900">{topic}</td>
+                      <td className="py-3 px-4 text-center font-mono">
+                        {isCompleted || isLive ? `${attendedCount} / 42` : "—"}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {rate > 0 ? (
+                          <span className="font-mono font-bold text-emerald-700">
+                            {rate.toFixed(1)}%
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 font-mono">—</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            isLive
+                              ? "bg-amber-100 text-amber-900 border border-amber-300 animate-pulse"
+                              : isCompleted
+                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                              : "bg-slate-100 text-slate-500"
+                          }`}
+                        >
+                          {isLive ? "● LIVE IN SESSION" : isCompleted ? "COMPLETED" : "UPCOMING"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-right text-slate-500 font-medium">
+                        {num % 2 === 0 ? "Hybrid Hub" : "In-Person Lab"}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* TAB 3: ABSENCE EXCEPTIONS                                                 */}
+        {/* ========================================================================= */}
+        {activeTab === "exceptions" && (
+          <div className="flex flex-col gap-4">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                  <tr>
+                    <th className="py-3.5 px-4">Student</th>
+                    <th className="py-3.5 px-4">DOS ID</th>
+                    <th className="py-3.5 px-4">Missed Workshop</th>
+                    <th className="py-3.5 px-4">Session Date</th>
+                    <th className="py-3.5 px-4 text-center">Provisional State</th>
+                    <th className="py-3.5 px-4 text-right">Dean Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {absences.map((caseItem, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-slate-900">{caseItem.studentName}</span>
+                          <span className="text-[11px] text-slate-400">{caseItem.department}</span>
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono font-medium text-slate-700">
+                        {caseItem.dosId}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="font-mono font-bold text-slate-800">{caseItem.sessionCode}:</span>{" "}
+                        <span className="text-slate-700">{caseItem.sessionTitle}</span>
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-slate-500">
+                        {caseItem.date}
+                      </td>
+                      <td className="py-3.5 px-4 text-center">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            caseItem.provisionalStatus === "EXCUSED"
+                              ? "bg-blue-50 text-blue-800 border border-blue-200"
+                              : caseItem.provisionalStatus === "ABSENT_CONFIRMED"
+                              ? "bg-red-50 text-red-800 border border-red-200"
+                              : "bg-amber-50 text-amber-800 border border-amber-200"
+                          }`}
+                        >
+                          {caseItem.provisionalStatus}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        {caseItem.provisionalStatus === "ABSENT_UNCONFIRMED" ? (
+                          <div className="inline-flex items-center gap-2">
+                            <button
+                              onClick={() =>
+                                handleConfirmException(
+                                  caseItem.dosId,
+                                  caseItem.sessionCode,
+                                  "EXCUSED",
+                                  "Medical / Institutional Exam Clearance"
+                                )
+                              }
+                              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-medium text-xs shadow-2xs"
+                            >
+                              Approve Excuse
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleConfirmException(
+                                  caseItem.dosId,
+                                  caseItem.sessionCode,
+                                  "ABSENT_CONFIRMED",
+                                  "Unexcused absence confirmed by coordinator"
+                                )
+                              }
+                              className="px-2.5 py-1 border border-slate-300 hover:bg-slate-100 text-slate-700 rounded font-medium text-xs"
+                            >
+                              Confirm Absent
+                            </button>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-slate-500 font-mono">
+                            ✓ {caseItem.confirmationNote || "Resolved"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-neutral-200 bg-white py-8 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto text-center font-mono text-[11px] text-neutral-500 tracking-wider">
-          DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1
-        </div>
+      <footer className="border-t border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-500 font-medium">
+        DESCIENCE OPEN SOURCE CLUB • ANNA UNIVERSITY CAMPUS HUB • TALENT_OS ENTERPRISE
       </footer>
     </div>
   );

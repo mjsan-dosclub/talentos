@@ -1,558 +1,1318 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { getStudents, enrollStudent, SEED_GROUP_ID } from "@/lib/db";
-import SessionBar from "@/components/SessionBar";
+import { useSearchParams, useRouter } from "next/navigation";
+import AppHeader from "@/components/AppHeader";
+import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
+import { WORKSHOP_TOPICS_27 } from "@/lib/db";
+import { formatConfigDateTime } from "@/lib/datetime";
 
-interface Member {
+// Types
+interface StudentMember {
   id: string;
+  dosId: string;
   fullName: string;
   email: string;
   institution: string;
-  githubHandle: string;
+  department: string;
   batch: string;
-  region: string;
   completedWorkshops: number;
+  status: "ACTIVE" | "ON_LEAVE" | "DEFENSE_READY";
 }
 
-// Initial Batch Roster (Production Mock)
-const INITIAL_MEMBERS: Member[] = [
+interface ExpertMentor {
+  id: string;
+  fullName: string;
+  email: string;
+  organization: string;
+  domainSpecialties: string[];
+  assignedWorkshops: string[];
+  status: "ACTIVE" | "STANDBY";
+  avatar: string;
+}
+
+interface PartnerInstitution {
+  id: string;
+  code: string;
+  name: string;
+  city: string;
+  state: string;
+  lat: number;
+  lng: number;
+  geofenceRadiusMeters: number;
+  studentCount: number;
+  status: "ACTIVE" | "ONBOARDING";
+}
+
+interface WorkshopItem {
+  code: string;
+  title: string;
+  focusArea: string;
+  expertName: string;
+  mode: "IN_PERSON" | "HYBRID" | "VIRTUAL";
+  testPassThreshold: number;
+  status: "COMPLETED" | "ACTIVE_IN_SESSION" | "SCHEDULED";
+  date: string;
+}
+
+interface AuditLogEntry {
+  id: string;
+  category: "Students" | "Experts" | "Attendance" | "Certifications" | "System";
+  subcategory: string;
+  action: "Create" | "Update" | "Perform" | "Archive";
+  modifiedBy: {
+    name: string;
+    email: string;
+    avatar: string;
+  };
+  dateOfChange: string;
+  sourceText: string;
+  sourceUrl?: string;
+}
+
+// Initial Mock Seed Data
+const INITIAL_STUDENTS: StudentMember[] = [
   {
-    id: "DOS-B3-001",
+    id: "a0000001",
+    dosId: "DOS-B3-001",
     fullName: "Arunachalam Sundaram",
     email: "arun@student.dosclub.org",
-    institution: "Anna University, Chennai",
-    githubHandle: "arun-systems",
-    batch: "Batch 3",
-    region: "Chennai / Tamil Nadu",
+    institution: "Anna University Campus Hub",
+    department: "Computer Technology",
+    batch: "Batch 3 - 2026",
     completedWorkshops: 14,
+    status: "ACTIVE",
   },
   {
-    id: "DOS-B3-002",
+    id: "a0000002",
+    dosId: "DOS-B3-002",
     fullName: "Kavitha Raman",
     email: "kavitha@student.dosclub.org",
-    institution: "PSG College of Technology, Coimbatore",
-    githubHandle: "kavitha-k",
-    batch: "Batch 3",
-    region: "Coimbatore / Tamil Nadu",
+    institution: "PSG Tech Innovation Hub",
+    department: "Information Technology",
+    batch: "Batch 3 - 2026",
     completedWorkshops: 14,
+    status: "ACTIVE",
   },
   {
-    id: "DOS-B3-003",
+    id: "a0000003",
+    dosId: "DOS-B3-003",
     fullName: "Dinesh Kumar V.",
     email: "dinesh@student.dosclub.org",
-    institution: "NIT Trichy",
-    githubHandle: "dinesh-v",
-    batch: "Batch 3",
-    region: "Trichy / Tamil Nadu",
+    institution: "NIT Trichy Center",
+    department: "ECE Systems",
+    batch: "Batch 3 - 2026",
     completedWorkshops: 13,
+    status: "ACTIVE",
   },
   {
-    id: "DOS-B3-004",
+    id: "a0000004",
+    dosId: "DOS-B3-004",
     fullName: "Meera Subramanian",
     email: "meera@student.dosclub.org",
     institution: "IIT Madras Research Park",
-    githubHandle: "meera-sub",
-    batch: "Batch 3",
-    region: "Chennai / Tamil Nadu",
+    department: "Distributed Systems",
+    batch: "Batch 3 - 2026",
     completedWorkshops: 14,
+    status: "DEFENSE_READY",
   },
   {
-    id: "DOS-B3-005",
+    id: "a0000005",
+    dosId: "DOS-B3-005",
     fullName: "Siddharth Rajan",
     email: "siddharth@student.dosclub.org",
-    institution: "Thiagarajar College of Engineering, Madurai",
-    githubHandle: "sid-rajan",
-    batch: "Batch 3",
-    region: "Madurai / Tamil Nadu",
+    institution: "Anna University Campus Hub",
+    department: "Computer Applications",
+    batch: "Batch 3 - 2026",
     completedWorkshops: 12,
+    status: "ACTIVE",
   },
 ];
 
-type IngestionTab = "form" | "csv";
+const INITIAL_EXPERTS: ExpertMentor[] = [
+  {
+    id: "exp-001",
+    fullName: "Priya Sundaram",
+    email: "priya.lead@descience.org",
+    organization: "DeScience Systems Lab Singapore",
+    domainSpecialties: ["Distributed Systems", "Fault Tolerance", "Microservices"],
+    assignedWorkshops: ["WS-14", "WS-15", "WS-16"],
+    status: "ACTIVE",
+    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "exp-002",
+    fullName: "Dr. Vikram Sethupathi",
+    email: "vikram@kernelresearch.in",
+    organization: "Indian Institute of Science (IISc)",
+    domainSpecialties: ["Linux Kernel", "Memory Management", "eBPF Tracing"],
+    assignedWorkshops: ["WS-01", "WS-02", "WS-03", "WS-20"],
+    status: "ACTIVE",
+    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "exp-003",
+    fullName: "Anandhakrishnan R.",
+    email: "anand@openprotocols.sg",
+    organization: "Open Protocols Foundation",
+    domainSpecialties: ["Database Internals", "LSM-Trees", "Raft Consensus"],
+    assignedWorkshops: ["WS-08", "WS-09", "WS-11"],
+    status: "ACTIVE",
+    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&auto=format&fit=crop&q=80",
+  },
+  {
+    id: "exp-004",
+    fullName: "Shalini Murugan",
+    email: "shalini@appliedcrypto.org",
+    organization: "Applied Cryptography Labs",
+    domainSpecialties: ["Zero-Knowledge Proofs", "Elliptic Curves", "Security"],
+    assignedWorkshops: ["WS-18", "WS-19"],
+    status: "STANDBY",
+    avatar: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=100&auto=format&fit=crop&q=80",
+  },
+];
 
-export default function AdminPage() {
-  const [members, setMembers] = useState<Member[]>(INITIAL_MEMBERS);
-  const [activeTab, setActiveTab] = useState<IngestionTab>("form");
+const INITIAL_INSTITUTIONS: PartnerInstitution[] = [
+  {
+    id: "inst-001",
+    code: "AU-DOS-01",
+    name: "Anna University & DOS Club Hub",
+    city: "Chennai",
+    state: "Tamil Nadu",
+    lat: 13.011,
+    lng: 80.2354,
+    geofenceRadiusMeters: 200,
+    studentCount: 42,
+    status: "ACTIVE",
+  },
+  {
+    id: "inst-002",
+    code: "PSG-DOS-02",
+    name: "PSG College of Technology Hub",
+    city: "Coimbatore",
+    state: "Tamil Nadu",
+    lat: 11.0247,
+    lng: 77.0028,
+    geofenceRadiusMeters: 250,
+    studentCount: 35,
+    status: "ACTIVE",
+  },
+  {
+    id: "inst-003",
+    code: "NITT-DOS-03",
+    name: "NIT Trichy Engineering Hub",
+    city: "Tiruchirappalli",
+    state: "Tamil Nadu",
+    lat: 10.7589,
+    lng: 78.8132,
+    geofenceRadiusMeters: 300,
+    studentCount: 28,
+    status: "ACTIVE",
+  },
+];
+
+const INITIAL_WORKSHOPS: WorkshopItem[] = WORKSHOP_TOPICS_27.map((topic, i) => {
+  const num = i + 1;
+  const code = `WS-${String(num).padStart(2, "0")}`;
+  const status: "COMPLETED" | "ACTIVE_IN_SESSION" | "SCHEDULED" =
+    num < 14 ? "COMPLETED" : num === 14 ? "ACTIVE_IN_SESSION" : "SCHEDULED";
+  const expertName = num >= 14 && num <= 16 ? "Priya Sundaram" : num <= 3 ? "Dr. Vikram Sethupathi" : "Anandhakrishnan R.";
+
+  return {
+    code,
+    title: topic,
+    focusArea: num <= 6 ? "Core Systems & I/O" : num <= 13 ? "Databases & Storage" : num <= 17 ? "Distributed Systems" : "Specialized War Room",
+    expertName,
+    mode: num % 2 === 0 ? "HYBRID" : "IN_PERSON",
+    testPassThreshold: 20,
+    status,
+    date: `2026-${String(Math.floor(i / 4) + 3).padStart(2, "0")}-${String((i % 4) * 7 + 10).padStart(2, "0")}`,
+  };
+});
+
+const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
+  {
+    id: "aud-001",
+    category: "Attendance",
+    subcategory: "Geofence Check-In",
+    action: "Perform",
+    modifiedBy: {
+      name: "Arunachalam Sundaram",
+      email: "arun@student.dosclub.org",
+      avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=100&auto=format&fit=crop&q=80",
+    },
+    dateOfChange: "14 Sep 2026 08:25 AM IST",
+    sourceText: "WS-14 Beacon Check-in (AU-DOS-01)",
+    sourceUrl: "/checkin",
+  },
+  {
+    id: "aud-002",
+    category: "Experts",
+    subcategory: "Workshop Assignment",
+    action: "Update",
+    modifiedBy: {
+      name: "Karthikeyan P.",
+      email: "admin@dosclub.org",
+      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
+    },
+    dateOfChange: "14 Sep 2026 07:15 AM IST",
+    sourceText: "Assigned Priya Sundaram to WS-14",
+    sourceUrl: "/trainer",
+  },
+  {
+    id: "aud-003",
+    category: "Certifications",
+    subcategory: "SHA-256 Ledger Stamp",
+    action: "Create",
+    modifiedBy: {
+      name: "System Worker Daemon",
+      email: "daemon@dosclub.org",
+      avatar: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=100&auto=format&fit=crop&q=80",
+    },
+    dateOfChange: "13 Sep 2026 09:40 PM IST",
+    sourceText: "Cert Hash 62c81542f5c668acd536e379182",
+    sourceUrl: "/ledger/DOS-CERT-2026-001",
+  },
+  {
+    id: "aud-004",
+    category: "Students",
+    subcategory: "Profile Creation",
+    action: "Create",
+    modifiedBy: {
+      name: "Dr. K. Ramanathan",
+      email: "coordinator@annauniv.edu",
+      avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&auto=format&fit=crop&q=80",
+    },
+    dateOfChange: "12 Sep 2026 11:20 AM IST",
+    sourceText: "Enrolled DOS-B3-005 into Anna Univ Hub",
+    sourceUrl: "/college",
+  },
+];
+
+function AdminHubContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const activeTab = searchParams.get("tab") || "students";
+
+  // State
+  const [students, setStudents] = useState<StudentMember[]>(INITIAL_STUDENTS);
+  const [experts, setExperts] = useState<ExpertMentor[]>(INITIAL_EXPERTS);
+  const [institutions, setInstitutions] = useState<PartnerInstitution[]>(INITIAL_INSTITUTIONS);
+  const [workshops, setWorkshops] = useState<WorkshopItem[]>(INITIAL_WORKSHOPS);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
+
+  // Search & Filter
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedBatch, setSelectedBatch] = useState<string>("ALL");
-  const [isLiveDb, setIsLiveDb] = useState(false);
+  const [auditCategoryFilter, setAuditCategoryFilter] = useState("All");
 
-  useEffect(() => {
-    getStudents().then(({ students, isLiveDb: live }) => {
-      setIsLiveDb(live);
-      if (live && students.length > 0) {
-        const mapped: Member[] = students.map((s, idx) => ({
-          id: s.dos_id,
-          fullName: s.full_name,
-          email: s.email,
-          institution: s.department || "Anna University Hub",
-          githubHandle: s.email.split("@")[0],
-          batch: "Batch 3",
-          region: "Tamil Nadu",
-          completedWorkshops: Math.max(10, 14 - idx),
-        }));
-        setMembers(mapped);
-      }
-    });
-  }, []);
+  // Modals
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
+  const [isAddExpertOpen, setIsAddExpertOpen] = useState(false);
+  const [isAddInstitutionOpen, setIsAddInstitutionOpen] = useState(false);
+  const [isAddWorkshopOpen, setIsAddWorkshopOpen] = useState(false);
 
-  // Form State
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [dosId, setDosId] = useState("");
-  const [institution, setInstitution] = useState("");
-  const [githubHandle, setGithubHandle] = useState("");
-  const [batch, setBatch] = useState("Batch 3");
-  const [region, setRegion] = useState("Chennai / Tamil Nadu");
-  const [formFeedback, setFormFeedback] = useState<string | null>(null);
+  // New Student Form State
+  const [newStudentName, setNewStudentName] = useState("");
+  const [newStudentEmail, setNewStudentEmail] = useState("");
+  const [newStudentDept, setNewStudentDept] = useState("Computer Science & Engineering");
+  const [newStudentInst, setNewStudentInst] = useState("Anna University Campus Hub");
 
-  // CSV State
-  const [csvText, setCsvText] = useState("");
-  const [csvFeedback, setCsvFeedback] = useState<string | null>(null);
+  // New Expert Form State
+  const [newExpertName, setNewExpertName] = useState("");
+  const [newExpertEmail, setNewExpertEmail] = useState("");
+  const [newExpertOrg, setNewExpertOrg] = useState("");
+  const [newExpertSpecialty, setNewExpertSpecialty] = useState("");
 
-  // Handle Form Submission
-  const handleAddMember = async (e: React.FormEvent) => {
+  // New Institution Form State
+  const [newInstCode, setNewInstCode] = useState("");
+  const [newInstName, setNewInstName] = useState("");
+  const [newInstCity, setNewInstCity] = useState("");
+  const [newInstRadius, setNewInstRadius] = useState(200);
+
+  // New Workshop Form State
+  const [newWsCode, setNewWsCode] = useState("");
+  const [newWsTitle, setNewWsTitle] = useState("");
+  const [newWsFocus, setNewWsFocus] = useState("");
+  const [newWsExpert, setNewWsExpert] = useState("Priya Sundaram");
+
+  // Notification Toast
+  const [toast, setToast] = useState<string | null>(null);
+  const triggerToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  // Handlers
+  const handleCreateStudent = (e: React.FormEvent) => {
     e.preventDefault();
-    setFormFeedback(null);
+    if (!newStudentName.trim() || !newStudentEmail.trim()) return;
 
-    if (!fullName.trim() || !email.trim() || !institution.trim()) {
-      setFormFeedback("ERR_MISSING_REQUIRED_FIELDS // FULL NAME, EMAIL, AND INSTITUTION REQUIRED");
-      return;
-    }
-
-    const generatedId = dosId.trim() || `DOS-B3-${String(members.length + 1).padStart(3, "0")}`;
-
-    const newMember: Member = {
-      id: generatedId.toUpperCase(),
-      fullName: fullName.trim(),
-      email: email.trim().toLowerCase(),
-      institution: institution.trim(),
-      githubHandle: githubHandle.trim() || "N/A",
-      batch: batch.trim() || "Batch 3",
-      region: region.trim() || "Tamil Nadu",
+    const nextNumber = String(students.length + 1).padStart(3, "0");
+    const created: StudentMember = {
+      id: `a00000${nextNumber}`,
+      dosId: `DOS-B3-${nextNumber}`,
+      fullName: newStudentName.trim(),
+      email: newStudentEmail.trim(),
+      institution: newStudentInst,
+      department: newStudentDept,
+      batch: "Batch 3 - 2026",
       completedWorkshops: 0,
+      status: "ACTIVE",
     };
 
-    setMembers([newMember, ...members]);
-    setFormFeedback(`SUCCESS // MEMBER ${newMember.id} ENROLLED IN BATCH`);
-    setFullName("");
-    setEmail("");
-    setDosId("");
-    setInstitution("");
-    setGithubHandle("");
-
-    // Persist to Supabase Database
-    try {
-      const res = await enrollStudent({
-        dos_id: newMember.id,
-        group_id: SEED_GROUP_ID,
-        full_name: newMember.fullName,
-        email: newMember.email,
-        department: newMember.institution,
-        course: "Systems Engineering",
-        year_of_study: 3,
-        is_archived: false,
-      });
-      if (res.isLiveDb) {
-        setIsLiveDb(true);
-      }
-    } catch (err) {
-      console.warn("Database persist notice:", err);
-    }
+    setStudents([created, ...students]);
+    setIsAddStudentOpen(false);
+    setNewStudentName("");
+    setNewStudentEmail("");
+    triggerToast(`SUCCESS // Enrolled ${created.fullName} (${created.dosId})`);
   };
 
-  // Handle CSV Ingestion
-  const handleCsvImport = () => {
-    setCsvFeedback(null);
-    if (!csvText.trim()) {
-      setCsvFeedback("ERR_EMPTY_PAYLOAD // PASTE CSV OR JSON DATA FIRST");
-      return;
-    }
+  const handleCreateExpert = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newExpertName.trim() || !newExpertEmail.trim()) return;
 
-    try {
-      const lines = csvText.trim().split("\n");
-      const parsedMembers: Member[] = [];
+    const created: ExpertMentor = {
+      id: `exp-${String(experts.length + 1).padStart(3, "0")}`,
+      fullName: newExpertName.trim(),
+      email: newExpertEmail.trim(),
+      organization: newExpertOrg.trim() || "Independent Industry Expert",
+      domainSpecialties: newExpertSpecialty.split(",").map((s) => s.trim()).filter(Boolean),
+      assignedWorkshops: ["WS-14"],
+      status: "ACTIVE",
+      avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+    };
 
-      lines.forEach((line, index) => {
-        // Skip header line if detected
-        if (index === 0 && line.toLowerCase().includes("fullname")) return;
-
-        const parts = line.split(",").map((p) => p.trim());
-        if (parts.length >= 3) {
-          const [name, memberEmail, inst, git, bch] = parts;
-          parsedMembers.push({
-            id: `DOS-B3-${String(members.length + parsedMembers.length + 1).padStart(3, "0")}`,
-            fullName: name,
-            email: memberEmail,
-            institution: inst || "Unspecified Institution",
-            githubHandle: git || "N/A",
-            batch: bch || "Batch 3",
-            region: "Tamil Nadu",
-            completedWorkshops: 0,
-          });
-        }
-      });
-
-      if (parsedMembers.length === 0) {
-        setCsvFeedback("ERR_PARSE_FAILED // NO VALID ROWS FOUND IN CSV FORMAT");
-        return;
-      }
-
-      setMembers([...parsedMembers, ...members]);
-      setCsvFeedback(`SUCCESS // BATCH INGESTED: ${parsedMembers.length} MEMBERS ENROLLED`);
-      setCsvText("");
-    } catch {
-      setCsvFeedback("ERR_SYNTAX // INVALID CSV / TEXT FORMAT");
-    }
+    setExperts([created, ...experts]);
+    setIsAddExpertOpen(false);
+    setNewExpertName("");
+    setNewExpertEmail("");
+    setNewExpertOrg("");
+    setNewExpertSpecialty("");
+    triggerToast(`SUCCESS // Registered Expert Mentor: ${created.fullName}`);
   };
 
-  // Filter Members
-  const filteredMembers = members.filter((m) => {
-    const matchesSearch =
-      m.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.institution.toLowerCase().includes(searchQuery.toLowerCase());
+  const handleCreateInstitution = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newInstName.trim() || !newInstCode.trim()) return;
 
-    const matchesBatch = selectedBatch === "ALL" || m.batch === selectedBatch;
-    return matchesSearch && matchesBatch;
-  });
+    const created: PartnerInstitution = {
+      id: `inst-${String(institutions.length + 1).padStart(3, "0")}`,
+      code: newInstCode.trim().toUpperCase(),
+      name: newInstName.trim(),
+      city: newInstCity.trim() || "Tamil Nadu",
+      state: "Tamil Nadu",
+      lat: 13.011,
+      lng: 80.2354,
+      geofenceRadiusMeters: Number(newInstRadius) || 200,
+      studentCount: 0,
+      status: "ACTIVE",
+    };
+
+    setInstitutions([...institutions, created]);
+    setIsAddInstitutionOpen(false);
+    setNewInstCode("");
+    setNewInstName("");
+    setNewInstCity("");
+    triggerToast(`SUCCESS // Onboarded Campus Hub: ${created.name}`);
+  };
+
+  const handleCreateWorkshop = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newWsTitle.trim()) return;
+
+    const code = newWsCode.trim().toUpperCase() || `WS-${String(workshops.length + 1).padStart(2, "0")}`;
+    const created: WorkshopItem = {
+      code,
+      title: newWsTitle.trim(),
+      focusArea: newWsFocus.trim() || "Applied Systems",
+      expertName: newWsExpert,
+      mode: "IN_PERSON",
+      testPassThreshold: 20,
+      status: "SCHEDULED",
+      date: new Date().toISOString().slice(0, 10),
+    };
+
+    setWorkshops([...workshops, created]);
+    setIsAddWorkshopOpen(false);
+    setNewWsCode("");
+    setNewWsTitle("");
+    setNewWsFocus("");
+    triggerToast(`SUCCESS // Curriculum Updated: Added ${created.code}`);
+  };
+
+  // Sidebar Menu Groups (HubSpot reference navigation)
+  const sidebarGroups: SidebarGroup[] = [
+    {
+      title: "Data Management",
+      items: [
+        { id: "students", label: "Students", icon: "👥", count: students.length },
+        { id: "experts", label: "Experts", icon: "🎓", count: experts.length, badge: "NEW" },
+        { id: "institutions", label: "Institutions", icon: "🏛️", count: institutions.length },
+      ],
+    },
+    {
+      title: "Curriculum & Execution",
+      items: [
+        { id: "workshops", label: "Workshops (27)", icon: "⚡", count: workshops.length },
+      ],
+    },
+    {
+      title: "Governance & Tools",
+      items: [
+        { id: "audit", label: "Audit Logs", icon: "📋", count: auditLogs.length },
+        { id: "settings", label: "Settings", icon: "⚙️" },
+      ],
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
-      {/* Top Header */}
-      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2.5 font-mono text-xs text-neutral-600 hover:text-neutral-900 transition-colors"
-          >
-            <span className="text-neutral-400">&larr;</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
-            <span className="tracking-wider uppercase font-medium">DOS CLUB // TALENT_OS</span>
-          </Link>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
+      <AppHeader />
 
-          <div className="flex items-center gap-3 font-mono text-xs">
-            <Link href="/trainer" className="text-neutral-600 hover:text-neutral-900 hidden sm:inline-block">
-              Trainer Portal
-            </Link>
-            <Link href="/college" className="text-neutral-600 hover:text-neutral-900 hidden md:inline-block">
-              College Portal
-            </Link>
-            <Link
-              href="/admin/settings"
-              className="text-neutral-700 hover:text-neutral-900 font-semibold border border-neutral-300 bg-neutral-50 px-2.5 py-1 rounded hover:bg-neutral-100 transition-colors inline-flex items-center gap-1.5"
-            >
-              <span>⚙️</span>
-              <span>Settings</span>
-            </Link>
-            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden lg:inline-block">
-              CLEARANCE: ROOT_ADMIN • DB: {isLiveDb ? "SUPABASE_LIVE" : "STANDBY"}
-            </span>
-            <SessionBar />
-          </div>
-        </div>
-      </header>
+      {/* Main Workspace Layout with HubSpot-style Left Sidebar */}
+      <div className="flex-1 flex max-w-7xl w-full mx-auto">
+        <SidebarNav
+          groups={sidebarGroups}
+          activeId={activeTab}
+          onSelect={(id) => {
+            if (id === "settings") {
+              router.push("/admin/settings");
+            } else {
+              router.push(`/admin?tab=${id}`);
+            }
+          }}
+        />
 
-      {/* Main Admin Console */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 flex flex-col gap-10">
-        {/* Console Header */}
-        <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-200 pb-8">
-          <div className="flex flex-col gap-3">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-neutral-200 bg-neutral-100 font-mono text-[10px] sm:text-xs text-neutral-700 tracking-widest uppercase self-start font-medium">
-              LEADERSHIP AUDIT INTERFACE // ROOT ACCESS
-            </div>
-            <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-neutral-950">
-              Admin & Batch Console
-            </h1>
-            <p className="font-mono text-xs sm:text-sm text-neutral-600">
-              Manage enrolled members, perform batch roster ingestion, and audit individual student records across all 27 workshops.
-            </p>
-          </div>
-
-          {/* Quick Metrics & Session Auditor Action */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full md:w-auto">
-            <div className="grid grid-cols-3 gap-3 border border-neutral-200 bg-white p-4 font-mono text-xs shadow-2xs">
-              <div className="flex flex-col">
-                <span className="text-neutral-500 text-[10px]">TOTAL MEMBERS</span>
-                <span className="text-base font-semibold text-neutral-900">{members.length}</span>
-              </div>
-              <div className="flex flex-col border-l border-neutral-200 pl-3">
-                <span className="text-neutral-500 text-[10px]">WORKSHOPS</span>
-                <span className="text-base font-semibold text-neutral-900">27</span>
-              </div>
-              <div className="flex flex-col border-l border-neutral-200 pl-3">
-                <span className="text-neutral-500 text-[10px]">BATCH</span>
-                <span className="text-base font-semibold text-emerald-700">ACTIVE</span>
-              </div>
-            </div>
-
-            <Link
-              href="/admin/sessions"
-              className="inline-flex items-center justify-center gap-2 px-4 py-3 bg-neutral-900 text-white font-mono text-xs uppercase tracking-wider font-semibold rounded hover:bg-neutral-800 transition-colors shrink-0 shadow-xs"
-            >
-              <span>Live Session Auditor</span>
-              <span className="text-neutral-400">&rarr;</span>
-            </Link>
-          </div>
-        </section>
-
-        {/* Ingestion Panel: Form & CSV Tabs */}
-        <section className="border border-neutral-200 bg-white p-6 sm:p-8 shadow-2xs">
-          <div className="flex justify-between items-center border-b border-neutral-200 pb-4 mb-6">
-            <div className="flex items-center gap-3">
-              <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-900 font-semibold">
-                ENROLL NEW MEMBERS
-              </h2>
-              <span className="text-neutral-300">|</span>
-              <div className="flex gap-2 font-mono text-xs">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("form")}
-                  className={`px-3 py-1 rounded transition-colors ${
-                    activeTab === "form"
-                      ? "bg-neutral-900 text-white font-medium"
-                      : "text-neutral-500 hover:text-neutral-900 bg-neutral-100"
-                  }`}
-                >
-                  INTERACTIVE FORM
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("csv")}
-                  className={`px-3 py-1 rounded transition-colors ${
-                    activeTab === "csv"
-                      ? "bg-neutral-900 text-white font-medium"
-                      : "text-neutral-500 hover:text-neutral-900 bg-neutral-100"
-                  }`}
-                >
-                  CSV / TEXT IMPORT
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Form Mode */}
-          {activeTab === "form" ? (
-            <form onSubmit={handleAddMember} className="flex flex-col gap-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-[11px] text-neutral-700 uppercase font-medium">
-                    FULL NAME *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Anandha Krishnan"
-                    className="border border-neutral-300 bg-white px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none focus:border-neutral-700 shadow-2xs"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-[11px] text-neutral-700 uppercase font-medium">
-                    STUDENT EMAIL *
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="student@dosclub.org"
-                    className="border border-neutral-300 bg-white px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none focus:border-neutral-700 shadow-2xs"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-[11px] text-neutral-700 uppercase font-medium">
-                    COLLEGE / INSTITUTION *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={institution}
-                    onChange={(e) => setInstitution(e.target.value)}
-                    placeholder="e.g. Anna University, Chennai"
-                    className="border border-neutral-300 bg-white px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none focus:border-neutral-700 shadow-2xs"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-[11px] text-neutral-700 uppercase font-medium">
-                    MEMBER ID (DOS_ID)
-                  </label>
-                  <input
-                    type="text"
-                    value={dosId}
-                    onChange={(e) => setDosId(e.target.value)}
-                    placeholder="e.g. DOS-B3-050 (Auto if blank)"
-                    className="border border-neutral-300 bg-white px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none focus:border-neutral-700 shadow-2xs uppercase"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-[11px] text-neutral-700 uppercase font-medium">
-                    GITHUB HANDLE
-                  </label>
-                  <input
-                    type="text"
-                    value={githubHandle}
-                    onChange={(e) => setGithubHandle(e.target.value)}
-                    placeholder="e.g. anand-dev"
-                    className="border border-neutral-300 bg-white px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none focus:border-neutral-700 shadow-2xs"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="font-mono text-[11px] text-neutral-700 uppercase font-medium">
-                    BATCH
-                  </label>
-                  <input
-                    type="text"
-                    value={batch}
-                    onChange={(e) => setBatch(e.target.value)}
-                    placeholder="Batch 3"
-                    className="border border-neutral-300 bg-white px-3 py-2 text-xs font-mono text-neutral-900 focus:outline-none focus:border-neutral-700 shadow-2xs"
-                  />
-                </div>
-              </div>
-
-              {formFeedback && (
-                <p
-                  className={`font-mono text-xs tracking-wider ${
-                    formFeedback.startsWith("SUCCESS") ? "text-emerald-700" : "text-amber-800"
-                  }`}
-                >
-                  {formFeedback}
-                </p>
-              )}
-
-              <button
-                type="submit"
-                className="self-start px-5 py-2.5 bg-neutral-900 text-white hover:bg-neutral-800 font-mono text-xs uppercase tracking-wider font-medium transition-colors shadow-2xs"
-              >
-                + ENROLL MEMBER
-              </button>
-            </form>
-          ) : (
-            /* CSV Mode */
-            <div className="flex flex-col gap-4">
-              <p className="text-xs text-neutral-600 font-mono">
-                Paste comma-separated rows below. Format: <code className="bg-neutral-100 px-1 py-0.5 text-neutral-800 font-semibold">FullName, Email, Institution, GitHubHandle, Batch</code>
-              </p>
-              <textarea
-                rows={5}
-                value={csvText}
-                onChange={(e) => setCsvText(e.target.value)}
-                placeholder="Naveen Raj, naveen@student.dosclub.org, SSN College, naveen-raj, Batch 3&#10;Priya Dharshini, priya@student.dosclub.org, CIT Coimbatore, priya-d, Batch 3"
-                className="w-full border border-neutral-300 bg-white p-3 font-mono text-xs text-neutral-900 focus:outline-none focus:border-neutral-700 shadow-2xs"
-              />
-
-              {csvFeedback && (
-                <p
-                  className={`font-mono text-xs tracking-wider ${
-                    csvFeedback.startsWith("SUCCESS") ? "text-emerald-700" : "text-amber-800"
-                  }`}
-                >
-                  {csvFeedback}
-                </p>
-              )}
-
-              <button
-                type="button"
-                onClick={handleCsvImport}
-                className="self-start px-5 py-2.5 bg-neutral-900 text-white hover:bg-neutral-800 font-mono text-xs uppercase tracking-wider font-medium transition-colors shadow-2xs"
-              >
-                PARSE & IMPORT ROSTER
+        {/* Right Main Content Area */}
+        <main className="flex-1 p-6 sm:p-8 flex flex-col gap-6 overflow-x-hidden">
+          {toast && (
+            <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium rounded-lg shadow-sm flex items-center justify-between">
+              <span>{toast}</span>
+              <button onClick={() => setToast(null)} className="text-emerald-700 font-bold hover:text-emerald-950">
+                ✕
               </button>
             </div>
           )}
-        </section>
 
-        {/* Member Directory & Search */}
-        <section className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-            <div className="flex items-center gap-2">
-              <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-700 font-semibold">
-                ACTIVE BATCH ROSTER ({filteredMembers.length} MEMBERS)
-              </h2>
-            </div>
-
-            {/* Search & Filter */}
-            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by name, email, DOS_ID..."
-                className="border border-neutral-300 bg-white px-3 py-1.5 text-xs font-mono text-neutral-900 focus:outline-none focus:border-neutral-600 shadow-2xs w-full sm:w-64"
-              />
-              <select
-                value={selectedBatch}
-                onChange={(e) => setSelectedBatch(e.target.value)}
-                className="border border-neutral-300 bg-white px-3 py-1.5 text-xs font-mono text-neutral-700 focus:outline-none shadow-2xs"
-              >
-                <option value="ALL">ALL BATCHES</option>
-                <option value="Batch 3">Batch 3</option>
-              </select>
-            </div>
-          </div>
-
-          {/* Members Table */}
-          <div className="border border-neutral-200 bg-white divide-y divide-neutral-200 shadow-2xs overflow-x-auto">
-            <div className="p-3 bg-neutral-50/70 grid grid-cols-12 gap-2 font-mono text-[11px] text-neutral-500 font-medium">
-              <div className="col-span-3">MEMBER</div>
-              <div className="col-span-2">ID</div>
-              <div className="col-span-3">INSTITUTION</div>
-              <div className="col-span-2">GITHUB</div>
-              <div className="col-span-1 text-center">WORKSHOPS</div>
-              <div className="col-span-1 text-right">ACTION</div>
-            </div>
-
-            {filteredMembers.map((m) => (
-              <div
-                key={m.id}
-                className="p-3.5 grid grid-cols-12 gap-2 items-center text-xs hover:bg-neutral-50/80 transition-colors font-mono"
-              >
-                <div className="col-span-3 flex flex-col">
-                  <span className="font-medium text-neutral-950 font-sans">{m.fullName}</span>
-                  <span className="text-[11px] text-neutral-500">{m.email}</span>
+          {/* ========================================================================= */}
+          {/* TAB 1: MANAGE STUDENTS                                                    */}
+          {/* ========================================================================= */}
+          {activeTab === "students" && (
+            <div className="flex flex-col gap-6">
+              {/* Header & Actions */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    Student Roster Management
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Manage enrolled student members, inspect longitudinal growth records, and monitor progress across Batch 3.
+                  </p>
                 </div>
-                <div className="col-span-2 text-neutral-700 font-medium">{m.id}</div>
-                <div className="col-span-3 text-neutral-600 text-[11px] truncate">{m.institution}</div>
-                <div className="col-span-2 text-neutral-600 text-[11px]">{m.githubHandle}</div>
-                <div className="col-span-1 text-center font-semibold text-emerald-700">
-                  {m.completedWorkshops} / 27
-                </div>
-                <div className="col-span-1 text-right">
-                  <Link
-                    href={`/record/${encodeURIComponent(m.id)}`}
-                    className="text-neutral-900 hover:text-black font-semibold text-[11px] underline"
+
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={() => setIsAddStudentOpen(true)}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5"
                   >
-                    Record &rarr;
-                  </Link>
+                    <span>+ Enroll Student</span>
+                  </button>
                 </div>
               </div>
-            ))}
 
-            {filteredMembers.length === 0 && (
-              <div className="p-8 text-center text-neutral-500 font-mono text-xs">
-                NO MEMBERS MATCHED YOUR SEARCH QUERY
+              {/* Search & Filter Bar */}
+              <div className="flex flex-col sm:flex-row gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-xs">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by student name, email, or DOS ID..."
+                  className="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800"
+                />
+                <select className="border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-700 bg-white">
+                  <option>Batch 3 - 2026 (Active)</option>
+                  <option>All Cohorts</option>
+                </select>
               </div>
-            )}
-          </div>
-        </section>
-      </main>
 
-      {/* Footer */}
-      <footer className="border-t border-neutral-200 bg-white py-8 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto text-center font-mono text-[11px] sm:text-xs text-neutral-500 tracking-wider">
-          DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1
+              {/* Students Table */}
+              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="py-3 px-4">Member Name</th>
+                        <th className="py-3 px-4">DOS ID</th>
+                        <th className="py-3 px-4">Institution / Department</th>
+                        <th className="py-3 px-4 text-center">Workshops Completed</th>
+                        <th className="py-3 px-4 text-center">Lifecycle Status</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {students
+                        .filter(
+                          (s) =>
+                            s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                            s.dosId.toLowerCase().includes(searchQuery.toLowerCase())
+                        )
+                        .map((student) => (
+                          <tr key={student.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs">
+                                  {student.fullName.charAt(0)}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="font-semibold text-slate-900">{student.fullName}</span>
+                                  <span className="text-[11px] text-slate-400">{student.email}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 font-mono font-medium text-slate-700">
+                              {student.dosId}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex flex-col">
+                                <span className="text-slate-800 font-medium">{student.institution}</span>
+                                <span className="text-[11px] text-slate-400">{student.department}</span>
+                              </div>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className="inline-flex items-center gap-1 font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                                {student.completedWorkshops} / 27
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  student.status === "DEFENSE_READY"
+                                    ? "bg-purple-50 text-purple-700 border border-purple-200"
+                                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                }`}
+                              >
+                                {student.status}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <Link
+                                href={`/record/${encodeURIComponent(student.dosId)}`}
+                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold transition-colors"
+                              >
+                                View 360 &rarr;
+                              </Link>
+                            </td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 2: MANAGE EXPERTS (Renamed from Trainers)                             */}
+          {/* ========================================================================= */}
+          {activeTab === "experts" && (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-blue-50 text-blue-800 font-medium text-[10px] uppercase tracking-wider mb-1.5">
+                    TECHNICAL MENTORS & LEAD FACULTY
+                  </div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    Technical Experts Management
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Manage expert mentors who lead live workshops, verify student evidence, and conduct production code defenses.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsAddExpertOpen(true)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5"
+                >
+                  <span>+ Add New Expert</span>
+                </button>
+              </div>
+
+              {/* Experts Grid Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {experts.map((exp) => (
+                  <div key={exp.id} className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs flex flex-col justify-between gap-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-center gap-3.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={exp.avatar}
+                          alt={exp.fullName}
+                          className="h-12 w-12 rounded-full object-cover border border-slate-200 shadow-xs"
+                        />
+                        <div className="flex flex-col">
+                          <h3 className="font-bold text-sm text-slate-900">{exp.fullName}</h3>
+                          <span className="text-xs text-slate-500">{exp.organization}</span>
+                          <span className="text-[11px] text-slate-400 font-mono mt-0.5">{exp.email}</span>
+                        </div>
+                      </div>
+
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        {exp.status}
+                      </span>
+                    </div>
+
+                    {/* Domain Specialties */}
+                    <div className="flex flex-col gap-1.5 border-t border-slate-100 pt-3">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        Domain Specialties:
+                      </span>
+                      <div className="flex flex-wrap gap-1.5">
+                        {exp.domainSpecialties.map((spec, i) => (
+                          <span
+                            key={i}
+                            className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium"
+                          >
+                            {spec}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Assigned Workshops */}
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+                      <div className="flex items-center gap-1.5 text-slate-600">
+                        <span className="font-semibold text-slate-800">Assigned:</span>
+                        <span className="font-mono text-xs font-bold text-blue-600">
+                          {exp.assignedWorkshops.join(", ")}
+                        </span>
+                      </div>
+
+                      <Link
+                        href="/trainer"
+                        className="text-xs font-semibold text-slate-800 hover:text-blue-600 transition-colors"
+                      >
+                        Launch Cockpit &rarr;
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 3: MANAGE INSTITUTIONS                                                */}
+          {/* ========================================================================= */}
+          {activeTab === "institutions" && (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    Partner Institutions & Campus Hubs
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Manage college campuses, configure venue GPS coordinates for geofence verification, and monitor cohort enrollment.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsAddInstitutionOpen(true)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5"
+                >
+                  <span>+ Add Partner Campus</span>
+                </button>
+              </div>
+
+              {/* Institutions List Table */}
+              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-3 px-4">Code</th>
+                      <th className="py-3 px-4">Institution Name</th>
+                      <th className="py-3 px-4">Region / City</th>
+                      <th className="py-3 px-4">GPS Geofence (Radius)</th>
+                      <th className="py-3 px-4 text-center">Enrolled Members</th>
+                      <th className="py-3 px-4 text-right">Hub Portal</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {institutions.map((inst) => (
+                      <tr key={inst.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="py-3 px-4 font-mono font-bold text-slate-800">
+                          {inst.code}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span className="font-semibold text-slate-900">{inst.name}</span>
+                        </td>
+                        <td className="py-3 px-4 text-slate-600">
+                          {inst.city}, {inst.state}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
+                          {inst.lat}° N, {inst.lng}° E ({inst.geofenceRadiusMeters}m limit)
+                        </td>
+                        <td className="py-3 px-4 text-center">
+                          <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
+                            {inst.studentCount} Students
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <Link
+                            href="/college"
+                            className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
+                          >
+                            Coordinator View &rarr;
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 4: MANAGE WORKSHOPS (Curriculum 27)                                    */}
+          {/* ========================================================================= */}
+          {activeTab === "workshops" && (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    27-Workshop Curriculum Registry
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Manage session definitions, scheduled execution dates, test pass requirements, and assigned expert mentors.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsAddWorkshopOpen(true)}
+                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5"
+                >
+                  <span>+ Schedule Workshop</span>
+                </button>
+              </div>
+
+              {/* Workshops Table */}
+              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="py-3 px-4">Code</th>
+                        <th className="py-3 px-4">Technical Curriculum Title</th>
+                        <th className="py-3 px-4">Focus Domain</th>
+                        <th className="py-3 px-4">Assigned Expert</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-right">Scheduled Date</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {workshops.map((ws) => (
+                        <tr key={ws.code} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4 font-mono font-bold text-slate-800">
+                            {ws.code}
+                          </td>
+                          <td className="py-3 px-4 font-semibold text-slate-900">
+                            {ws.title}
+                          </td>
+                          <td className="py-3 px-4">
+                            <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium">
+                              {ws.focusArea}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-700 font-medium">
+                            {ws.expertName}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span
+                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                ws.status === "ACTIVE_IN_SESSION"
+                                  ? "bg-amber-100 text-amber-900 border border-amber-300 animate-pulse"
+                                  : ws.status === "COMPLETED"
+                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                  : "bg-slate-100 text-slate-600"
+                              }`}
+                            >
+                              {ws.status === "ACTIVE_IN_SESSION" ? "● LIVE IN SESSION" : ws.status}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-right font-mono text-[11px] text-slate-500">
+                            {ws.date}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 5: AUDIT LOGS (HubSpot Reference Style)                                 */}
+          {/* ========================================================================= */}
+          {activeTab === "audit" && (
+            <div className="flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                <div>
+                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                    Audit Logs
+                  </h1>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Get an immutable report showing administrative actions, student check-ins, and cryptographic ledger activities.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => triggerToast("EXPORT // Audit log CSV exported successfully.")}
+                    className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-md transition-colors shadow-2xs"
+                  >
+                    Export Report
+                  </button>
+                </div>
+              </div>
+
+              {/* Filters (Modeled on HubSpot image media_1789356488472.png) */}
+              <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center gap-4 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-medium">Category:</span>
+                  <select
+                    value={auditCategoryFilter}
+                    onChange={(e) => setAuditCategoryFilter(e.target.value)}
+                    className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 bg-white"
+                  >
+                    <option value="All">All Categories</option>
+                    <option value="Attendance">Attendance</option>
+                    <option value="Experts">Experts</option>
+                    <option value="Students">Students</option>
+                    <option value="Certifications">Certifications</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-medium">Action:</span>
+                  <select className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 bg-white">
+                    <option>All Actions</option>
+                    <option>Create</option>
+                    <option>Update</option>
+                    <option>Perform</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-medium">Modified by:</span>
+                  <select className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 bg-white">
+                    <option>Anyone</option>
+                    <option>Karthikeyan P.</option>
+                    <option>Priya Sundaram</option>
+                    <option>Dr. K. Ramanathan</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Audit Table */}
+              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="py-3 px-4">Category</th>
+                      <th className="py-3 px-4">Subcategory</th>
+                      <th className="py-3 px-4">Action</th>
+                      <th className="py-3 px-4">Modified By</th>
+                      <th className="py-3 px-4">Date of Change</th>
+                      <th className="py-3 px-4 text-right">Source Link</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {auditLogs
+                      .filter((log) => auditCategoryFilter === "All" || log.category === auditCategoryFilter)
+                      .map((log) => (
+                        <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-4">
+                            <span className="font-semibold text-slate-800">{log.category}</span>
+                          </td>
+                          <td className="py-3 px-4 text-slate-600">{log.subcategory}</td>
+                          <td className="py-3 px-4">
+                            <span className="font-medium text-slate-800">{log.action}</span>
+                          </td>
+                          <td className="py-3 px-4">
+                            <div className="flex items-center gap-2.5">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={log.modifiedBy.avatar}
+                                alt={log.modifiedBy.name}
+                                className="h-6 w-6 rounded-full object-cover border border-slate-200"
+                              />
+                              <div className="flex flex-col">
+                                <span className="font-medium text-slate-900">{log.modifiedBy.name}</span>
+                                <span className="text-[10px] text-slate-400">{log.modifiedBy.email}</span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
+                            {log.dateOfChange}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            {log.sourceUrl ? (
+                              <Link
+                                href={log.sourceUrl}
+                                className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-1"
+                              >
+                                <span>{log.sourceText}</span>
+                                <span className="text-[10px]">↗</span>
+                              </Link>
+                            ) : (
+                              <span className="text-slate-400">{log.sourceText}</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* MODAL 1: ENROLL STUDENT                                                   */}
+      {/* ========================================================================= */}
+      {isAddStudentOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base font-bold text-slate-900">Enroll New Student Member</h2>
+              <button onClick={() => setIsAddStudentOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateStudent} className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Full Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={newStudentName}
+                  onChange={(e) => setNewStudentName(e.target.value)}
+                  placeholder="e.g. Anandhi Natarajan"
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Institutional Email:</label>
+                <input
+                  type="email"
+                  required
+                  value={newStudentEmail}
+                  onChange={(e) => setNewStudentEmail(e.target.value)}
+                  placeholder="anandhi@student.dosclub.org"
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Department:</label>
+                <input
+                  type="text"
+                  value={newStudentDept}
+                  onChange={(e) => setNewStudentDept(e.target.value)}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Institution Hub:</label>
+                <select
+                  value={newStudentInst}
+                  onChange={(e) => setNewStudentInst(e.target.value)}
+                  className="border border-slate-300 rounded p-2 bg-white"
+                >
+                  {institutions.map((inst) => (
+                    <option key={inst.id} value={inst.name}>
+                      {inst.name} ({inst.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddStudentOpen(false)}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded"
+                >
+                  Complete Enrollment
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-      </footer>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 2: ADD EXPERT                                                       */}
+      {/* ========================================================================= */}
+      {isAddExpertOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base font-bold text-slate-900">Add Technical Expert Mentor</h2>
+              <button onClick={() => setIsAddExpertOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateExpert} className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Expert Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={newExpertName}
+                  onChange={(e) => setNewExpertName(e.target.value)}
+                  placeholder="e.g. Ramesh Chandran"
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Email Address:</label>
+                <input
+                  type="email"
+                  required
+                  value={newExpertEmail}
+                  onChange={(e) => setNewExpertEmail(e.target.value)}
+                  placeholder="ramesh@systems.org"
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Organization / Company:</label>
+                <input
+                  type="text"
+                  value={newExpertOrg}
+                  onChange={(e) => setNewExpertOrg(e.target.value)}
+                  placeholder="e.g. Red Hat Kernel Team / Singapore"
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Domain Specialties (Comma separated):</label>
+                <input
+                  type="text"
+                  value={newExpertSpecialty}
+                  onChange={(e) => setNewExpertSpecialty(e.target.value)}
+                  placeholder="e.g. Linux Kernel, Concurrency, eBPF"
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddExpertOpen(false)}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded"
+                >
+                  Register Expert
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 3: ADD INSTITUTION                                                  */}
+      {/* ========================================================================= */}
+      {isAddInstitutionOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base font-bold text-slate-900">Add Partner Institution</h2>
+              <button onClick={() => setIsAddInstitutionOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateInstitution} className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Institution Code:</label>
+                <input
+                  type="text"
+                  required
+                  value={newInstCode}
+                  onChange={(e) => setNewInstCode(e.target.value)}
+                  placeholder="e.g. TCE-DOS-04"
+                  className="border border-slate-300 rounded p-2 uppercase font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Campus Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={newInstName}
+                  onChange={(e) => setNewInstName(e.target.value)}
+                  placeholder="e.g. Thiagarajar College of Engineering Hub"
+                  className="border border-slate-300 rounded p-2"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">City / District:</label>
+                <input
+                  type="text"
+                  value={newInstCity}
+                  onChange={(e) => setNewInstCity(e.target.value)}
+                  placeholder="e.g. Madurai"
+                  className="border border-slate-300 rounded p-2"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Geofence Radius (Meters):</label>
+                <input
+                  type="number"
+                  value={newInstRadius}
+                  onChange={(e) => setNewInstRadius(Number(e.target.value))}
+                  className="border border-slate-300 rounded p-2 font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddInstitutionOpen(false)}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded"
+                >
+                  Onboard Campus Hub
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 4: ADD WORKSHOP                                                     */}
+      {/* ========================================================================= */}
+      {isAddWorkshopOpen && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h2 className="text-base font-bold text-slate-900">Schedule Curriculum Workshop</h2>
+              <button onClick={() => setIsAddWorkshopOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateWorkshop} className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Workshop Code:</label>
+                <input
+                  type="text"
+                  value={newWsCode}
+                  onChange={(e) => setNewWsCode(e.target.value)}
+                  placeholder="e.g. WS-28"
+                  className="border border-slate-300 rounded p-2 uppercase font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Workshop Title:</label>
+                <input
+                  type="text"
+                  required
+                  value={newWsTitle}
+                  onChange={(e) => setNewWsTitle(e.target.value)}
+                  placeholder="e.g. Advanced eBPF Observability & XDP Topologies"
+                  className="border border-slate-300 rounded p-2"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Focus Domain:</label>
+                <input
+                  type="text"
+                  value={newWsFocus}
+                  onChange={(e) => setNewWsFocus(e.target.value)}
+                  placeholder="e.g. Kernel Networking"
+                  className="border border-slate-300 rounded p-2"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Assigned Expert Mentor:</label>
+                <select
+                  value={newWsExpert}
+                  onChange={(e) => setNewWsExpert(e.target.value)}
+                  className="border border-slate-300 rounded p-2 bg-white"
+                >
+                  {experts.map((exp) => (
+                    <option key={exp.id} value={exp.fullName}>
+                      {exp.fullName} ({exp.organization})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsAddWorkshopOpen(false)}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded"
+                >
+                  Add to Curriculum
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-xs font-mono">LOADING_ADMIN_HUB...</div>}>
+      <AdminHubContent />
+    </Suspense>
   );
 }
