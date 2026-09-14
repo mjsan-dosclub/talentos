@@ -356,4 +356,217 @@ Technical Operations
 DeScience Open Source Club`,
     variables: ["trainer_name", "workshop_code", "workshop_title", "present_count", "total_cohort", "avg_rating", "feedback_highlight", "trainer_cockpit_url"],
   },
+
+  // ---------------------------------------------------------------------------
+  // Category 4: Onboarding Sequences & Anti-Spam Whitelisting
+  // ---------------------------------------------------------------------------
+  {
+    id: "student_welcome_step1",
+    category: "STUDENT",
+    name: "Student Onboarding (Step 1): Welcome & Anti-Spam Whitelisting",
+    description: "First touchpoint sent immediately upon student enrollment to welcome them, provide verification link, and urge them to save DOS Club email to prevent spam filtering.",
+    subject: "Welcome to DOS Club! Action Required: Save our contact & confirm your email",
+    body: `Hey {{student_name}},
+
+Welcome to DeScience Open Source Club (Batch 3 Systems Engineering Cohort)!
+
+CRITICAL FIRST STEP — AVOID MISSING SESSIONS:
+To guarantee you receive all time-sensitive workshop beacons, cryptographic keys, and peer defense schedules, please perform these two quick actions right now:
+
+1. Add our sending address (notifications@dosclub.org) to your Google / Apple / Outlook Contacts or VIP List.
+2. If this email landed in your "Promotions" or "Spam" folder, drag it to your "Primary" inbox and mark "Not Spam".
+
+Please confirm your institutional email address by clicking the secure link below:
+{{verification_url}}
+
+Once verified, you will immediately receive your official DOS ID, engineering dossier access credentials, and curriculum roadmap.
+
+Welcome to the engineering commons,
+Admissions & Member Operations
+DeScience Open Source Club`,
+    variables: ["student_name", "verification_url"],
+  },
+  {
+    id: "student_welcome_step2",
+    category: "STUDENT",
+    name: "Student Onboarding (Step 2): Credentials & System Operating Guide",
+    description: "Detailed operational briefing sent once email is confirmed. Details attendance rules, dossier mechanics, case study publishing, and login pass.",
+    subject: "Your DOS Club Engineering Pass & Operating Guidelines (DOS-ID: {{dos_id}})",
+    body: `Hey {{student_name}},
+
+Your institutional email is verified! Here is your official DOS Club Member Pass and onboarding guide:
+
+YOUR CREDENTIALS:
+- DOS ID: {{dos_id}}
+- Portal Login: {{login_url}}
+- Temporary Password: {{temporary_password}}
+- Your Public Talent Dossier: {{dossier_url}}
+
+HOW WE OPERATE IN DOS CLUB:
+1. Zero-Grace Attendance:
+   Every workshop requires physical presence. Check-in is geofenced (200m radius) and uses rotating 30-second QR tokens. Entry closes strictly at the scheduled hour.
+
+2. Cryptographic Proof Ledger:
+   No paper certificates. Your engineering standing is built on verified Git commits, peer-reviewed pull requests, and live code defenses before industry mentors.
+
+3. Student Case Studies & Articles Program:
+   As you build systems, you are invited to author architecture case studies. Peer-audited articles are published globally on our engineering portal and syndicated across social media.
+
+JOIN OUR REAL-TIME CHANNELS:
+- WhatsApp Member Channel: https://whatsapp.com/channel/0029VaDeScienceOSClub
+- Discord Builders Community: https://discord.gg/descience-osclub
+
+See you at the terminal!
+
+Warm regards,
+Academic Standards & Student Growth
+DeScience Open Source Club`,
+    variables: ["student_name", "dos_id", "login_url", "temporary_password", "dossier_url"],
+  },
+  {
+    id: "college_onboarding_welcome",
+    category: "COLLEGE",
+    name: "Partner College Onboarding: Welcome & Coordinator Portal Access",
+    description: "Executive welcome sent to college principals, deans, and placement coordinators with their dashboard credentials and student tracking instructions.",
+    subject: "Welcome to DOS Club Academic Partnership — {{institution_name}} Onboarding",
+    body: `Respected Principal / Faculty Coordinator,
+
+Greetings from DeScience Open Source Club (an initiative of Touchmark Descience).
+
+We are honored to welcome {{institution_name}} as a recognized Academic Partner Hub for the Batch 3 Systems Engineering Cohort.
+
+YOUR INSTITUTIONAL PORTAL ACCESS:
+- Portal URL: {{college_portal_url}}
+- Coordinator Account: {{coordinator_email}}
+- Temporary Access Pass: {{temporary_password}}
+
+WHAT YOUR PORTAL ENABLES:
+1. Real-Time Student Roster: Track your enrolled engineering students, department cohorts, and attendance rates.
+2. Cryptographic Evidence: Inspect verified GitHub pull requests, hermetic benchmark results, and system test suites.
+3. Absence & Exam Excuses: Submit institutional verification for students on approved university examination leave to maintain their active standing.
+
+ANTI-SPAM NOTE:
+Please whitelist notifications@dosclub.org with your campus IT department so monthly placement readiness digests are delivered directly to your inbox.
+
+We look forward to a transformative semester of collective engineering excellence.
+
+Warm regards,
+Institutional Partnerships Directorate
+DeScience Open Source Club`,
+    variables: ["institution_name", "college_portal_url", "coordinator_email", "temporary_password"],
+  },
+  {
+    id: "trainer_onboarding_welcome",
+    category: "TRAINER",
+    name: "Technical Expert Onboarding: Welcome & Cockpit Access Credentials",
+    description: "Welcome pack sent to newly registered industry mentors with credentials, calendar sync, and evaluation instructions.",
+    subject: "Welcome to DOS Club Advisory Council — Expert Cockpit Credentials",
+    body: `Dear {{trainer_name}},
+
+On behalf of DeScience Open Source Club, thank you for joining our Technical Expert Advisory Council.
+
+Your real-world systems experience will directly shape how our student engineers design concurrent architectures, write POSIX-compliant code, and master zero-trust environments.
+
+YOUR COCKPIT CREDENTIALS:
+- Expert Cockpit: {{trainer_cockpit_url}}
+- Registered Email: {{trainer_email}}
+- Temporary Access Key: {{temporary_password}}
+
+KEY CAPABILITIES IN YOUR COCKPIT:
+- Live Dynamic QR Generation: Generate rotating 30s tokens for in-person workshop check-ins.
+- Zero-Grace Exception Overrides: Approve optical scan or device malfunction exceptions.
+- Standout Engineering Recognition: Award standout badges to exceptional student contributors.
+
+FREE 1-CLICK CALENDAR SYNC:
+Whenever you are assigned a workshop, you will receive direct 1-click links for Google Calendar and Apple iCal (.ics) with zero subscription fees.
+
+Thank you for lifting the next generation of engineers.
+
+Warm regards,
+Curriculum Operations Committee
+DeScience Open Source Club`,
+    variables: ["trainer_name", "trainer_cockpit_url", "trainer_email", "temporary_password"],
+  },
+  {
+    id: "admissions_enquiry_ack",
+    category: "STUDENT",
+    name: "Admissions Enquiry Auto-Responder (Thank You & Social Links)",
+    description: "Immediate auto-confirmation sent to prospective students or colleges after submitting the admissions enquiry form.",
+    subject: "We received your DOS Club Admissions Enquiry (Ref: {{enquiry_ref}})",
+    body: `Dear {{candidate_name}},
+
+Thank you for your interest in joining DeScience Open Source Club (Ref: {{enquiry_ref}}).
+
+Our admissions and cohort allocation pod has received your information. A mentor will reach out via WhatsApp / Email within 24–48 hours to discuss your engineering background and upcoming admissions evaluation rounds.
+
+WHILE YOU WAIT — CONNECT WITH OUR COMMUNITY:
+- WhatsApp Community Channel: https://whatsapp.com/channel/0029VaDeScienceOSClub
+- Discord Builders Server: https://discord.gg/descience-osclub
+- LinkedIn: https://www.linkedin.com/company/touchmark-descience/
+- GitHub Commons: https://github.com/descience-osclub
+- Twitter / X: https://x.com/descience_club
+- YouTube: https://youtube.com/@descienceosclub
+
+ANTI-SPAM TIP:
+Please save admissions@dosclub.org in your contacts so our interview scheduling invitation does not get delayed in your Spam folder.
+
+Warm regards,
+Admissions Directorate
+DeScience Open Source Club`,
+    variables: ["candidate_name", "enquiry_ref"],
+  },
+  {
+    id: "admissions_enquiry_admin_alert",
+    category: "STUDENT",
+    name: "Admin Alert: New Admissions Enquiry Received",
+    description: "Immediate operational alert sent to the Super Admin when an aspirant submits the enquiry form.",
+    subject: "🚨 New Admissions Enquiry: {{candidate_name}} ({{candidate_role}})",
+    body: `TalentOS Admissions Alert:
+
+A new admissions enquiry has been submitted on the landing page:
+- Reference: {{enquiry_ref}}
+- Candidate Name: {{candidate_name}}
+- WhatsApp Contact: {{phone_number}}
+- Email Address: {{email_address}}
+- Current Role: {{candidate_role}}
+- How They Found Us: {{referral_source}}
+
+Candidate Message:
+"{{candidate_message}}"
+
+Review and manage this application in your Admin Console:
+{{admin_console_url}}
+
+TalentOS Automated Dispatch`,
+    variables: ["enquiry_ref", "candidate_name", "phone_number", "email_address", "candidate_role", "referral_source", "candidate_message", "admin_console_url"],
+  },
+  {
+    id: "casestudy_published_alert",
+    category: "STUDENT",
+    name: "Case Study Published: Student Architectural Breakdown",
+    description: "Broadcast template sent to cohort members when a new student case study is peer-approved and published.",
+    subject: "New Student Architecture Deep-Dive: {{casestudy_title}} by {{student_name}}",
+    body: `Hey DOS Club Builders,
+
+A new student architectural breakdown has been peer-audited and published to the TalentOS engineering commons!
+
+Title: {{casestudy_title}}
+Author: {{student_name}} ({{student_pod}})
+System Audited: {{system_audited}}
+Key Achievement: {{key_metric}}
+
+Read the full technical deep-dive and view verified Git commits:
+{{casestudy_url}}
+
+Join the live peer review and architecture discussion on Discord:
+{{discord_thread_url}}
+
+Interested in publishing your own systems case study? Submit your draft via your student dossier!
+
+Keep building,
+Editorial & Peer Defense Council
+DeScience Open Source Club`,
+    variables: ["casestudy_title", "student_name", "student_pod", "system_audited", "key_metric", "casestudy_url", "discord_thread_url"],
+  },
 ];
+

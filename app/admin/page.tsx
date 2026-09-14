@@ -354,6 +354,11 @@ function AdminHubContent() {
   const [newWsFocus, setNewWsFocus] = useState("");
   const [newWsExpert, setNewWsExpert] = useState("Priya Sundaram");
 
+  // Welcome Email Sequence Toggles
+  const [sendWelcomeEmailStudent, setSendWelcomeEmailStudent] = useState(true);
+  const [sendWelcomeEmailExpert, setSendWelcomeEmailExpert] = useState(true);
+  const [sendWelcomeEmailInstitution, setSendWelcomeEmailInstitution] = useState(true);
+
   // Notification Toast
   const [toast, setToast] = useState<string | null>(null);
   const triggerToast = (msg: string) => {
@@ -383,7 +388,12 @@ function AdminHubContent() {
     setIsAddStudentOpen(false);
     setNewStudentName("");
     setNewStudentEmail("");
-    triggerToast(`Enrolled ${created.fullName} (${created.dosId})`);
+    if (sendWelcomeEmailStudent) {
+      console.log(`[TalentOS Notification] 2-Step Welcome & Verification Email dispatched to ${created.email}`);
+      triggerToast(`Enrolled ${created.fullName} (${created.dosId}) • Welcome & Verification email sent!`);
+    } else {
+      triggerToast(`Enrolled ${created.fullName} (${created.dosId})`);
+    }
   };
 
   const handleCreateExpert = (e: React.FormEvent) => {
@@ -407,7 +417,12 @@ function AdminHubContent() {
     setNewExpertEmail("");
     setNewExpertOrg("");
     setNewExpertSpecialty("");
-    triggerToast(`Registered Expert Mentor: ${created.fullName}`);
+    if (sendWelcomeEmailExpert) {
+      console.log(`[TalentOS Notification] Expert Welcome & Cockpit Credentials dispatched to ${created.email}`);
+      triggerToast(`Registered ${created.fullName} • Cockpit pass & calendar sync emailed!`);
+    } else {
+      triggerToast(`Registered Expert Mentor: ${created.fullName}`);
+    }
   };
 
   const handleCreateInstitution = (e: React.FormEvent) => {
@@ -432,7 +447,12 @@ function AdminHubContent() {
     setNewInstCode("");
     setNewInstName("");
     setNewInstCity("");
-    triggerToast(`Onboarded Campus Hub: ${created.name}`);
+    if (sendWelcomeEmailInstitution) {
+      console.log(`[TalentOS Notification] Partner Institution Onboarding Email dispatched for ${created.name}`);
+      triggerToast(`Added ${created.name} • Campus coordinator onboarding emailed!`);
+    } else {
+      triggerToast(`Added Partner Institution: ${created.name}`);
+    }
   };
 
   const handleCreateWorkshop = (e: React.FormEvent) => {
@@ -1122,6 +1142,22 @@ function AdminHubContent() {
                 </select>
               </div>
 
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-50/50 border border-emerald-200">
+                <input
+                  type="checkbox"
+                  id="sendWelcomeStudent"
+                  checked={sendWelcomeEmailStudent}
+                  onChange={(e) => setSendWelcomeEmailStudent(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 cursor-pointer mt-0.5"
+                />
+                <label htmlFor="sendWelcomeStudent" className="text-xs text-slate-700 cursor-pointer leading-snug">
+                  <span className="font-bold text-slate-900">Send 2-Step Welcome & Verification Email</span>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Requests email whitelisting, confirms student inbox, and delivers curriculum pass & DOS ID.
+                  </p>
+                </label>
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
@@ -1206,6 +1242,22 @@ function AdminHubContent() {
                 />
               </div>
 
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-50/50 border border-emerald-200">
+                <input
+                  type="checkbox"
+                  id="sendWelcomeExpert"
+                  checked={sendWelcomeEmailExpert}
+                  onChange={(e) => setSendWelcomeEmailExpert(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 cursor-pointer mt-0.5"
+                />
+                <label htmlFor="sendWelcomeExpert" className="text-xs text-slate-700 cursor-pointer leading-snug">
+                  <span className="font-bold text-slate-900">Send Cockpit Pass & 1-Click Calendar Sync</span>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Dispatches expert cockpit credentials and free Google/Apple Calendar integration links.
+                  </p>
+                </label>
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
@@ -1287,6 +1339,22 @@ function AdminHubContent() {
                   onChange={(e) => setNewInstRadius(Number(e.target.value))}
                   className="border border-slate-300 rounded p-2 font-mono"
                 />
+              </div>
+
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-emerald-50/50 border border-emerald-200">
+                <input
+                  type="checkbox"
+                  id="sendWelcomeInstitution"
+                  checked={sendWelcomeEmailInstitution}
+                  onChange={(e) => setSendWelcomeEmailInstitution(e.target.checked)}
+                  className="w-4 h-4 rounded text-emerald-600 cursor-pointer mt-0.5"
+                />
+                <label htmlFor="sendWelcomeInstitution" className="text-xs text-slate-700 cursor-pointer leading-snug">
+                  <span className="font-bold text-slate-900">Send Coordinator Portal Onboarding Email</span>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Emails coordinator login pass, student tracking instructions, and campus IT whitelisting notice.
+                  </p>
+                </label>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
