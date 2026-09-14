@@ -43,35 +43,55 @@ export const DEMO_ACCOUNTS: Record<string, TalentosUser> = {
 };
 
 /**
- * Encodes session payload to base64 JSON string
+ * Encodes session payload to URL-safe JSON string
  */
 export function serializeSession(user: TalentosUser): string {
   const payload = {
     ...user,
     loginTime: user.loginTime || new Date().toISOString(),
   };
-  if (typeof window !== "undefined") {
-    return btoa(unescape(encodeURIComponent(JSON.stringify(payload))));
-  }
-  return Buffer.from(JSON.stringify(payload)).toString("base64");
+  return encodeURIComponent(JSON.stringify(payload));
 }
 
 /**
- * Decodes session payload from base64 JSON string
+ * Decodes session payload from URL-safe string, with base64 and JSON fallbacks
  */
 export function deserializeSession(serialized: string | null | undefined): TalentosUser | null {
   if (!serialized) return null;
+
+  // 1. Try URL-encoded JSON
   try {
-    let jsonStr: string;
-    if (typeof window !== "undefined") {
-      jsonStr = decodeURIComponent(escape(atob(serialized)));
-    } else {
-      jsonStr = Buffer.from(serialized, "base64").toString("utf-8");
+    const trimmed = decodeURIComponent(serialized.trim());
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      return JSON.parse(trimmed) as TalentosUser;
     }
-    return JSON.parse(jsonStr) as TalentosUser;
-  } catch (err) {
-    return null;
-  }
+  } catch (e) {}
+
+  // 2. Try raw JSON
+  try {
+    if (serialized.startsWith("{") && serialized.endsWith("}")) {
+      return JSON.parse(serialized) as TalentosUser;
+    }
+  } catch (e) {}
+
+  // 3. Fallback: Base64 decode
+  try {
+    let b64Str = serialized.trim();
+    if (b64Str.includes("%")) {
+      b64Str = decodeURIComponent(b64Str);
+    }
+    let decoded = "";
+    if (typeof atob === "function") {
+      decoded = atob(b64Str);
+    } else if (typeof Buffer !== "undefined") {
+      decoded = Buffer.from(b64Str, "base64").toString("utf-8");
+    }
+    if (decoded.startsWith("{") && decoded.endsWith("}")) {
+      return JSON.parse(decoded) as TalentosUser;
+    }
+  } catch (e) {}
+
+  return null;
 }
 
 /**

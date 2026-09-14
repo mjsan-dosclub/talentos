@@ -41,19 +41,41 @@ function LoginContent() {
   }, [errorCode, redirectUrl]);
 
   // Fast-Auth 1-Click Login for development testing & Acceptance Matrix
-  const handleFastLogin = (demoKey: keyof typeof DEMO_ACCOUNTS) => {
-    const demoUser = DEMO_ACCOUNTS[demoKey];
-    setClientSession(demoUser);
+  const handleFastLogin = async (demoKey: keyof typeof DEMO_ACCOUNTS) => {
+    setIsAuthenticating(true);
+    setStatusMessage("INITIALIZING SECURE SESSION...");
 
-    if (redirectUrl) {
-      router.push(redirectUrl);
-      return;
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ demoKey }),
+      });
+
+      const data = await res.json();
+      if (data.user) {
+        setClientSession(data.user);
+        const destination = redirectUrl || data.redirect;
+        window.location.href = destination;
+      } else {
+        setStatusMessage("FAST_AUTH_ERROR // Could not issue session token");
+        setIsAuthenticating(false);
+      }
+    } catch (err: any) {
+      console.warn("Fast login error:", err);
+      const demoUser = DEMO_ACCOUNTS[demoKey];
+      setClientSession(demoUser);
+      const destination =
+        redirectUrl ||
+        (demoUser.role === "TRAINER"
+          ? "/trainer"
+          : demoUser.role === "COLLEGE_ADMIN"
+          ? "/college"
+          : demoUser.role === "SUPER_ADMIN"
+          ? "/admin"
+          : `/record/${encodeURIComponent(demoUser.dos_id || "DOS-B3-001")}`);
+      window.location.href = destination;
     }
-
-    if (demoUser.role === "TRAINER") router.push("/trainer");
-    else if (demoUser.role === "COLLEGE_ADMIN") router.push("/college");
-    else if (demoUser.role === "SUPER_ADMIN") router.push("/admin");
-    else router.push(`/record/${encodeURIComponent(demoUser.dos_id || "DOS-B3-001")}`);
   };
 
   const handleAuthenticate = async (e: React.FormEvent) => {
@@ -71,68 +93,37 @@ function LoginContent() {
     }
 
     setIsAuthenticating(true);
+    setStatusMessage("AUTHENTICATING // CHECKING CREDENTIALS...");
 
     try {
-      // 1. Attempt Supabase Auth live session
-      const { data: authData } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password.trim(),
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim(), role }),
       });
 
-      let authenticatedUser: TalentosUser;
-
-      if (role === "trainer") {
-        authenticatedUser = {
-          id: authData?.user?.id || "t0000001-0000-0000-0000-000000000001",
-          email: email.trim(),
-          name: "Trainer Faculty",
-          role: "TRAINER",
-        };
-      } else if (role === "college") {
-        authenticatedUser = {
-          id: authData?.user?.id || "c0000001-0000-0000-0000-000000000001",
-          email: email.trim(),
-          name: "College Dean / Coordinator",
-          role: "COLLEGE_ADMIN",
-          institution_id: "AU-DOS-01",
-        };
-      } else if (role === "admin") {
-        authenticatedUser = {
-          id: authData?.user?.id || "s0000001-0000-0000-0000-000000000001",
-          email: email.trim(),
-          name: "Organiser Admin",
-          role: "SUPER_ADMIN",
-        };
+      const data = await res.json();
+      if (data.user) {
+        setClientSession(data.user);
+        const destination = redirectUrl || data.redirect;
+        window.location.href = destination;
       } else {
-        const { student } = await getStudentByIdOrEmail(email.trim());
-        const targetId = student?.dos_id || "DOS-B3-001";
-        authenticatedUser = {
-          id: student?.id || "a0000001-0000-0000-0000-000000000001",
-          email: email.trim(),
-          name: student?.full_name || "Student Member",
-          role: "STUDENT",
-          dos_id: targetId,
-          institution_id: "AU-DOS-01",
-        };
+        setStatusMessage("ERR_AUTH_FAILED // INVALID CREDENTIALS");
+        setIsAuthenticating(false);
       }
-
-      setClientSession(authenticatedUser);
-
-      if (redirectUrl) {
-        router.push(redirectUrl);
-        return;
-      }
-
-      if (authenticatedUser.role === "TRAINER") router.push("/trainer");
-      else if (authenticatedUser.role === "COLLEGE_ADMIN") router.push("/college");
-      else if (authenticatedUser.role === "SUPER_ADMIN") router.push("/admin");
-      else router.push(`/record/${encodeURIComponent(authenticatedUser.dos_id || "DOS-B3-001")}`);
     } catch (err: any) {
-      console.warn("Auth check fallback:", err);
-      // Fallback local session
-      handleFastLogin(role as keyof typeof DEMO_ACCOUNTS);
-    } finally {
-      setIsAuthenticating(false);
+      console.warn("Auth error fallback:", err);
+      const demoUser = DEMO_ACCOUNTS[role as keyof typeof DEMO_ACCOUNTS] || DEMO_ACCOUNTS.student;
+      setClientSession(demoUser);
+      window.location.href =
+        redirectUrl ||
+        (role === "trainer"
+          ? "/trainer"
+          : role === "college"
+          ? "/college"
+          : role === "admin"
+          ? "/admin"
+          : `/record/DOS-B3-001`);
     }
   };
 
@@ -176,35 +167,47 @@ function LoginContent() {
           </p>
           <div className="grid grid-cols-2 gap-2 font-mono text-xs">
             <button
+              type="button"
+              disabled={isAuthenticating}
               onClick={() => handleFastLogin("student")}
-              className="px-3 py-2 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors rounded-sm flex flex-col"
+              className="px-3 py-2.5 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors rounded-sm flex flex-col disabled:opacity-50 cursor-pointer shadow-2xs"
             >
               <span className="font-semibold text-neutral-900">👤 Student: Arun</span>
-              <span className="text-[10px] text-neutral-500">DOS-B3-001 • Student 360</span>
+              <span className="text-[10px] text-neutral-500">arun@student.dosclub.org</span>
+              <span className="text-[9px] text-emerald-700 font-bold mt-1">1-CLICK LOGIN &rarr;</span>
             </button>
 
             <button
+              type="button"
+              disabled={isAuthenticating}
               onClick={() => handleFastLogin("trainer")}
-              className="px-3 py-2 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors rounded-sm flex flex-col"
+              className="px-3 py-2.5 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors rounded-sm flex flex-col disabled:opacity-50 cursor-pointer shadow-2xs"
             >
               <span className="font-semibold text-neutral-900">⚡ Trainer: Priya</span>
-              <span className="text-[10px] text-neutral-500">Faculty / QR Beacon</span>
+              <span className="text-[10px] text-neutral-500">faculty@dosclub.org</span>
+              <span className="text-[9px] text-emerald-700 font-bold mt-1">1-CLICK LOGIN &rarr;</span>
             </button>
 
             <button
+              type="button"
+              disabled={isAuthenticating}
               onClick={() => handleFastLogin("college")}
-              className="px-3 py-2 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors rounded-sm flex flex-col"
+              className="px-3 py-2.5 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors rounded-sm flex flex-col disabled:opacity-50 cursor-pointer shadow-2xs"
             >
               <span className="font-semibold text-neutral-900">🏛️ College: Dr. Raman</span>
-              <span className="text-[10px] text-neutral-500">Anna University Dean</span>
+              <span className="text-[10px] text-neutral-500">coordinator@annauniv.edu</span>
+              <span className="text-[9px] text-emerald-700 font-bold mt-1">1-CLICK LOGIN &rarr;</span>
             </button>
 
             <button
+              type="button"
+              disabled={isAuthenticating}
               onClick={() => handleFastLogin("admin")}
-              className="px-3 py-2 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors rounded-sm flex flex-col"
+              className="px-3 py-2.5 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/50 transition-colors rounded-sm flex flex-col disabled:opacity-50 cursor-pointer shadow-2xs"
             >
               <span className="font-semibold text-neutral-900">🛡️ Super Admin: Karthi</span>
-              <span className="text-[10px] text-neutral-500">Organiser / System Config</span>
+              <span className="text-[10px] text-neutral-500">admin@dosclub.org</span>
+              <span className="text-[9px] text-emerald-700 font-bold mt-1">1-CLICK LOGIN &rarr;</span>
             </button>
           </div>
         </div>
@@ -214,17 +217,17 @@ function LoginContent() {
           {/* Header Tag */}
           <div className="flex flex-col gap-2">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-neutral-200 bg-neutral-100 font-mono text-[10px] text-neutral-700 tracking-widest uppercase self-start font-medium">
-              RESTRICTED ACCESS // CREDENTIAL GATE
+              CREDENTIAL LOGIN GATE // ALL 4 ROLES
             </div>
             <h1 className="text-2xl font-semibold tracking-tight text-neutral-950">
               Institutional Terminal
             </h1>
             <p className="text-xs text-neutral-600 leading-relaxed">
-              Authenticate with your registered institutional credentials to generate a cryptographic session token.
+              Use the credentials below or click any role tab to auto-fill:
             </p>
           </div>
 
-          {/* Role Selector */}
+          {/* Role Selector with auto-fill */}
           <div className="grid grid-cols-4 border border-neutral-300 bg-neutral-100 text-[11px] font-mono p-0.5 rounded-xs gap-0.5">
             {(["student", "trainer", "college", "admin"] as const).map((r) => (
               <button
@@ -233,8 +236,21 @@ function LoginContent() {
                 onClick={() => {
                   setRole(r);
                   setStatusMessage(null);
+                  if (r === "student") {
+                    setEmail("arun@student.dosclub.org");
+                    setPassword("dosclub2026");
+                  } else if (r === "trainer") {
+                    setEmail("faculty@dosclub.org");
+                    setPassword("dosclub2026");
+                  } else if (r === "college") {
+                    setEmail("coordinator@annauniv.edu");
+                    setPassword("dosclub2026");
+                  } else {
+                    setEmail("admin@dosclub.org");
+                    setPassword("dosclub2026");
+                  }
                 }}
-                className={`py-1.5 px-1 tracking-wider text-center transition-colors rounded-xs uppercase ${
+                className={`py-1.5 px-1 tracking-wider text-center transition-colors rounded-xs uppercase cursor-pointer ${
                   role === r
                     ? "bg-white text-neutral-950 font-semibold shadow-2xs"
                     : "text-neutral-500 hover:text-neutral-800"
