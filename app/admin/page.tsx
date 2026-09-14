@@ -1,94 +1,171 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import React, { useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
 import {
   UsersIcon,
+  BoltIcon,
+  BuildingIcon,
+  AcademicCapIcon,
   SparklesIcon,
-  IdCardIcon,
+  ClipboardListIcon,
   SettingsIcon,
   XIcon,
 } from "@/components/Icons";
-import CaseStudiesCmsTab from "@/components/admin/CaseStudiesCmsTab";
-import EnquiriesTab from "@/components/admin/EnquiriesTab";
-import PassLedgerTab from "@/components/admin/PassLedgerTab";
 
-interface AuditLogEntry {
-  id: string;
-  category: "Students" | "Experts" | "Attendance" | "Certifications" | "System";
-  subcategory: string;
-  action: "Create" | "Update" | "Perform" | "Archive";
-  sourceText: string;
-  timestamp: string;
-}
+import {
+  StudentMember,
+  ExpertMentor,
+  PartnerInstitution,
+  WorkshopItem,
+  AuditLogEntry,
+  INITIAL_STUDENTS,
+  INITIAL_EXPERTS,
+  INITIAL_INSTITUTIONS,
+  INITIAL_WORKSHOPS,
+  INITIAL_AUDIT_LOGS,
+} from "@/lib/admin-data";
 
-function AdminHubContent() {
+import StudentsTab from "@/components/admin/StudentsTab";
+import WorkshopsTab from "@/components/admin/WorkshopsTab";
+import InstitutionsTab from "@/components/admin/InstitutionsTab";
+import MentorsTab from "@/components/admin/MentorsTab";
+import LandingCmsHubTab from "@/components/admin/LandingCmsHubTab";
+import GovernanceTab from "@/components/admin/GovernanceTab";
+
+function AdminDashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const rawTab = searchParams.get("tab") || "casestudies";
-  const activeTab = ["casestudies", "enquiries", "passes"].includes(rawTab)
-    ? rawTab
-    : "casestudies";
+  const rawTab = searchParams.get("tab") || "students";
 
-  // Notification Toast
+  // Core Data State
+  const [students, setStudents] = useState<StudentMember[]>(INITIAL_STUDENTS);
+  const [experts, setExperts] = useState<ExpertMentor[]>(INITIAL_EXPERTS);
+  const [institutions, setInstitutions] = useState<PartnerInstitution[]>(INITIAL_INSTITUTIONS);
+  const [workshops, setWorkshops] = useState<WorkshopItem[]>(INITIAL_WORKSHOPS);
+  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
+
+  // Toast System
   const [toast, setToast] = useState<string | null>(null);
   const triggerToast = (msg: string) => {
     setToast(msg);
     setTimeout(() => setToast(null), 3500);
   };
 
-  // Audit Logger State
-  const [, setAuditLogs] = useState<AuditLogEntry[]>([]);
+  // Real-time Audit Logger Helper
   const logAdminAudit = (
-    category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
+    category: AuditLogEntry["category"],
     subcategory: string,
-    action: "Create" | "Update" | "Perform" | "Archive",
-    sourceText: string
+    action: AuditLogEntry["action"],
+    sourceText: string,
+    sourceUrl?: string
   ) => {
     const entry: AuditLogEntry = {
       id: `aud-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       category,
       subcategory,
       action,
+      modifiedBy: {
+        name: "Platform Administrator (Live)",
+        email: "admin@dosclub.org",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
+      },
+      dateOfChange: new Date().toLocaleDateString("en-US", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+      }) + " " + new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
       sourceText,
-      timestamp: new Date().toISOString(),
+      sourceUrl: sourceUrl || `/admin?tab=${rawTab}`,
     };
     setAuditLogs((prev) => [entry, ...prev]);
   };
 
-  // Sidebar Menu Groups (HubSpot reference navigation)
+  // Determine active module with full URL and alias compatibility
+  let activeModule: "students" | "workshops" | "institutions" | "mentors" | "cms" | "governance" = "students";
+  let cmsSubTab: "casestudies" | "enquiries" | "passes" = "casestudies";
+
+  if (rawTab === "students") {
+    activeModule = "students";
+  } else if (rawTab === "workshops" || rawTab === "schedule") {
+    activeModule = "workshops";
+  } else if (rawTab === "institutions") {
+    activeModule = "institutions";
+  } else if (rawTab === "mentors" || rawTab === "experts") {
+    activeModule = "mentors";
+  } else if (
+    rawTab === "cms" ||
+    rawTab === "casestudies" ||
+    rawTab === "enquiries" ||
+    rawTab === "passes"
+  ) {
+    activeModule = "cms";
+    if (rawTab === "enquiries" || rawTab === "passes" || rawTab === "casestudies") {
+      cmsSubTab = rawTab;
+    }
+  } else if (rawTab === "governance" || rawTab === "audit" || rawTab === "settings") {
+    activeModule = "governance";
+  } else {
+    activeModule = "students";
+  }
+
+  // Sidebar Menu Groups (6 primary modules)
   const sidebarGroups: SidebarGroup[] = [
     {
-      title: "Landing & Intake Operations",
+      title: "Core Operations",
       items: [
         {
-          id: "casestudies",
-          label: "Case Studies CMS",
-          icon: <SparklesIcon className="w-4 h-4" />,
-          badge: "5 DOSSIERS",
-        },
-        {
-          id: "enquiries",
-          label: "Partner Enquiries",
+          id: "students",
+          label: "Students Roster",
           icon: <UsersIcon className="w-4 h-4" />,
-          badge: "LEADS",
+          count: students.length,
         },
         {
-          id: "passes",
-          label: "Access Pass Ledger",
-          icon: <IdCardIcon className="w-4 h-4" />,
-          badge: "HERO VERIFIER",
+          id: "workshops",
+          label: "Workshops & Curriculum",
+          icon: <BoltIcon className="w-4 h-4" />,
+          count: workshops.length,
+          badge: "27 TOPICS",
+        },
+        {
+          id: "institutions",
+          label: "Colleges & Campus Hubs",
+          icon: <BuildingIcon className="w-4 h-4" />,
+          count: institutions.length,
+        },
+        {
+          id: "mentors",
+          label: "Technical Expert Mentors",
+          icon: <AcademicCapIcon className="w-4 h-4" />,
+          count: experts.length,
         },
       ],
     },
     {
-      title: "Platform & Governance",
+      title: "Landing & Growth",
       items: [
         {
+          id: "cms",
+          label: "Landing & CMS",
+          icon: <SparklesIcon className="w-4 h-4" />,
+          badge: "3 PORTALS",
+        },
+      ],
+    },
+    {
+      title: "Platform & Security",
+      items: [
+        {
+          id: "governance",
+          label: "Platform Governance",
+          icon: <ClipboardListIcon className="w-4 h-4" />,
+          count: auditLogs.length,
+        },
+        {
           id: "settings",
-          label: "Settings & System",
+          label: "System Settings",
           icon: <SettingsIcon className="w-4 h-4" />,
         },
       ],
@@ -103,7 +180,7 @@ function AdminHubContent() {
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
         <SidebarNav
           groups={sidebarGroups}
-          activeId={activeTab}
+          activeId={activeModule}
           onSelect={(id) => {
             if (id === "settings") {
               router.push("/admin/settings");
@@ -128,19 +205,62 @@ function AdminHubContent() {
             </div>
           )}
 
-          {/* TAB 1: CASE STUDIES CMS */}
-          {activeTab === "casestudies" && (
-            <CaseStudiesCmsTab onAuditLog={logAdminAudit} />
+          {/* MODULE 1: STUDENTS */}
+          {activeModule === "students" && (
+            <StudentsTab
+              students={students}
+              setStudents={setStudents}
+              onToast={triggerToast}
+              onAuditLog={logAdminAudit}
+            />
           )}
 
-          {/* TAB 2: PARTNER ENQUIRIES */}
-          {activeTab === "enquiries" && (
-            <EnquiriesTab onToast={triggerToast} onAuditLog={logAdminAudit} />
+          {/* MODULE 2: WORKSHOPS & CURRICULUM */}
+          {activeModule === "workshops" && (
+            <WorkshopsTab
+              workshops={workshops}
+              setWorkshops={setWorkshops}
+              onToast={triggerToast}
+              onAuditLog={logAdminAudit}
+            />
           )}
 
-          {/* TAB 3: ACCESS PASS LEDGER (HERO VERIFIER) */}
-          {activeTab === "passes" && (
-            <PassLedgerTab onToast={triggerToast} onAuditLog={logAdminAudit} />
+          {/* MODULE 3: COLLEGES & CAMPUS HUBS */}
+          {activeModule === "institutions" && (
+            <InstitutionsTab
+              institutions={institutions}
+              setInstitutions={setInstitutions}
+              onToast={triggerToast}
+              onAuditLog={logAdminAudit}
+            />
+          )}
+
+          {/* MODULE 4: TECHNICAL EXPERT MENTORS */}
+          {activeModule === "mentors" && (
+            <MentorsTab
+              experts={experts}
+              setExperts={setExperts}
+              onToast={triggerToast}
+              onAuditLog={logAdminAudit}
+            />
+          )}
+
+          {/* MODULE 5: LANDING & CMS */}
+          {activeModule === "cms" && (
+            <LandingCmsHubTab
+              initialSubTab={cmsSubTab}
+              onToast={triggerToast}
+              onAuditLog={logAdminAudit}
+            />
+          )}
+
+          {/* MODULE 6: PLATFORM & GOVERNANCE */}
+          {activeModule === "governance" && (
+            <GovernanceTab
+              auditLogs={auditLogs}
+              setAuditLogs={setAuditLogs}
+              onToast={triggerToast}
+            />
           )}
         </main>
       </div>
@@ -153,11 +273,11 @@ export default function AdminDashboardPage() {
     <Suspense
       fallback={
         <div className="p-8 text-center text-xs font-mono text-slate-500">
-          LOADING_TALENTOS_ADMIN...
+          LOADING_TALENTOS_ADMIN_COCKPIT...
         </div>
       }
     >
-      <AdminHubContent />
+      <AdminDashboardContent />
     </Suspense>
   );
 }
