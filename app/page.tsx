@@ -201,40 +201,14 @@ export default function Home() {
             Collaborative mindset: peer defense pods, shared commons, collective capability.
             Zero dark colors.
             ========================================================================= */}
-        <section aria-label="Hero Introduction" className="flex flex-col gap-10 pt-4 sm:pt-8">
-          {/* Top Live Cohort Notification Bar - Clean Light Pill */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <a
-              href="https://membership.descienceosclub.com/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs text-[#10222b] text-xs transition-all group cursor-pointer"
-            >
-              <span className="px-2 py-0.5 rounded bg-[#e8f5e9] text-[#2f8a36] font-mono font-bold text-[10px] tracking-wider uppercase border border-[#4caf50]/30">
-                LIVE COHORT
-              </span>
-              <span className="text-slate-600 font-mono text-xs">
-                Batch 3 Systems Engineering Active // 42 Engineers in Collaborative Defense
-              </span>
-              <ArrowRightIcon className="w-3.5 h-3.5 text-[#2f8a36] group-hover:translate-x-0.5 transition-transform" />
-            </a>
-
-            <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse" />
-              <span>CEG CAMPUS HUB • ZERO-GRACE EVALUATIONS IN SESSION</span>
-            </div>
-          </div>
-
-          {/* Editorial Grid: Narrative on Left, Collaborative Showcase on Right */}
+        {/* =========================================================================
+            SECTION 1: CLEAN MINIMALIST HERO - THE PORTAL
+            Minimalist, calm, distraction-free light editorial aesthetic.
+            ========================================================================= */}
+        <section aria-label="Hero Introduction" className="pt-4 sm:pt-10">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16 items-center">
             {/* Left Column: Editorial Manifesto */}
             <div className="lg:col-span-7 space-y-6 sm:space-y-8">
-              {/* Terminal Eyebrow Badge */}
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#e8f5e9] border border-[#4caf50]/30 text-xs font-mono tracking-wide text-[#2f8a36] font-semibold">
-                <UsersIcon className="w-3.5 h-3.5 text-[#2f8a36]" />
-                <span>{cms.hero.eyebrow}</span>
-              </div>
-
               {/* Large Typography Headline */}
               <div className="space-y-3">
                 <h1 className="text-4xl sm:text-6xl font-['Space_Grotesk'] font-bold tracking-tight text-[#10222b] leading-[1.08]">
@@ -274,20 +248,11 @@ export default function Home() {
                   <span>Verify Cohort Dossier</span>
                 </button>
               </div>
-
-              {/* Minimal Sub-Attribution */}
-              <div className="pt-2 text-[11px] text-slate-500 font-mono flex items-center gap-3">
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#1593c3]" />
-                  {cms.hero.subAttribution}
-                </span>
-              </div>
             </div>
 
-            {/* Right Column: Clean Light Collaborative Systems Cards (No Solo Focus) */}
+            {/* Right Column: Clean Light Photography (No Noise / No Badges) */}
             <div className="lg:col-span-5 relative">
               <div className="relative mx-auto max-w-md">
-                {/* Primary Collaborative Systems Card */}
                 <TiltCard
                   maxTilt={4}
                   scale={1.01}
@@ -297,114 +262,21 @@ export default function Home() {
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={cms.hero.studentPhoto || "/images/students/student-workshop-build.jpg"}
-                      alt={cms.hero.studentPhotoCaption}
-                      className="w-full h-80 sm:h-96 object-cover object-top group-hover:scale-103 transition-transform duration-700"
+                      alt={cms.hero.studentPhotoCaption || "DeScience Open Source Club"}
+                      className="w-full h-80 sm:h-96 object-cover object-center group-hover:scale-103 transition-transform duration-700"
                     />
-
-                    {/* Contextual Collaboration Badge (Clean Light) */}
-                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[#10222b] text-[10px] font-mono tracking-wide flex items-center gap-1.5 shadow-sm border border-slate-200">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[#4caf50] animate-pulse" />
-                      <span>Systems Pod Alpha • CEG Campus</span>
-                    </div>
-
-                    {/* Cohort Track Chip (Clean Light Mint) */}
-                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-[#e8f5e9] text-[#2f8a36] border border-[#4caf50]/40 text-[10px] font-mono font-bold tracking-wider shadow-2xs">
-                      BATCH 3 // 2026
-                    </div>
                   </div>
 
                   <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-['Space_Grotesk'] font-semibold text-[#10222b]">
-                        Peer Systems Defense & Code Review
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-mono">
-                        {cms.hero.studentPhotoCaption}
-                      </span>
-                    </div>
+                    <span className="text-xs font-['Space_Grotesk'] font-medium text-slate-700">
+                      {cms.hero.studentPhotoCaption || "DeScience Open Source Club"}
+                    </span>
                     <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#e8f5e9] text-[#2f8a36] font-mono font-semibold border border-[#4caf50]/20">
-                      VERIFIED POD
-                    </span>
-                  </div>
-                </TiltCard>
-
-                {/* Floating Shared Commons Window */}
-                <TiltCard
-                  maxTilt={6}
-                  scale={1.03}
-                  glare={false}
-                  className="hidden sm:flex absolute -bottom-6 -left-8 w-68 rounded-xl overflow-hidden border border-slate-200/90 shadow-xl bg-white p-2.5 flex-col gap-2 animate-tilt-float z-30 cursor-pointer"
-                >
-                  <div className="h-28 rounded-lg overflow-hidden relative">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={cms.hero.collabPhoto || "/images/students/student-4.jpg"}
-                      alt={cms.hero.collabPhotoCaption}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-white/95 backdrop-blur-xs text-slate-800 text-[9px] font-mono font-semibold border border-slate-200 shadow-2xs">
-                      Commons Git Stream
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between px-1">
-                    <span className="text-[11px] font-['Space_Grotesk'] text-[#10222b] font-semibold">
-                      1,420+ Merged PRs
-                    </span>
-                    <span className="text-[9px] px-2 py-0.5 rounded bg-[#e1f5fe] text-[#0d6b90] font-mono font-bold border border-[#1593c3]/30">
-                      COMMONS
+                      OPEN SOURCE
                     </span>
                   </div>
                 </TiltCard>
               </div>
-            </div>
-          </div>
-
-          {/* Collaboration Tenets Strip - Clean Light Grid */}
-          <div className="pt-8 border-t border-black/[0.06] grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-1">
-              <span className="text-[#2f8a36] font-bold">01 // MUTUAL CODE REVIEW</span>
-              <span className="text-slate-600 text-[11px]">Every commit verified by 2 peers</span>
-            </div>
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-1">
-              <span className="text-[#0d6b90] font-bold">02 // ZERO SOLO SILOS</span>
-              <span className="text-slate-600 text-[11px]">Systems authored in pods</span>
-            </div>
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-1">
-              <span className="text-[#2f8a36] font-bold">03 // SHARED COMMONS</span>
-              <span className="text-slate-600 text-[11px]">Public RFCs & zero hoarding</span>
-            </div>
-            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-1">
-              <span className="text-[#0d6b90] font-bold">04 // COLLECTIVE HONOUR</span>
-              <span className="text-slate-600 text-[11px]">Whole batch elevates together</span>
-            </div>
-          </div>
-
-          {/* Campus & Research Ecosystem Bar - Clean Light */}
-          <div className="w-full pt-2 flex flex-col gap-3">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-slate-500 font-bold">
-              COLLABORATIVE HUBS & ENGINEERING RESEARCH PARKS
-            </span>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-              {[
-                { name: "Anna Univ CEG Hub", tag: "Campus Hub" },
-                { name: "IIT Madras Research Park", tag: "Innovation Hub" },
-                { name: "Singapore Partner Labs", tag: "Global Lab" },
-                { name: "MIT Campus Guild", tag: "Partner Node" },
-                { name: "Touchmark Descience", tag: "Lead Council" },
-                { name: "Linux Foundation", tag: "Commons" },
-              ].map((partner, idx) => (
-                <div
-                  key={idx}
-                  className="bg-white p-3 rounded-xl border border-slate-200/90 shadow-2xs flex flex-col items-center justify-center text-center gap-0.5 hover:border-[#4caf50] transition-colors"
-                >
-                  <span className="font-['Space_Grotesk'] text-xs font-bold text-[#10222b]">
-                    {partner.name}
-                  </span>
-                  <span className="text-[9px] font-mono text-[#2f8a36] font-semibold">
-                    {partner.tag}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
         </section>
@@ -517,7 +389,7 @@ export default function Home() {
                 {/* Lab Evaluation Chip - Clean Light Pill */}
                 <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-mono flex items-center gap-2 border border-slate-200 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse" />
-                  <span>Live Lab Evaluation • Anna University Hub</span>
+                  <span>Verified Technical Evaluation</span>
                 </div>
               </div>
             </div>
@@ -978,7 +850,7 @@ export default function Home() {
             <span>
               &copy; {new Date().getFullYear()} DeScience Open Source Club. An initiative of Touchmark Descience. All rights reserved.
             </span>
-            <span>Tamil Nadu & Global Partner Network • Chennai & Singapore</span>
+            <span>DeScience Open Source Club • Chennai, Tamil Nadu</span>
           </div>
         </div>
       </footer>

@@ -87,21 +87,21 @@ export interface LandingCmsData {
 
 export const DEFAULT_LANDING_CMS: LandingCmsData = {
   hero: {
-    eyebrow: "DOS CLUB // COLLECTIVE SYSTEMS COMMONS",
+    eyebrow: "DeScience Open Source Club",
     title: "Where engineers build systems together.",
     highlight: "Not competition. Collective capability.",
     subtitle: "A world-class engineering ecosystem for open-source builders.",
     description:
       "There is a world behind this door. An open-source ecosystem where Indian engineering minds master 27 real-world systems through peer architecture defense, collaborative codebases, and shared rigor. Graduating with authentic evidence that speaks before their résumé does.",
     studentPhoto: "/images/students/student-workshop-build.jpg",
-    studentPhotoCaption: "Collaborative Systems Pod • CEG Campus Hub",
+    studentPhotoCaption: "Engineering Collaboration Workshop",
     collabPhoto: "/images/students/student-4.jpg",
-    collabPhotoCaption: "Peer Systems Defense Session",
+    collabPhotoCaption: "Technical Evaluation Session",
     ctaPrimaryText: "Become a Member",
     ctaPrimaryUrl: "https://membership.descienceosclub.com/",
     ctaSecondaryText: "Enquire",
     ctaSecondaryUrl: "#enquire",
-    subAttribution: "Anna University Hub • IIT Madras Research Park • Singapore Partner Labs",
+    subAttribution: "",
   },
 
   invisibleEngine: {
@@ -192,7 +192,7 @@ export const DEFAULT_LANDING_CMS: LandingCmsData = {
         id: "pillar-5",
         tag: "05 // HORIZONS",
         title: "International Opportunities",
-        desc: "Connecting promising engineering minds across Tamil Nadu with global technology hubs in Singapore and beyond, expanding where your capabilities can take you.",
+        desc: "Connecting promising engineering minds across Tamil Nadu with global technology ecosystems, expanding where your capabilities can take you.",
         image: "/images/students/student-laptop-focus.jpg",
       },
     ],
