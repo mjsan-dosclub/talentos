@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import SessionBar from "@/components/SessionBar";
 
 interface AbsenceCase {
   dosId: string;
@@ -75,12 +76,7 @@ export default function CollegeCoordinatorPage() {
             <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden sm:inline-block">
               INSTITUTION: ANNA UNIVERSITY (AU-DOS-01)
             </span>
-            <Link
-              href="/login"
-              className="font-mono text-xs text-neutral-500 hover:text-neutral-900 font-medium"
-            >
-              Sign Out
-            </Link>
+            <SessionBar />
           </div>
         </div>
       </header>

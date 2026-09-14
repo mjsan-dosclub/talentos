@@ -14,6 +14,8 @@ import type {
   ExternalAssessment,
   SkillMaturity,
 } from "@/lib/supabase";
+import { formatConfigDate, formatConfigDateTime } from "@/lib/datetime";
+import SessionBar from "@/components/SessionBar";
 
 // STRICT INVARIANT STATES FROM PROJECT_RULES.md
 type ApprovedState =
@@ -635,12 +637,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
             <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden lg:inline-block">
               MEMBER: {identifier}
             </span>
-            <Link
-              href="/login"
-              className="font-mono text-xs text-neutral-500 hover:text-neutral-900 font-medium"
-            >
-              Sign Out
-            </Link>
+            <SessionBar />
           </div>
         </div>
       </header>

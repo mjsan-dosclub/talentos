@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStudents, enrollStudent, SEED_GROUP_ID } from "@/lib/db";
+import SessionBar from "@/components/SessionBar";
 
 interface Member {
   id: string;
@@ -240,15 +241,17 @@ export default function AdminPage() {
             <Link href="/college" className="text-neutral-600 hover:text-neutral-900 hidden md:inline-block">
               College Portal
             </Link>
-            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden lg:inline-block">
-              CLEARANCE: ROOT_ADMIN • BATCH: ACTIVE • DB: {isLiveDb ? "SUPABASE_LIVE" : "STANDBY"}
-            </span>
             <Link
-              href="/login"
-              className="font-mono text-xs text-neutral-500 hover:text-neutral-900 font-medium"
+              href="/admin/settings"
+              className="text-neutral-700 hover:text-neutral-900 font-semibold border border-neutral-300 bg-neutral-50 px-2.5 py-1 rounded hover:bg-neutral-100 transition-colors inline-flex items-center gap-1.5"
             >
-              Sign Out
+              <span>⚙️</span>
+              <span>Settings</span>
             </Link>
+            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden lg:inline-block">
+              CLEARANCE: ROOT_ADMIN • DB: {isLiveDb ? "SUPABASE_LIVE" : "STANDBY"}
+            </span>
+            <SessionBar />
           </div>
         </div>
       </header>

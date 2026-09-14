@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStudents, Student } from "@/lib/db";
+import { formatConfigTime } from "@/lib/datetime";
+import SessionBar from "@/components/SessionBar";
 
 interface ParticipantState {
   student: Student;
@@ -26,11 +28,12 @@ export default function TrainerDashboardPage() {
   // Load students for today's session
   useEffect(() => {
     getStudents().then(({ students }) => {
+      const now = new Date();
       const initial: ParticipantState[] = students.map((s, idx) => ({
         student: s,
         status: idx === 0 ? "CHECKED_IN" : idx === 1 ? "COMPLETED" : "NOT_STARTED",
         source: idx === 0 || idx === 1 ? "QR_SCAN" : "TRAINER_MANUAL",
-        checkInTime: idx === 0 ? "09:02:14 UTC" : idx === 1 ? "08:58:40 UTC" : undefined,
+        checkInTime: idx === 0 ? formatConfigTime(now) : idx === 1 ? formatConfigTime(new Date(now.getTime() - 15 * 60000)) : undefined,
       }));
       setParticipants(initial);
     });
@@ -86,7 +89,7 @@ export default function TrainerDashboardPage() {
             ...p,
             status: "CHECKED_IN",
             source: "TRAINER_MANUAL",
-            checkInTime: new Date().toISOString().substring(11, 19) + " UTC",
+            checkInTime: formatConfigTime(new Date()),
             exceptionReason: reason,
           };
         }
@@ -122,12 +125,7 @@ export default function TrainerDashboardPage() {
             <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden sm:inline-block">
               ROLE: TRAINER • SESSION: LIVE
             </span>
-            <Link
-              href="/login"
-              className="font-mono text-xs text-neutral-500 hover:text-neutral-900 font-medium"
-            >
-              Sign Out
-            </Link>
+            <SessionBar />
           </div>
         </div>
       </header>

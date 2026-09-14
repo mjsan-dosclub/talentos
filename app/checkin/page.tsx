@@ -3,6 +3,8 @@
 import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { formatConfigTime, formatConfigDate } from "@/lib/datetime";
+import SessionBar from "@/components/SessionBar";
 
 // Haversine formula for distance in meters
 function computeDistanceMeters(
@@ -175,12 +177,15 @@ function CheckInContent() {
             <span className="tracking-wider uppercase font-semibold">TALENT_OS // MOBILE</span>
           </Link>
 
-          <Link
-            href="/trainer"
-            className="font-mono text-[11px] text-neutral-500 hover:text-neutral-900 border border-neutral-300 px-2 py-0.5 rounded"
-          >
-            Trainer Screen
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/trainer"
+              className="font-mono text-[11px] text-neutral-500 hover:text-neutral-900 border border-neutral-300 px-2 py-0.5 rounded"
+            >
+              Trainer Screen
+            </Link>
+            <SessionBar />
+          </div>
         </div>
       </header>
 
@@ -219,7 +224,15 @@ function CheckInContent() {
               </div>
               <div className="flex justify-between">
                 <span className="text-neutral-400">TIMESTAMP:</span>
-                <span className="text-neutral-800">{receipt.timestamp.slice(11, 19)} UTC</span>
+                <span className="text-neutral-900 font-bold font-mono">
+                  {formatConfigTime(receipt.timestamp)}
+                </span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-neutral-400">LOCAL DATE:</span>
+                <span className="text-neutral-700 font-mono">
+                  {formatConfigDate(receipt.timestamp)}
+                </span>
               </div>
             </div>
 

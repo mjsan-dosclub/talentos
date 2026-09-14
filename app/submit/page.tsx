@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import SessionBar from "@/components/SessionBar";
 
 // 9 APPROVED LIFECYCLE STATES FROM PROJECT_RULES.md
 type ApprovedState =
@@ -115,10 +116,7 @@ export default function DeliverableSubmitPage() {
             >
               My Record
             </Link>
-            <span className="text-neutral-300">|</span>
-            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden sm:inline-block">
-              ROLE: MEMBER • BATCH: ACTIVE
-            </span>
+            <SessionBar />
           </div>
         </div>
       </header>
