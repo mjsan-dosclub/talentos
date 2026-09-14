@@ -4,11 +4,14 @@ import { supabase } from "@/lib/supabase";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { fullName, email, phone, institution, yearAndDept, track, statement } = body;
+    const name = body.name || body.fullName;
+    const contact = body.contact || body.email || body.phone;
+    const category = body.category || "Student";
+    const message = body.message || body.statement || "";
 
-    if (!fullName || !email) {
+    if (!name || !contact) {
       return NextResponse.json(
-        { error: "Full Name and Email are required fields." },
+        { error: "Name and Contact (Email or Mobile) are required." },
         { status: 400 }
       );
     }
@@ -22,13 +25,11 @@ export async function POST(req: NextRequest) {
         {
           id: crypto.randomUUID(),
           enquiry_ref: enquiryId,
-          full_name: fullName,
-          email,
-          phone: phone || null,
-          institution: institution || null,
-          year_and_dept: yearAndDept || null,
-          track: track || null,
-          statement: statement || null,
+          full_name: name,
+          email: contact.includes("@") ? contact : null,
+          phone: !contact.includes("@") ? contact : null,
+          institution: category,
+          statement: message,
           created_at: timestamp,
         },
       ]);
@@ -36,12 +37,12 @@ export async function POST(req: NextRequest) {
       console.warn("Notice: Supabase aspirant_enquiries insert skipped or table not created:", dbErr);
     }
 
-    console.log(`[TalentOS] New Aspirant Enquiry registered: ${enquiryId} - ${fullName} (${email}) - Track: ${track}`);
+    console.log(`[TalentOS] New Enquiry registered: ${enquiryId} - ${name} (${contact}) - [${category}]`);
 
     return NextResponse.json({
       success: true,
       enquiryId,
-      message: "Enquiry submitted successfully. Admissions committee will review your profile.",
+      message: "Enquiry submitted successfully. Our team will connect with you.",
     });
   } catch (error: any) {
     console.error("Enquiry API error:", error);
