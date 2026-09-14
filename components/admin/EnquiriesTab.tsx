@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { EnquiryRecord } from "@/app/api/enquiry/route";
+import TablePagination from "./TablePagination";
 import {
   UsersIcon,
   CheckIcon,
@@ -29,6 +30,8 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
   const [roleFilter, setRoleFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
@@ -76,6 +79,11 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
 
     return matchesSearch && matchesRole && matchesStatus;
   });
+
+  const paginatedEnquiries = filteredEnquiries.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   // Selection handlers
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -350,7 +358,10 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
           <input
             type="text"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             placeholder="Search by name, email, phone, reference, or referral channel..."
             className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
           />
@@ -359,7 +370,10 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
         <div className="flex items-center gap-2 w-full sm:w-auto">
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none"
           >
             <option value="ALL">All Statuses</option>
@@ -371,7 +385,10 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
 
           <select
             value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
+            onChange={(e) => {
+              setRoleFilter(e.target.value);
+              setCurrentPage(1);
+            }}
             className="text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 font-medium focus:outline-none"
           >
             <option value="ALL">All Cohort Roles</option>
@@ -411,8 +428,9 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredEnquiries.map((enq) => {
+                {paginatedEnquiries.map((enq, idx) => {
                   const isSelected = selectedIds.has(enq.id);
+                  const isNearBottom = idx >= paginatedEnquiries.length - 2;
                   return (
                     <tr
                       key={enq.id}
@@ -488,7 +506,11 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
                               className="fixed inset-0 z-40"
                               onClick={() => setOpenKebabId(null)}
                             />
-                            <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
+                            <div
+                              className={`absolute right-3 ${
+                                isNearBottom ? "bottom-full mb-1" : "top-10"
+                              } w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
+                            >
                               {enq.phone && (
                                 <a
                                   href={`https://wa.me/${cleanPhoneForWhatsApp(enq.phone)}?text=${encodeURIComponent(
@@ -559,6 +581,18 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
             </table>
           </div>
         )}
+
+        {/* Table Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredEnquiries.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
     </div>
   );

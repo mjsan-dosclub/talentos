@@ -136,6 +136,22 @@ export default function Home() {
   useEffect(() => {
     setUser(getClientSession());
 
+    // Fetch site settings to keep SEO title live
+    async function loadSettings() {
+      try {
+        const res = await fetch("/api/settings");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.config?.seo?.metaTitle) {
+            document.title = data.config.seo.metaTitle;
+          }
+        }
+      } catch {
+        // fallback
+      }
+    }
+    loadSettings();
+
     // Fetch active published case studies from Admin CMS API
     async function loadDynamicCaseStudies() {
       try {
@@ -165,11 +181,20 @@ export default function Home() {
     loadDynamicCaseStudies();
   }, []);
 
+  const getDashboardHref = () => {
+    if (!user) return "/login";
+    if (user.role === "SUPER_ADMIN") return "/admin";
+    if (user.role === "TRAINER") return "/trainer";
+    if (user.role === "COLLEGE_ADMIN") return "/college";
+    if (user.role === "STUDENT") return `/record/${encodeURIComponent(user.dos_id || "DOS-B3-001")}`;
+    return "/admin";
+  };
+
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
     if (!accessPass.trim()) return;
     const cleanKey = accessPass.trim().toUpperCase();
-    router.push(`/record/${encodeURIComponent(cleanKey)}`);
+    router.push(`/ledger/${encodeURIComponent(cleanKey)}`);
   };
 
   const handleRequestSubmit = async (e: React.FormEvent) => {
@@ -246,7 +271,7 @@ export default function Home() {
               Request Access
             </Link>
             <Link
-              href="/login"
+              href={getDashboardHref()}
               className="text-xs font-semibold text-neutral-600 hover:text-[#14171A] tracking-wider uppercase transition-colors"
             >
               {user ? "Dashboard" : "Portal Access"}
@@ -304,7 +329,7 @@ export default function Home() {
               Request Access
             </Link>
             <Link
-              href="/login"
+              href={getDashboardHref()}
               onClick={() => setMobileMenuOpen(false)}
               className="block text-xs font-semibold text-neutral-700 uppercase tracking-wider"
             >

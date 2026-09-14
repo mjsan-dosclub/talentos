@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, Suspense } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
@@ -52,6 +52,17 @@ function AdminDashboardContent() {
   const [institutions, setInstitutions] = useState<PartnerInstitution[]>(INITIAL_INSTITUTIONS);
   const [workshops, setWorkshops] = useState<WorkshopItem[]>(INITIAL_WORKSHOPS);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
+
+  useEffect(() => {
+    fetch("/api/students")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.students && Array.isArray(data.students)) {
+          setStudents(data.students);
+        }
+      })
+      .catch((err) => console.warn("Failed loading live students:", err));
+  }, []);
 
   // Toast System
   const [toast, setToast] = useState<string | null>(null);

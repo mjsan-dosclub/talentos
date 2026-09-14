@@ -1,0 +1,43 @@
+{
+  "timezone": "Asia/Kolkata",
+  "locale": "en-IN",
+  "branding": {
+    "siteTitle": "DOS Club TalentOS",
+    "tagline": "Student Growth. Learning Evidence. Talent Intelligence.",
+    "organizationName": "DeScience Open Source Club",
+    "logoUrl": "/dos-club-logo.png",
+    "headColor": "#0f172a",
+    "fontFamily": "Inter, sans-serif",
+    "monoFontFamily": "JetBrains Mono, monospace",
+    "fontSizeBase": "16px"
+  },
+  "seo": {
+    "metaTitle": "DOS Club TalentOS — Student Growth & Talent Intelligence",
+    "metaDescription": "Operating platform for Descience Open Source Club tracking 27 workshops and learning evidence across Tamil Nadu and global partner institutions.",
+    "metaKeywords": "DOS Club, TalentOS, Engineering Portfolio, Student Growth, Talent Intelligence, Anna University, Tamil Nadu",
+    "ogImage": "/og-image.png",
+    "canonicalUrl": "http://localhost:3000"
+  },
+  "email": {
+    "provider": "smtp",
+    "smtpHost": "smtp.sendgrid.net",
+    "smtpPort": 587,
+    "smtpUser": "apikey",
+    "fromAddress": "notifications@dosclub.org",
+    "fromName": "DOS Club TalentOS",
+    "globalCc": "descienceosclub@gmail.com, admissions@dosclub.org",
+    "enabled": true
+  },
+  "whatsapp": {
+    "provider": "meta_cloud",
+    "senderPhone": "+914422350000",
+    "accountSid": "AC_meta_cloud_dosclub_india",
+    "enabled": true
+  },
+  "telegram": {
+    "botToken": "bot_dosclub_talentos_token",
+    "defaultChatId": "-1002345678901",
+    "alertsChannel": "@dosclub_engineering_alerts",
+    "enabled": true
+  }
+}

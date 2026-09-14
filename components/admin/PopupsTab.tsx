@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import type { WelcomePopup, PopupContentType } from "@/lib/popups-types";
+import TablePagination from "./TablePagination";
 
 import {
   VideoIcon,
@@ -12,6 +13,7 @@ import {
   CheckIcon,
   AlertTriangleIcon,
   ClockIcon,
+  MoreVerticalIcon,
 } from "@/components/Icons";
 
 function getYouTubeEmbedUrl(rawUrl: string): string | null {
@@ -38,6 +40,9 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingPopup, setEditingPopup] = useState<WelcomePopup | null>(null);
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Form State
   const [formTitle, setFormTitle] = useState("");
@@ -300,8 +305,9 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {popups.map((p) => {
+                {popups.slice((currentPage - 1) * pageSize, currentPage * pageSize).map((p, idx, arr) => {
                   const status = computeStatus(p);
+                  const isNearBottom = idx >= arr.length - 2;
                   return (
                     <tr key={p.id} className="hover:bg-slate-50/70 transition-colors">
                       {/* Status */}
@@ -369,42 +375,74 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
                         )}
                       </td>
 
-                      {/* Actions */}
-                      <td className="py-3.5 px-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setPreviewPopup(p)}
-                            className="px-2.5 py-1 text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded text-[11px] font-medium transition-colors cursor-pointer"
-                          >
-                            Preview
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleToggleActive(p)}
-                            className={`px-2.5 py-1 rounded text-[11px] font-medium transition-colors cursor-pointer ${
-                              p.isActive
-                                ? "bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200"
-                                : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200"
-                            }`}
-                          >
-                            {p.isActive ? "Deactivate" : "Activate"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(p)}
-                            className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-medium transition-colors cursor-pointer"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(p.id, p.title)}
-                            className="px-2.5 py-1 text-red-600 hover:bg-red-50 rounded text-[11px] font-medium transition-colors cursor-pointer"
-                          >
-                            Delete
-                          </button>
-                        </div>
+                      {/* 3-Dot Kebab Menu Actions */}
+                      <td className="py-3.5 px-4 text-right whitespace-nowrap relative">
+                        <button
+                          type="button"
+                          onClick={() => setOpenKebabId(openKebabId === p.id ? null : p.id)}
+                          className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                          aria-label="Actions"
+                        >
+                          <MoreVerticalIcon className="w-4 h-4" />
+                        </button>
+
+                        {openKebabId === p.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setOpenKebabId(null)}
+                            />
+                            <div
+                              className={`absolute right-3 ${
+                                isNearBottom ? "bottom-full mb-1" : "top-10"
+                              } w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
+                            >
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPreviewPopup(p);
+                                  setOpenKebabId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                              >
+                                <span>Preview Popup</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  openEditModal(p);
+                                  setOpenKebabId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                              >
+                                <span>Edit Announcement</span>
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  handleToggleActive(p);
+                                  setOpenKebabId(null);
+                                }}
+                                className={`w-full px-3 py-1.5 flex items-center gap-2 cursor-pointer font-medium ${
+                                  p.isActive ? "text-amber-700 hover:bg-amber-50" : "text-emerald-700 hover:bg-emerald-50"
+                                }`}
+                              >
+                                <span>{p.isActive ? "Deactivate" : "Activate"}</span>
+                              </button>
+                              <div className="border-t border-slate-100 my-1" />
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenKebabId(null);
+                                  handleDelete(p.id, p.title);
+                                }}
+                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                              >
+                                <span>Delete Announcement</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </td>
                     </tr>
                   );
@@ -413,6 +451,18 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
             </table>
           </div>
         )}
+
+        {/* Table Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={popups.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* ========================================================================= */}

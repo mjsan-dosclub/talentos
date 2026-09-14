@@ -16,14 +16,27 @@ const jetbrainsMono = JetBrains_Mono({
   display: "swap",
 });
 
-export const metadata: Metadata = {
-  title: "DOS Club TalentOS — Student Growth & Talent Intelligence",
-  description: "Operating platform for DeScience Open Source Club documenting 27-workshop technical execution across Tamil Nadu and global partners.",
-  icons: {
-    icon: "/dos-club-logo.png",
-    apple: "/dos-club-logo.png",
-  },
-};
+import { getSystemConfig } from "@/lib/config";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const config = getSystemConfig();
+  return {
+    title: config.seo?.metaTitle || "DOS Club TalentOS — Student Growth & Talent Intelligence",
+    description:
+      config.seo?.metaDescription ||
+      "Operating platform for DeScience Open Source Club documenting 27-workshop technical execution across Tamil Nadu and global partners.",
+    keywords: config.seo?.metaKeywords,
+    icons: {
+      icon: config.branding?.logoUrl || "/dos-club-logo.png",
+      apple: config.branding?.logoUrl || "/dos-club-logo.png",
+    },
+    openGraph: {
+      title: config.seo?.metaTitle,
+      description: config.seo?.metaDescription,
+      images: [config.seo?.ogImage || "/og-image.png"],
+    },
+  };
+}
 
 export default function RootLayout({
   children,

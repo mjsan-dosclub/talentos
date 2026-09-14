@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { CaseStudy } from "@/lib/casestudies";
+import TablePagination from "./TablePagination";
 import {
   SparklesIcon,
   CheckCircleIcon,
@@ -10,6 +11,8 @@ import {
   BuildingIcon,
   ShieldCheckIcon,
   TrashIcon,
+  EditIcon,
+  MoreVerticalIcon,
 } from "@/components/Icons";
 
 interface CaseStudiesCmsTabProps {
@@ -30,6 +33,9 @@ export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps
   const [notification, setNotification] = useState<string | null>(null);
   const [selectedStudyIds, setSelectedStudyIds] = useState<Set<string>>(new Set());
   const [bulkProcessing, setBulkProcessing] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(9);
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
   // Form State
   const initialFormState = {
@@ -375,7 +381,10 @@ export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps
 
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
             <button
-              onClick={() => setFilterStatus("ALL")}
+              onClick={() => {
+                setFilterStatus("ALL");
+                setCurrentPage(1);
+              }}
               className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
                 filterStatus === "ALL" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500"
               }`}
@@ -383,7 +392,10 @@ export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps
               All ({caseStudies.length})
             </button>
             <button
-              onClick={() => setFilterStatus("PUBLISHED")}
+              onClick={() => {
+                setFilterStatus("PUBLISHED");
+                setCurrentPage(1);
+              }}
               className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
                 filterStatus === "PUBLISHED" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500"
               }`}
@@ -391,7 +403,10 @@ export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps
               Published
             </button>
             <button
-              onClick={() => setFilterStatus("DRAFT")}
+              onClick={() => {
+                setFilterStatus("DRAFT");
+                setCurrentPage(1);
+              }}
               className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
                 filterStatus === "DRAFT" ? "bg-white text-slate-900 shadow-xs" : "text-slate-500"
               }`}
@@ -402,7 +417,7 @@ export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps
 
           <button
             onClick={handleOpenCreate}
-            className="flex items-center gap-2 px-4 py-2 bg-[#3772FF] hover:bg-[#285cdb] text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow"
+            className="flex items-center gap-2 px-4 py-2 bg-[#3772FF] hover:bg-[#285cdb] text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
           >
             <SparklesIcon className="w-4 h-4" />
             <span>Write New Case Study</span>
@@ -454,105 +469,192 @@ export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps
       )}
 
       {/* Case Studies Grid / Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredStudies.map((study) => (
-          <div
-            key={study.id}
-            className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
-          >
-            <div>
-              {/* Header Image / Badge */}
-              <div className="relative h-40 bg-slate-900 overflow-hidden">
-                <img
-                  src={study.bannerImage || study.coverImage || "/images/students/student-workshop-build.jpg"}
-                  alt={study.title}
-                  className="w-full h-full object-cover opacity-60"
-                />
-                <div className="absolute top-3 left-3 flex items-center gap-2">
-                  <span className="px-2.5 py-1 rounded-full bg-[#181A20]/80 backdrop-blur-xs text-white font-mono text-[9px] font-bold border border-white/10">
-                    {study.category}
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
-                      study.status === "DRAFT"
-                        ? "bg-amber-400 text-slate-900"
-                        : "bg-emerald-500 text-white"
-                    }`}
-                  >
-                    {study.status || "PUBLISHED"}
-                  </span>
-                </div>
-                <div className="absolute top-3 right-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedStudyIds.has(study.id)}
-                    onChange={() => handleToggleSelect(study.id)}
-                    className="w-4 h-4 rounded border-white/40 bg-white/20 text-[#3772FF] focus:ring-[#3772FF] cursor-pointer"
-                  />
-                </div>
-              </div>
-
-              {/* Content */}
-              <div className="p-5">
-                <div className="text-[10px] font-mono text-[#3772FF] font-semibold mb-1">
-                  {study.systemAudited}
-                </div>
-                <h3 className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug">
-                  {study.title}
-                </h3>
-                <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
-                  {study.shortDescription || study.summary}
-                </p>
-
-                {/* Author Info */}
-                <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2.5">
-                  <img
-                    src={study.student.avatar || "/images/students/student-1.jpg"}
-                    alt={study.student.name}
-                    className="w-7 h-7 rounded-full object-cover border border-slate-200"
-                  />
+      {filteredStudies.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 font-mono text-xs">
+          NO_CASE_STUDIES_FOUND
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          {(() => {
+            const paginatedStudies = filteredStudies.slice(
+              (currentPage - 1) * pageSize,
+              currentPage * pageSize
+            );
+            return paginatedStudies.map((study, idx) => {
+              const isNearBottom = idx >= paginatedStudies.length - 3;
+              return (
+                <div
+                  key={study.id}
+                  className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between relative"
+                >
                   <div>
-                    <div className="text-xs font-bold text-slate-800">
-                      {study.student.name}
+                    {/* Header Image / Badge */}
+                    <div className="relative h-40 bg-slate-900 overflow-hidden">
+                      <img
+                        src={study.bannerImage || study.coverImage || "/images/students/student-workshop-build.jpg"}
+                        alt={study.title}
+                        className="w-full h-full object-cover opacity-60"
+                      />
+                      <div className="absolute top-3 left-3 flex items-center gap-2">
+                        <span className="px-2.5 py-1 rounded-full bg-[#181A20]/80 backdrop-blur-xs text-white font-mono text-[9px] font-bold border border-white/10">
+                          {study.category}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
+                            study.status === "DRAFT"
+                              ? "bg-amber-400 text-slate-900"
+                              : "bg-emerald-500 text-white"
+                          }`}
+                        >
+                          {study.status || "PUBLISHED"}
+                        </span>
+                      </div>
+                      <div className="absolute top-3 right-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedStudyIds.has(study.id)}
+                          onChange={() => handleToggleSelect(study.id)}
+                          className="w-4 h-4 rounded border-white/40 bg-white/20 text-[#3772FF] focus:ring-[#3772FF] cursor-pointer"
+                        />
+                      </div>
                     </div>
-                    <div className="text-[10px] text-slate-400 font-mono">
-                      {study.student.college} &bull; {study.publishedAt}
+
+                    {/* Content */}
+                    <div className="p-5">
+                      <div className="text-[10px] font-mono text-[#3772FF] font-semibold mb-1">
+                        {study.systemAudited}
+                      </div>
+                      <h3 className="text-sm font-bold text-slate-900 line-clamp-2 leading-snug">
+                        {study.title}
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">
+                        {study.shortDescription || study.summary}
+                      </p>
+
+                      {/* Author Info */}
+                      <div className="mt-4 pt-3 border-t border-slate-100 flex items-center gap-2.5">
+                        <img
+                          src={study.student.avatar || "/images/students/student-1.jpg"}
+                          alt={study.student.name}
+                          className="w-7 h-7 rounded-full object-cover border border-slate-200"
+                        />
+                        <div>
+                          <div className="text-xs font-bold text-slate-800">
+                            {study.student.name}
+                          </div>
+                          <div className="text-[10px] text-slate-400 font-mono">
+                            {study.student.college} &bull; {study.publishedAt}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions Toolbar */}
+                  <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs relative">
+                    <button
+                      onClick={() => handleToggleStatus(study)}
+                      className={`font-semibold text-[11px] cursor-pointer ${
+                        study.status === "DRAFT"
+                          ? "text-emerald-600 hover:text-emerald-700"
+                          : "text-amber-600 hover:text-amber-700"
+                      }`}
+                    >
+                      {study.status === "DRAFT" ? "Publish to Web" : "Move to Draft"}
+                    </button>
+
+                    <div className="relative">
+                      <button
+                        onClick={() => setOpenKebabId(openKebabId === study.id ? null : study.id)}
+                        className="p-1.5 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-200 transition-colors cursor-pointer"
+                        aria-label="Actions"
+                      >
+                        <MoreVerticalIcon className="w-4 h-4" />
+                      </button>
+
+                      {openKebabId === study.id && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setOpenKebabId(null)}
+                          />
+                          <div
+                            className={`absolute right-0 ${
+                              isNearBottom ? "bottom-full mb-1" : "top-8"
+                            } w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
+                          >
+                            <button
+                              onClick={() => {
+                                handleOpenEdit(study);
+                                setOpenKebabId(null);
+                              }}
+                              className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                            >
+                              <span>Edit Case Study</span>
+                              <EditIcon className="w-3.5 h-3.5 text-slate-400" />
+                            </button>
+
+                            <a
+                              href={`/casestudies/${study.slug}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                              onClick={() => setOpenKebabId(null)}
+                            >
+                              <span>View Live Article</span>
+                              <ExternalLinkIcon className="w-3.5 h-3.5 text-slate-400" />
+                            </a>
+
+                            <div className="border-t border-slate-100 my-1" />
+
+                            <button
+                              onClick={() => {
+                                handleToggleStatus(study);
+                                setOpenKebabId(null);
+                              }}
+                              className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                            >
+                              <span>{study.status === "DRAFT" ? "Publish to Web" : "Move to Draft"}</span>
+                              <span className="text-xs">&bull;</span>
+                            </button>
+
+                            <div className="border-t border-slate-100 my-1" />
+
+                            <button
+                              onClick={() => {
+                                handleDelete(study.id, study.title);
+                                setOpenKebabId(null);
+                              }}
+                              className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                            >
+                              <TrashIcon className="w-3.5 h-3.5" />
+                              <span>Delete Case Study</span>
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+              );
+            });
+          })()}
+        </div>
+      )}
 
-            {/* Actions Toolbar */}
-            <div className="px-5 py-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-xs">
-              <button
-                onClick={() => handleToggleStatus(study)}
-                className={`font-semibold text-[11px] ${
-                  study.status === "DRAFT"
-                    ? "text-emerald-600 hover:text-emerald-700"
-                    : "text-amber-600 hover:text-amber-700"
-                }`}
-              >
-                {study.status === "DRAFT" ? "Publish to Web" : "Move to Draft"}
-              </button>
-
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => handleOpenEdit(study)}
-                  className="text-slate-600 hover:text-[#3772FF] font-semibold text-[11px]"
-                >
-                  Edit
-                </button>
-                <button
-                  onClick={() => handleDelete(study.id, study.title)}
-                  className="text-rose-500 hover:text-rose-700 font-semibold text-[11px]"
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
+      {/* Table Pagination */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-2xs">
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredStudies.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+          pageSizeOptions={[6, 9, 18, 36]}
+        />
       </div>
 
       {/* Create / Edit Case Study Modal */}

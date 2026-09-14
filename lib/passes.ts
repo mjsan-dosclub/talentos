@@ -93,15 +93,63 @@ export const INITIAL_PASSES: AccessPass[] = [
   }
 ];
 
-let passesStore: AccessPass[] = [...INITIAL_PASSES];
+import fs from "fs";
+import path from "path";
+
+const DATA_DIR = path.join(process.cwd(), "data");
+const PASSES_FILE = path.join(DATA_DIR, "passes.json");
+
+function ensurePassesFile(): void {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(PASSES_FILE)) {
+      fs.writeFileSync(PASSES_FILE, JSON.stringify(INITIAL_PASSES, null, 2), "utf-8");
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+}
+
+function loadPassesFromDisk(): AccessPass[] {
+  ensurePassesFile();
+  try {
+    if (fs.existsSync(PASSES_FILE)) {
+      const raw = fs.readFileSync(PASSES_FILE, "utf-8");
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn("Failed reading passes.json:", e);
+  }
+  return [...INITIAL_PASSES];
+}
+
+function savePassesToDisk(passes: AccessPass[]): void {
+  ensurePassesFile();
+  try {
+    fs.writeFileSync(PASSES_FILE, JSON.stringify(passes, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed writing passes.json:", e);
+  }
+}
+
+let passesStore: AccessPass[] | null = null;
+
+function getStore(): AccessPass[] {
+  if (!passesStore) {
+    passesStore = loadPassesFromDisk();
+  }
+  return passesStore;
+}
 
 export function getAccessPasses(): AccessPass[] {
-  return passesStore;
+  return getStore();
 }
 
 export function getAccessPassByCode(query: string): AccessPass | undefined {
   const clean = query.trim().toUpperCase();
-  return passesStore.find(
+  return getStore().find(
     (p) =>
       p.pass_code.toUpperCase() === clean ||
       p.id.toUpperCase() === clean ||
@@ -110,6 +158,7 @@ export function getAccessPassByCode(query: string): AccessPass | undefined {
 }
 
 export function issueAccessPass(data: Omit<AccessPass, "id" | "issued_at">): AccessPass {
+  const store = getStore();
   const now = new Date().toISOString();
   const pass: AccessPass = {
     ...data,
@@ -118,22 +167,31 @@ export function issueAccessPass(data: Omit<AccessPass, "id" | "issued_at">): Acc
     issued_at: now,
     status: data.status || "ACTIVE",
   };
-  passesStore.unshift(pass);
+  store.unshift(pass);
+  savePassesToDisk(store);
   return pass;
 }
 
 export function updateAccessPassStatus(id: string, status: "ACTIVE" | "REVOKED" | "EXPIRED"): AccessPass | null {
-  const index = passesStore.findIndex((p) => p.id === id || p.pass_code.toUpperCase() === id.toUpperCase());
+  const store = getStore();
+  const index = store.findIndex((p) => p.id === id || p.pass_code.toUpperCase() === id.toUpperCase());
   if (index === -1) return null;
-  passesStore[index] = {
-    ...passesStore[index],
+  store[index] = {
+    ...store[index],
     status,
   };
-  return passesStore[index];
+  savePassesToDisk(store);
+  return store[index];
 }
 
 export function deleteAccessPass(id: string): boolean {
-  const initialLen = passesStore.length;
-  passesStore = passesStore.filter((p) => p.id !== id && p.pass_code.toUpperCase() !== id.toUpperCase());
-  return passesStore.length < initialLen;
+  let store = getStore();
+  const initialLen = store.length;
+  passesStore = store.filter((p) => p.id !== id && p.pass_code.toUpperCase() !== id.toUpperCase());
+  if (passesStore.length < initialLen) {
+    savePassesToDisk(passesStore);
+    return true;
+  }
+  return false;
 }
+

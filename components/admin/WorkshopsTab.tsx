@@ -5,6 +5,7 @@ import { WorkshopItem } from "@/lib/admin-data";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 import GlobalTableFilter from "./GlobalTableFilter";
 import WorkshopScheduleTab from "./WorkshopScheduleTab";
+import TablePagination from "./TablePagination";
 import {
   BoltIcon,
   SearchIcon,
@@ -58,6 +59,8 @@ export default function WorkshopsTab({
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [modeFilter, setModeFilter] = useState("ALL");
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -293,10 +296,16 @@ export default function WorkshopsTab({
           {/* Reusable Global Filter Bar */}
           <GlobalTableFilter
             search={search}
-            onSearchChange={setSearch}
+            onSearchChange={(val) => {
+              setSearch(val);
+              setCurrentPage(1);
+            }}
             searchPlaceholder="Search by workshop code, title, expert or focus area..."
             status={statusFilter}
-            onStatusChange={setStatusFilter}
+            onStatusChange={(val) => {
+              setStatusFilter(val);
+              setCurrentPage(1);
+            }}
             statusOptions={[
               { value: "ALL", label: "All Statuses" },
               { value: "COMPLETED", label: "Completed" },
@@ -304,7 +313,10 @@ export default function WorkshopsTab({
               { value: "SCHEDULED", label: "Scheduled" },
             ]}
             secondary={modeFilter}
-            onSecondaryChange={setModeFilter}
+            onSecondaryChange={(val) => {
+              setModeFilter(val);
+              setCurrentPage(1);
+            }}
             secondaryLabel="All Delivery Modes"
             secondaryOptions={[
               { value: "IN_PERSON", label: "In-Person Lab" },
@@ -317,6 +329,7 @@ export default function WorkshopsTab({
               setSearch("");
               setStatusFilter("ALL");
               setModeFilter("ALL");
+              setCurrentPage(1);
             }}
           />
 
@@ -386,138 +399,161 @@ export default function WorkshopsTab({
                       </td>
                     </tr>
                   ) : (
-                    filtered.map((ws) => {
-                      const isSelected = selectedCodes.has(ws.code);
-                      return (
-                        <tr
-                          key={ws.code}
-                          className={`hover:bg-slate-50/80 transition-colors ${
-                            isSelected ? "bg-blue-50/30" : ""
-                          }`}
-                        >
-                          <td className="p-3 text-center">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => handleToggleSelect(ws.code)}
-                              className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
-                            />
-                          </td>
-                          <td className="p-3">
-                            <div className="flex flex-col">
-                              <span className="font-mono text-xs font-bold text-slate-900">
-                                {ws.code}
+                    (() => {
+                      const paginatedWorkshops = filtered.slice(
+                        (currentPage - 1) * pageSize,
+                        currentPage * pageSize
+                      );
+                      return paginatedWorkshops.map((ws, idx) => {
+                        const isSelected = selectedCodes.has(ws.code);
+                        const isNearBottom = idx >= paginatedWorkshops.length - 2;
+                        return (
+                          <tr
+                            key={ws.code}
+                            className={`hover:bg-slate-50/80 transition-colors ${
+                              isSelected ? "bg-blue-50/30" : ""
+                            }`}
+                          >
+                            <td className="p-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => handleToggleSelect(ws.code)}
+                                className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
+                              />
+                            </td>
+                            <td className="p-3">
+                              <div className="flex flex-col">
+                                <span className="font-mono text-xs font-bold text-slate-900">
+                                  {ws.code}
+                                </span>
+                                <span className="text-slate-800 font-medium mt-0.5">
+                                  {ws.title}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-3">
+                              <span className="text-slate-600 font-medium">{ws.focusArea}</span>
+                            </td>
+                            <td className="p-3 font-semibold text-slate-800">
+                              {ws.expertName}
+                            </td>
+                            <td className="p-3">
+                              <span className="px-2 py-0.5 rounded bg-slate-100 font-mono text-[10px] text-slate-600">
+                                {ws.mode}
                               </span>
-                              <span className="text-slate-800 font-medium mt-0.5">
-                                {ws.title}
+                            </td>
+                            <td className="p-3 font-mono text-xs">
+                              <span className="font-bold text-blue-700">{ws.testPassThreshold}</span> / 25
+                            </td>
+                            <td className="p-3">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  ws.status === "COMPLETED"
+                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                    : ws.status === "ACTIVE_IN_SESSION"
+                                    ? "bg-amber-50 text-amber-800 border border-amber-200 animate-pulse"
+                                    : "bg-blue-50 text-blue-800 border border-blue-200"
+                                }`}
+                              >
+                                {ws.status}
                               </span>
-                            </div>
-                          </td>
-                          <td className="p-3">
-                            <span className="text-slate-600 font-medium">{ws.focusArea}</span>
-                          </td>
-                          <td className="p-3 font-semibold text-slate-800">
-                            {ws.expertName}
-                          </td>
-                          <td className="p-3">
-                            <span className="px-2 py-0.5 rounded bg-slate-100 font-mono text-[10px] text-slate-600">
-                              {ws.mode}
-                            </span>
-                          </td>
-                          <td className="p-3 font-mono text-xs">
-                            <span className="font-bold text-blue-700">{ws.testPassThreshold}</span> / 25
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                ws.status === "COMPLETED"
-                                  ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                  : ws.status === "ACTIVE_IN_SESSION"
-                                  ? "bg-amber-50 text-amber-800 border border-amber-200 animate-pulse"
-                                  : "bg-blue-50 text-blue-800 border border-blue-200"
-                              }`}
-                            >
-                              {ws.status}
-                            </span>
-                          </td>
-                          {/* Minimalist 3-dot Kebab Menu */}
-                          <td className="p-3 text-right relative">
-                            <button
-                              onClick={() => setOpenKebabId(openKebabId === ws.code ? null : ws.code)}
-                              className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
-                              aria-label="Actions"
-                            >
-                              <MoreVerticalIcon className="w-4 h-4" />
-                            </button>
+                            </td>
+                            {/* Minimalist 3-dot Kebab Menu */}
+                            <td className="p-3 text-right relative">
+                              <button
+                                onClick={() => setOpenKebabId(openKebabId === ws.code ? null : ws.code)}
+                                className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                                aria-label="Actions"
+                              >
+                                <MoreVerticalIcon className="w-4 h-4" />
+                              </button>
 
-                            {openKebabId === ws.code && (
-                              <>
-                                <div
-                                  className="fixed inset-0 z-40"
-                                  onClick={() => setOpenKebabId(null)}
-                                />
-                                <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
-                                  <button
-                                    onClick={() => {
-                                      setEditingWorkshop(ws);
-                                      setOpenKebabId(null);
-                                    }}
-                                    className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                              {openKebabId === ws.code && (
+                                <>
+                                  <div
+                                    className="fixed inset-0 z-40"
+                                    onClick={() => setOpenKebabId(null)}
+                                  />
+                                  <div
+                                    className={`absolute right-3 ${
+                                      isNearBottom ? "bottom-full mb-1" : "top-10"
+                                    } w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
                                   >
-                                    <span>Edit Topic</span>
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setSubView("SCHEDULE");
-                                      setOpenKebabId(null);
-                                    }}
-                                    className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
-                                  >
-                                    <span>Schedule Deliveries</span>
-                                    <CalendarIcon className="w-3 h-3 text-slate-400" />
-                                  </button>
-                                  <div className="border-t border-slate-100 my-1" />
-                                  <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                    Set Status
-                                  </div>
-                                  {(["SCHEDULED", "ACTIVE_IN_SESSION", "COMPLETED", "INACTIVE"] as const).map((st) => (
                                     <button
-                                      key={st}
                                       onClick={() => {
-                                        handleStatusChange(ws.code, st, ws.title);
+                                        setEditingWorkshop(ws);
                                         setOpenKebabId(null);
                                       }}
-                                      className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
-                                        ws.status === st
-                                          ? "text-[#E25C38] font-bold bg-orange-50/50"
-                                          : "text-slate-600 hover:bg-slate-50"
-                                      }`}
+                                      className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
                                     >
-                                      <span>{st.replace(/_/g, " ")}</span>
-                                      {ws.status === st && <span className="text-xs">&bull;</span>}
+                                      <span>Edit Topic</span>
                                     </button>
-                                  ))}
-                                  <div className="border-t border-slate-100 my-1" />
-                                  <button
-                                    onClick={() => {
-                                      setOpenKebabId(null);
-                                      handleDelete(ws.code, ws.title);
-                                    }}
-                                    className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
-                                  >
-                                    <span>Delete Workshop</span>
-                                  </button>
-                                </div>
-                              </>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })
+                                    <button
+                                      onClick={() => {
+                                        setSubView("SCHEDULE");
+                                        setOpenKebabId(null);
+                                      }}
+                                      className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                    >
+                                      <span>Schedule Deliveries</span>
+                                      <CalendarIcon className="w-3 h-3 text-slate-400" />
+                                    </button>
+                                    <div className="border-t border-slate-100 my-1" />
+                                    <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                      Set Status
+                                    </div>
+                                    {(["SCHEDULED", "ACTIVE_IN_SESSION", "COMPLETED", "INACTIVE"] as const).map((st) => (
+                                      <button
+                                        key={st}
+                                        onClick={() => {
+                                          handleStatusChange(ws.code, st, ws.title);
+                                          setOpenKebabId(null);
+                                        }}
+                                        className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
+                                          ws.status === st
+                                            ? "text-[#E25C38] font-bold bg-orange-50/50"
+                                            : "text-slate-600 hover:bg-slate-50"
+                                        }`}
+                                      >
+                                        <span>{st.replace(/_/g, " ")}</span>
+                                        {ws.status === st && <span className="text-xs">&bull;</span>}
+                                      </button>
+                                    ))}
+                                    <div className="border-t border-slate-100 my-1" />
+                                    <button
+                                      onClick={() => {
+                                        setOpenKebabId(null);
+                                        handleDelete(ws.code, ws.title);
+                                      }}
+                                      className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                                    >
+                                      <span>Delete Workshop</span>
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      });
+                    })()
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* Table Pagination */}
+            <TablePagination
+              currentPage={currentPage}
+              totalItems={filtered.length}
+              pageSize={pageSize}
+              onPageChange={setCurrentPage}
+              onPageSizeChange={(newSize) => {
+                setPageSize(newSize);
+                setCurrentPage(1);
+              }}
+            />
           </div>
         </>
       )}

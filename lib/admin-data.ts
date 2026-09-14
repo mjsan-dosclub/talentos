@@ -9,7 +9,7 @@ export interface StudentMember {
   department: string;
   batch: string;
   completedWorkshops: number;
-  status: "ACTIVE" | "ON_LEAVE" | "DEFENSE_READY" | "INACTIVE";
+  status: "ACTIVE" | "ON_LEAVE" | "DEFENSE_READY" | "INACTIVE" | "ARCHIVED";
 }
 
 export interface ExpertMentor {

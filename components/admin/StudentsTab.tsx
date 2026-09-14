@@ -1,9 +1,8 @@
-"use client";
-
 import React, { useState } from "react";
 import Link from "next/link";
 import { StudentMember } from "@/lib/admin-data";
 import GlobalTableFilter from "./GlobalTableFilter";
+import TablePagination from "./TablePagination";
 import {
   UsersIcon,
   TrashIcon,
@@ -36,6 +35,10 @@ export default function StudentsTab({
   const [batchFilter, setBatchFilter] = useState("ALL");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentMember | null>(null);
@@ -62,6 +65,12 @@ export default function StudentsTab({
     return matchesSearch && matchesStatus && matchesBatch;
   });
 
+  // Paginated records
+  const paginatedStudents = filtered.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   // Selection handlers
   const handleToggleSelect = (id: string) => {
     setSelectedIds((prev) => {
@@ -81,9 +90,22 @@ export default function StudentsTab({
   };
 
   // Bulk actions
-  const handleBulkStatusUpdate = (status: StudentMember["status"]) => {
+  const handleBulkStatusUpdate = async (status: StudentMember["status"]) => {
     const count = selectedIds.size;
     if (count === 0) return;
+
+    for (const id of Array.from(selectedIds)) {
+      try {
+        await fetch("/api/students", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status }),
+        });
+      } catch (e) {
+        // Continue best-effort
+      }
+    }
+
     setStudents((prev) =>
       prev.map((s) => (selectedIds.has(s.id) ? { ...s, status } : s))
     );
@@ -97,100 +119,157 @@ export default function StudentsTab({
     onToast(`Updated ${count} candidate(s) to ${status}`);
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     const count = selectedIds.size;
     if (count === 0) return;
-    if (!confirm(`Delete ${count} selected student record(s)?`)) return;
+    if (!confirm(`Archive ${count} selected student record(s)?`)) return;
+
+    for (const id of Array.from(selectedIds)) {
+      try {
+        await fetch(`/api/students?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      } catch (e) {
+        // Continue best-effort
+      }
+    }
+
     setStudents((prev) => prev.filter((s) => !selectedIds.has(s.id)));
     onAuditLog?.(
       "Students",
       "Student Deletion",
       "Archive",
-      `Bulk deleted ${count} student record(s)`
+      `Bulk archived ${count} student record(s)`
     );
     setSelectedIds(new Set());
-    onToast(`Deleted ${count} student(s)`);
+    onToast(`Archived ${count} student(s)`);
   };
 
   // Single actions
-  const handleDelete = (id: string, name: string) => {
-    if (!confirm(`Delete record for "${name}"?`)) return;
-    setStudents((prev) => prev.filter((s) => s.id !== id));
-    onAuditLog?.(
-      "Students",
-      "Student Deletion",
-      "Archive",
-      `Deleted student record for ${name}`
-    );
-    onToast(`Deleted student: ${name}`);
+  const handleDelete = async (id: string, name: string) => {
+    if (!confirm(`Delete record for "${name}"? This candidate will be archived.`)) return;
+    try {
+      const res = await fetch(`/api/students?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+      if (res.ok) {
+        setStudents((prev) => prev.filter((s) => s.id !== id && s.dosId !== id));
+        onAuditLog?.(
+          "Students",
+          "Student Deletion",
+          "Archive",
+          `Archived student record for ${name} (${id})`
+        );
+        onToast(`Candidate ${name} archived successfully`);
+      } else {
+        const data = await res.json();
+        onToast(`Failed to archive candidate: ${data.error || "Server error"}`);
+      }
+    } catch (e: any) {
+      onToast(`Error archiving student: ${e.message}`);
+    }
   };
 
-  const handleStatusChange = (
+  const handleStatusChange = async (
     id: string,
     status: StudentMember["status"],
     name: string
   ) => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === id ? { ...s, status } : s))
-    );
-    onAuditLog?.(
-      "Students",
-      "Status Update",
-      "Update",
-      `Changed status of ${name} to ${status}`
-    );
-    onToast(`${name} is now ${status}`);
+    try {
+      const res = await fetch("/api/students", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status }),
+      });
+      if (res.ok) {
+        setStudents((prev) =>
+          prev.map((s) => (s.id === id || s.dosId === id ? { ...s, status } : s))
+        );
+        onAuditLog?.(
+          "Students",
+          "Status Update",
+          "Update",
+          `Changed status of ${name} to ${status}`
+        );
+        onToast(`${name} is now ${status}`);
+      }
+    } catch (e: any) {
+      onToast(`Error updating status: ${e.message}`);
+    }
   };
 
-  const handleCreateStudent = (e: React.FormEvent) => {
+  const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudent.fullName.trim() || !newStudent.email.trim()) return;
 
     const nextNum = String(students.length + 1).padStart(3, "0");
-    const created: StudentMember = {
-      id: `a00000${nextNum}`,
+    const payload = {
       dosId: `DOS-B3-${nextNum}`,
       fullName: newStudent.fullName.trim(),
       email: newStudent.email.trim(),
-      institution: newStudent.institution,
       department: newStudent.department,
+      institution: newStudent.institution,
       batch: newStudent.batch,
       completedWorkshops: 0,
-      status: "ACTIVE",
+      status: "ACTIVE" as const,
     };
 
-    setStudents([created, ...students]);
-    setIsAddOpen(false);
-    setNewStudent({
-      fullName: "",
-      email: "",
-      department: "Computer Science & Engineering",
-      institution: "Anna University Campus Hub",
-      batch: "Batch 3 - 2026",
-    });
-    onAuditLog?.(
-      "Students",
-      "Profile Creation",
-      "Create",
-      `Enrolled candidate ${created.fullName} (${created.dosId})`
-    );
-    onToast(`Enrolled ${created.fullName} (${created.dosId})`);
+    try {
+      const res = await fetch("/api/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success && data.student) {
+        setStudents([data.student, ...students]);
+        setIsAddOpen(false);
+        setNewStudent({
+          fullName: "",
+          email: "",
+          department: "Computer Science & Engineering",
+          institution: "Anna University Campus Hub",
+          batch: "Batch 3 - 2026",
+        });
+        onAuditLog?.(
+          "Students",
+          "Profile Creation",
+          "Create",
+          `Enrolled candidate ${data.student.fullName} (${data.student.dosId})`
+        );
+        onToast(`Enrolled ${data.student.fullName} (${data.student.dosId})`);
+      } else {
+        onToast(`Failed to enroll: ${data.error || "Unknown error"}`);
+      }
+    } catch (e: any) {
+      onToast(`Error enrolling candidate: ${e.message}`);
+    }
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingStudent) return;
-    setStudents((prev) =>
-      prev.map((s) => (s.id === editingStudent.id ? editingStudent : s))
-    );
-    onAuditLog?.(
-      "Students",
-      "Profile Update",
-      "Update",
-      `Updated profile for ${editingStudent.fullName} (${editingStudent.dosId})`
-    );
-    onToast(`Saved changes for ${editingStudent.fullName}`);
-    setEditingStudent(null);
+    try {
+      const res = await fetch("/api/students", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingStudent),
+      });
+      if (res.ok) {
+        setStudents((prev) =>
+          prev.map((s) => (s.id === editingStudent.id ? editingStudent : s))
+        );
+        onAuditLog?.(
+          "Students",
+          "Profile Update",
+          "Update",
+          `Updated profile for ${editingStudent.fullName} (${editingStudent.dosId})`
+        );
+        onToast(`Saved changes for ${editingStudent.fullName}`);
+        setEditingStudent(null);
+      } else {
+        const data = await res.json();
+        onToast(`Failed to update: ${data.error || "Server error"}`);
+      }
+    } catch (e: any) {
+      onToast(`Error saving candidate: ${e.message}`);
+    }
   };
 
   return (
@@ -223,19 +302,29 @@ export default function StudentsTab({
       {/* Reusable Global Datatable Filter */}
       <GlobalTableFilter
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setCurrentPage(1);
+        }}
         searchPlaceholder="Search by name, email, DOS_ID or campus hub..."
         status={statusFilter}
-        onStatusChange={setStatusFilter}
+        onStatusChange={(val) => {
+          setStatusFilter(val);
+          setCurrentPage(1);
+        }}
         statusOptions={[
           { value: "ALL", label: "All Statuses" },
           { value: "ACTIVE", label: "Active" },
           { value: "DEFENSE_READY", label: "Defense Ready" },
           { value: "ON_LEAVE", label: "On Leave" },
+          { value: "ARCHIVED", label: "Archived Candidates" },
           { value: "INACTIVE", label: "Inactive" },
         ]}
         secondary={batchFilter}
-        onSecondaryChange={setBatchFilter}
+        onSecondaryChange={(val) => {
+          setBatchFilter(val);
+          setCurrentPage(1);
+        }}
         secondaryLabel="All Batches"
         secondaryOptions={[
           { value: "Batch 3 - 2026", label: "Batch 3 - 2026" },
@@ -247,6 +336,7 @@ export default function StudentsTab({
           setSearch("");
           setStatusFilter("ALL");
           setBatchFilter("ALL");
+          setCurrentPage(1);
         }}
       />
 
@@ -262,42 +352,48 @@ export default function StudentsTab({
             </span>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap text-xs">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => handleBulkStatusUpdate("ACTIVE")}
-              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded font-semibold cursor-pointer"
+              className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded cursor-pointer"
             >
-              Set Active
+              Mark Active
             </button>
             <button
               onClick={() => handleBulkStatusUpdate("DEFENSE_READY")}
-              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 rounded font-semibold cursor-pointer"
+              className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded cursor-pointer"
             >
-              Set Defense Ready
+              Mark Defense Ready
             </button>
             <button
-              onClick={() => handleBulkStatusUpdate("INACTIVE")}
-              className="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 rounded font-semibold cursor-pointer"
+              onClick={() => handleBulkStatusUpdate("ON_LEAVE")}
+              className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded cursor-pointer"
             >
-              Set Inactive
+              Mark On Leave
             </button>
             <button
               onClick={handleBulkDelete}
-              className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 rounded font-semibold cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold rounded cursor-pointer flex items-center gap-1"
             >
               <TrashIcon className="w-3 h-3" />
-              <span>Delete</span>
+              <span>Archive</span>
+            </button>
+            <button
+              onClick={() => setSelectedIds(new Set())}
+              className="px-2 py-1 text-slate-400 hover:text-white text-xs cursor-pointer ml-1"
+            >
+              Cancel
             </button>
           </div>
         </div>
       )}
 
-      {/* Students Datatable */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
+      {/* Candidate Table Card */}
+      <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">
+              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[10px] font-bold">
                 <th className="p-3 w-10 text-center">
                   <input
                     type="checkbox"
@@ -323,8 +419,9 @@ export default function StudentsTab({
                   </td>
                 </tr>
               ) : (
-                filtered.map((s) => {
+                paginatedStudents.map((s, idx) => {
                   const isSelected = selectedIds.has(s.id);
+                  const isNearBottom = idx >= paginatedStudents.length - 2;
                   return (
                     <tr
                       key={s.id}
@@ -385,6 +482,8 @@ export default function StudentsTab({
                               ? "bg-blue-50 text-blue-800 border border-blue-200"
                               : s.status === "ON_LEAVE"
                               ? "bg-amber-50 text-amber-800 border border-amber-200"
+                              : s.status === "ARCHIVED"
+                              ? "bg-rose-50 text-rose-800 border border-rose-200"
                               : "bg-slate-100 text-slate-600 border border-slate-300"
                           }`}
                         >
@@ -407,7 +506,11 @@ export default function StudentsTab({
                               className="fixed inset-0 z-40"
                               onClick={() => setOpenKebabId(null)}
                             />
-                            <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
+                            <div
+                              className={`absolute right-3 ${
+                                isNearBottom ? "bottom-full mb-1" : "top-10"
+                              } w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
+                            >
                               <Link
                                 href={`/record/${s.dosId}`}
                                 target="_blank"
@@ -448,15 +551,27 @@ export default function StudentsTab({
                                 </button>
                               ))}
                               <div className="border-t border-slate-100 my-1" />
-                              <button
-                                onClick={() => {
-                                  setOpenKebabId(null);
-                                  handleDelete(s.id, s.fullName);
-                                }}
-                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
-                              >
-                                <span>Delete Candidate</span>
-                              </button>
+                              {s.status === "ARCHIVED" ? (
+                                <button
+                                  onClick={() => {
+                                    setOpenKebabId(null);
+                                    handleStatusChange(s.id, "ACTIVE", s.fullName);
+                                  }}
+                                  className="w-full px-3 py-1.5 text-emerald-700 hover:bg-emerald-50 flex items-center gap-2 cursor-pointer font-semibold"
+                                >
+                                  <span>Restore Candidate</span>
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setOpenKebabId(null);
+                                    handleDelete(s.id, s.fullName);
+                                  }}
+                                  className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                                >
+                                  <span>Archive Candidate</span>
+                                </button>
+                              )}
                             </div>
                           </>
                         )}
@@ -468,6 +583,18 @@ export default function StudentsTab({
             </tbody>
           </table>
         </div>
+
+        {/* Table Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* ADD STUDENT MODAL */}

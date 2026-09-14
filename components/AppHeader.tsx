@@ -83,7 +83,7 @@ export default function AppHeader() {
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Quick Home & Dashboard Navigation */}
           <div className="flex items-center gap-1.5 mr-1">
-            {pathname !== "/" && (
+            {pathname !== "/" && !pathname.startsWith("/admin") && (
               <Link
                 href="/"
                 className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"

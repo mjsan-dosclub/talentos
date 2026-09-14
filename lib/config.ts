@@ -102,22 +102,74 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
   },
 };
 
+// Disk persistence helpers for server-side runtime
+function loadFromDisk(): SystemConfig | null {
+  if (typeof window !== "undefined") return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("fs");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require("path");
+    const filePath = path.join(process.cwd(), "data", "system_settings.json");
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, "utf-8");
+      const parsed = JSON.parse(raw);
+      return {
+        ...DEFAULT_SYSTEM_CONFIG,
+        ...parsed,
+        branding: { ...DEFAULT_SYSTEM_CONFIG.branding, ...(parsed.branding || {}) },
+        seo: { ...DEFAULT_SYSTEM_CONFIG.seo, ...(parsed.seo || {}) },
+        email: { ...DEFAULT_SYSTEM_CONFIG.email, ...(parsed.email || {}) },
+        whatsapp: { ...DEFAULT_SYSTEM_CONFIG.whatsapp, ...(parsed.whatsapp || {}) },
+        telegram: { ...DEFAULT_SYSTEM_CONFIG.telegram, ...(parsed.telegram || {}) },
+      };
+    }
+  } catch {
+    // Graceful fallback
+  }
+  return null;
+}
+
+function saveToDisk(cfg: SystemConfig): void {
+  if (typeof window !== "undefined") return;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fs = require("fs");
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const path = require("path");
+    const dataDir = path.join(process.cwd(), "data");
+    const filePath = path.join(dataDir, "system_settings.json");
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    fs.writeFileSync(filePath, JSON.stringify(cfg, null, 2), "utf-8");
+  } catch {
+    // Graceful fallback
+  }
+}
+
 // In-memory runtime cache with disk/DB fallback
-let runtimeConfig: SystemConfig = { ...DEFAULT_SYSTEM_CONFIG };
+let runtimeConfig: SystemConfig = loadFromDisk() || { ...DEFAULT_SYSTEM_CONFIG };
 
 export function getSystemConfig(): SystemConfig {
+  const diskConfig = loadFromDisk();
+  if (diskConfig) {
+    runtimeConfig = diskConfig;
+  }
   return runtimeConfig;
 }
 
 export function updateSystemConfig(partial: Partial<SystemConfig>): SystemConfig {
+  const current = getSystemConfig();
   runtimeConfig = {
-    ...runtimeConfig,
+    ...current,
     ...partial,
-    branding: { ...runtimeConfig.branding, ...(partial.branding || {}) },
-    seo: { ...runtimeConfig.seo, ...(partial.seo || {}) },
-    email: { ...runtimeConfig.email, ...(partial.email || {}) },
-    whatsapp: { ...runtimeConfig.whatsapp, ...(partial.whatsapp || {}) },
-    telegram: { ...runtimeConfig.telegram, ...(partial.telegram || {}) },
+    branding: { ...current.branding, ...(partial.branding || {}) },
+    seo: { ...current.seo, ...(partial.seo || {}) },
+    email: { ...current.email, ...(partial.email || {}) },
+    whatsapp: { ...current.whatsapp, ...(partial.whatsapp || {}) },
+    telegram: { ...current.telegram, ...(partial.telegram || {}) },
   };
+  saveToDisk(runtimeConfig);
   return runtimeConfig;
 }

@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { ExpertMentor } from "@/lib/admin-data";
 import GlobalTableFilter from "./GlobalTableFilter";
+import TablePagination from "./TablePagination";
 import {
   AcademicCapIcon,
   TrashIcon,
@@ -36,6 +37,8 @@ export default function MentorsTab({
   const [domainFilter, setDomainFilter] = useState("ALL");
   const [viewMode, setViewMode] = useState<"CARD" | "TABLE">("CARD");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
   // Modal states
@@ -77,6 +80,11 @@ export default function MentorsTab({
 
     return matchesSearch && matchesStatus && matchesDomain;
   });
+
+  const paginatedExperts = filtered.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   // Bulk actions
   const handleToggleSelect = (id: string) => {
@@ -251,10 +259,16 @@ export default function MentorsTab({
       {/* Reusable Global Filter Bar */}
       <GlobalTableFilter
         search={search}
-        onSearchChange={setSearch}
+        onSearchChange={(val) => {
+          setSearch(val);
+          setCurrentPage(1);
+        }}
         searchPlaceholder="Search by mentor name, company, designation, or domain tags..."
         status={statusFilter}
-        onStatusChange={setStatusFilter}
+        onStatusChange={(val) => {
+          setStatusFilter(val);
+          setCurrentPage(1);
+        }}
         statusOptions={[
           { value: "ALL", label: "All Statuses" },
           { value: "ACTIVE", label: "Active" },
@@ -262,7 +276,10 @@ export default function MentorsTab({
           { value: "INACTIVE", label: "Inactive" },
         ]}
         secondary={domainFilter}
-        onSecondaryChange={setDomainFilter}
+        onSecondaryChange={(val) => {
+          setDomainFilter(val);
+          setCurrentPage(1);
+        }}
         secondaryLabel="All Domains"
         secondaryOptions={allDomains.map((d) => ({ value: d, label: d }))}
         totalCount={experts.length}
@@ -271,6 +288,7 @@ export default function MentorsTab({
           setSearch("");
           setStatusFilter("ALL");
           setDomainFilter("ALL");
+          setCurrentPage(1);
         }}
       />
 
@@ -317,7 +335,7 @@ export default function MentorsTab({
               NO_MENTORS_MATCHING_FILTER
             </div>
           ) : (
-            filtered.map((exp) => {
+            paginatedExperts.map((exp) => {
               const isSelected = selectedIds.has(exp.id);
               return (
                 <div
@@ -477,154 +495,173 @@ export default function MentorsTab({
                     </td>
                   </tr>
                 ) : (
-                  filtered.map((exp) => (
-                    <tr key={exp.id} className="hover:bg-slate-50/80 transition-colors">
-                      <td className="p-3 text-center">
-                        <input
-                          type="checkbox"
-                          checked={selectedIds.has(exp.id)}
-                          onChange={() => handleToggleSelect(exp.id)}
-                          className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
-                        />
-                      </td>
-                      <td className="p-3">
-                        <div className="flex items-center gap-2.5">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={exp.avatar}
-                            alt=""
-                            className="w-8 h-8 rounded-full object-cover border border-slate-200"
+                  paginatedExperts.map((exp, idx, arr) => {
+                    const isNearBottom = idx >= arr.length - 2;
+                    return (
+                      <tr key={exp.id} className="hover:bg-slate-50/80 transition-colors">
+                        <td className="p-3 text-center">
+                          <input
+                            type="checkbox"
+                            checked={selectedIds.has(exp.id)}
+                            onChange={() => handleToggleSelect(exp.id)}
+                            className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
                           />
-                          <div className="flex flex-col">
-                            <span className="font-bold text-slate-900">{exp.fullName}</span>
-                            <span className="text-[11px] text-slate-400">{exp.email}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex flex-col">
-                          <span className="font-medium text-slate-800">{exp.designation || "Systems Mentor"}</span>
-                          <span className="text-[11px] text-slate-500">{exp.organization}</span>
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex flex-wrap gap-1 max-w-xs">
-                          {exp.domainSpecialties.map((s, idx) => (
-                            <span
-                              key={idx}
-                              className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-medium text-slate-700"
-                            >
-                              {s}
-                            </span>
-                          ))}
-                        </div>
-                      </td>
-                      <td className="p-3 font-mono text-xs font-bold text-[#E25C38]">
-                        {exp.assignedWorkshops.join(", ")}
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            exp.status === "ACTIVE"
-                              ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                              : exp.status === "STANDBY"
-                              ? "bg-amber-50 text-amber-800 border border-amber-200"
-                              : "bg-slate-100 text-slate-600 border border-slate-300"
-                          }`}
-                        >
-                          {exp.status}
-                        </span>
-                      </td>
-                      {/* Minimalist 3-dot Kebab Menu */}
-                      <td className="p-3 text-right relative">
-                        <button
-                          onClick={() => setOpenKebabId(openKebabId === exp.id ? null : exp.id)}
-                          className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
-                          aria-label="Actions"
-                        >
-                          <MoreVerticalIcon className="w-4 h-4" />
-                        </button>
-
-                        {openKebabId === exp.id && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-40"
-                              onClick={() => setOpenKebabId(null)}
+                        </td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-2.5">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={exp.avatar}
+                              alt=""
+                              className="w-8 h-8 rounded-full object-cover border border-slate-200"
                             />
-                            <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
-                              <button
-                                onClick={() => {
-                                  setEditingExpert(exp);
-                                  setOpenKebabId(null);
-                                }}
-                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                            <div className="flex flex-col">
+                              <span className="font-bold text-slate-900">{exp.fullName}</span>
+                              <span className="text-[11px] text-slate-400">{exp.email}</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex flex-col">
+                            <span className="font-medium text-slate-800">{exp.designation || "Systems Mentor"}</span>
+                            <span className="text-[11px] text-slate-500">{exp.organization}</span>
+                          </div>
+                        </td>
+                        <td className="p-3">
+                          <div className="flex flex-wrap gap-1 max-w-xs">
+                            {exp.domainSpecialties.map((s, sIdx) => (
+                              <span
+                                key={sIdx}
+                                className="px-1.5 py-0.5 bg-slate-100 rounded text-[10px] font-medium text-slate-700"
                               >
-                                <span>Edit Expert Profile</span>
-                              </button>
-                              <Link
-                                href="/trainer"
-                                target="_blank"
-                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                        <td className="p-3 font-mono text-xs font-bold text-[#E25C38]">
+                          {exp.assignedWorkshops.join(", ")}
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                              exp.status === "ACTIVE"
+                                ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                : exp.status === "STANDBY"
+                                ? "bg-amber-50 text-amber-800 border border-amber-200"
+                                : "bg-slate-100 text-slate-600 border border-slate-300"
+                            }`}
+                          >
+                            {exp.status}
+                          </span>
+                        </td>
+                        {/* Minimalist 3-dot Kebab Menu */}
+                        <td className="p-3 text-right relative">
+                          <button
+                            onClick={() => setOpenKebabId(openKebabId === exp.id ? null : exp.id)}
+                            className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                            aria-label="Actions"
+                          >
+                            <MoreVerticalIcon className="w-4 h-4" />
+                          </button>
+
+                          {openKebabId === exp.id && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-40"
                                 onClick={() => setOpenKebabId(null)}
+                              />
+                              <div
+                                className={`absolute right-3 ${
+                                  isNearBottom ? "bottom-full mb-1" : "top-10"
+                                } w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
                               >
-                                <span>View Trainer Cockpit</span>
-                                <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
-                              </Link>
-                              {exp.linkedinUrl && (
-                                <a
-                                  href={exp.linkedinUrl}
+                                <button
+                                  onClick={() => {
+                                    setEditingExpert(exp);
+                                    setOpenKebabId(null);
+                                  }}
+                                  className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                                >
+                                  <span>Edit Expert Profile</span>
+                                </button>
+                                <Link
+                                  href="/trainer"
                                   target="_blank"
-                                  rel="noopener noreferrer"
                                   className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
                                   onClick={() => setOpenKebabId(null)}
                                 >
-                                  <span>LinkedIn Profile</span>
+                                  <span>View Trainer Cockpit</span>
                                   <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
-                                </a>
-                              )}
-                              <div className="border-t border-slate-100 my-1" />
-                              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                Set Status
-                              </div>
-                              {(["ACTIVE", "STANDBY", "INACTIVE"] as const).map((st) => (
+                                </Link>
+                                {exp.linkedinUrl && (
+                                  <a
+                                    href={exp.linkedinUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                    onClick={() => setOpenKebabId(null)}
+                                  >
+                                    <span>LinkedIn Profile</span>
+                                    <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
+                                  </a>
+                                )}
+                                <div className="border-t border-slate-100 my-1" />
+                                <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  Set Status
+                                </div>
+                                {(["ACTIVE", "STANDBY", "INACTIVE"] as const).map((st) => (
+                                  <button
+                                    key={st}
+                                    onClick={() => {
+                                      handleToggleStatus(exp.id, st, exp.fullName);
+                                      setOpenKebabId(null);
+                                    }}
+                                    className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
+                                      exp.status === st
+                                        ? "text-[#E25C38] font-bold bg-orange-50/50"
+                                        : "text-slate-600 hover:bg-slate-50"
+                                    }`}
+                                  >
+                                    <span>{st}</span>
+                                    {exp.status === st && <span className="text-xs">&bull;</span>}
+                                  </button>
+                                ))}
+                                <div className="border-t border-slate-100 my-1" />
                                 <button
-                                  key={st}
                                   onClick={() => {
-                                    handleToggleStatus(exp.id, st, exp.fullName);
                                     setOpenKebabId(null);
+                                    handleDelete(exp.id, exp.fullName);
                                   }}
-                                  className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
-                                    exp.status === st
-                                      ? "text-[#E25C38] font-bold bg-orange-50/50"
-                                      : "text-slate-600 hover:bg-slate-50"
-                                  }`}
+                                  className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
                                 >
-                                  <span>{st}</span>
-                                  {exp.status === st && <span className="text-xs">&bull;</span>}
+                                  <span>Delete Expert</span>
                                 </button>
-                              ))}
-                              <div className="border-t border-slate-100 my-1" />
-                              <button
-                                onClick={() => {
-                                  setOpenKebabId(null);
-                                  handleDelete(exp.id, exp.fullName);
-                                }}
-                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
-                              >
-                                <span>Delete Expert</span>
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </td>
-                    </tr>
-                  ))
+                              </div>
+                            </>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
           </div>
         </div>
       )}
+
+      {/* Table Pagination */}
+      <TablePagination
+        currentPage={currentPage}
+        totalItems={filtered.length}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize);
+          setCurrentPage(1);
+        }}
+      />
 
       {/* SYNCHRONIZED ADD MENTOR MODAL */}
       {isAddOpen && (

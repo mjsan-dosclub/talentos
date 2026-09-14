@@ -1,7 +1,6 @@
-"use client";
-
 import React, { useState, useEffect } from "react";
 import { AccessPass } from "@/lib/passes";
+import TablePagination from "./TablePagination";
 import {
   IdCardIcon,
   CheckIcon,
@@ -29,6 +28,8 @@ export default function PassLedgerTab({ onToast, onAuditLog }: PassLedgerTabProp
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "ACTIVE" | "REVOKED" | "EXPIRED">("ALL");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
@@ -217,6 +218,11 @@ export default function PassLedgerTab({ onToast, onAuditLog }: PassLedgerTabProp
     return matchesSearch && matchesStatus;
   });
 
+  const paginatedPasses = filteredPasses.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   const isAllSelected =
     filteredPasses.length > 0 &&
     filteredPasses.every((p) => selectedIds.has(p.id));
@@ -368,7 +374,10 @@ export default function PassLedgerTab({ onToast, onAuditLog }: PassLedgerTabProp
             type="text"
             placeholder="Search by pass code, name, email..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setCurrentPage(1);
+            }}
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:border-[#E25C38]"
           />
         </div>
@@ -378,7 +387,10 @@ export default function PassLedgerTab({ onToast, onAuditLog }: PassLedgerTabProp
             {(["ALL", "ACTIVE", "REVOKED", "EXPIRED"] as const).map((st) => (
               <button
                 key={st}
-                onClick={() => setStatusFilter(st)}
+                onClick={() => {
+                  setStatusFilter(st);
+                  setCurrentPage(1);
+                }}
                 className={`px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
                   statusFilter === st ? "bg-white text-slate-900 shadow-xs" : "text-slate-500"
                 }`}
@@ -426,151 +438,170 @@ export default function PassLedgerTab({ onToast, onAuditLog }: PassLedgerTabProp
                   </td>
                 </tr>
               ) : (
-                filteredPasses.map((pass) => (
-                  <tr key={pass.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="py-3.5 px-4">
-                      <input
-                        type="checkbox"
-                        checked={selectedIds.has(pass.id)}
-                        onChange={() => toggleSelect(pass.id)}
-                        className="rounded border-slate-300 text-[#E25C38] focus:ring-[#E25C38] cursor-pointer"
-                      />
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                          {pass.pass_code}
-                        </span>
-                        <button
-                          onClick={() => copyCode(pass.pass_code)}
-                          title="Copy Pass Code"
-                          className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
-                        >
-                          <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                          </svg>
-                        </button>
-                      </div>
-                      <div className="text-[10px] text-slate-400 mt-0.5">{pass.notes}</div>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-900">{pass.candidate_name}</div>
-                      <div className="text-[11px] text-slate-500">{pass.candidate_email}</div>
-                      <div className="text-[10px] text-slate-400 font-mono mt-0.5">{pass.institution}</div>
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <div className="font-semibold text-slate-800">{pass.cohort_batch}</div>
-                      <div className="text-[10px] text-neutral-500 font-medium">{pass.clearance_level}</div>
-                    </td>
-
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600">
-                      {new Date(pass.issued_at).toLocaleDateString()}
-                    </td>
-
-                    <td className="py-3.5 px-4">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase tracking-wider ${
-                          pass.status === "ACTIVE"
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-                            : pass.status === "REVOKED"
-                            ? "bg-rose-50 text-rose-700 border border-rose-200"
-                            : "bg-amber-50 text-amber-700 border border-amber-200"
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            pass.status === "ACTIVE"
-                              ? "bg-emerald-500"
-                              : pass.status === "REVOKED"
-                              ? "bg-rose-500"
-                              : "bg-amber-500"
-                          }`}
+                paginatedPasses.map((pass, idx) => {
+                  const isNearBottom = idx >= paginatedPasses.length - 2;
+                  return (
+                    <tr key={pass.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(pass.id)}
+                          onChange={() => toggleSelect(pass.id)}
+                          className="rounded border-slate-300 text-[#E25C38] focus:ring-[#E25C38] cursor-pointer"
                         />
-                        <span>{pass.status}</span>
-                      </span>
-                    </td>
+                      </td>
 
-                    {/* Minimalist 3-dot Kebab Menu */}
-                    <td className="py-3.5 px-4 text-right relative">
-                      <button
-                        onClick={() => setOpenKebabId(openKebabId === pass.id ? null : pass.id)}
-                        className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
-                        aria-label="Actions"
-                      >
-                        <MoreVerticalIcon className="w-4 h-4" />
-                      </button>
+                      <td className="py-3.5 px-4">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                            {pass.pass_code}
+                          </span>
+                          <button
+                            onClick={() => copyCode(pass.pass_code)}
+                            title="Copy Pass Code"
+                            className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+                          >
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="text-[10px] text-slate-400 mt-0.5">{pass.notes}</div>
+                      </td>
 
-                      {openKebabId === pass.id && (
-                        <>
-                          <div
-                            className="fixed inset-0 z-40"
-                            onClick={() => setOpenKebabId(null)}
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-slate-900">{pass.candidate_name}</div>
+                        <div className="text-[11px] text-slate-500">{pass.candidate_email}</div>
+                        <div className="text-[10px] text-slate-400 font-mono mt-0.5">{pass.institution}</div>
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <div className="font-semibold text-slate-800">{pass.cohort_batch}</div>
+                        <div className="text-[10px] text-neutral-500 font-medium">{pass.clearance_level}</div>
+                      </td>
+
+                      <td className="py-3.5 px-4 font-mono text-[11px] text-slate-600">
+                        {new Date(pass.issued_at).toLocaleDateString()}
+                      </td>
+
+                      <td className="py-3.5 px-4">
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase tracking-wider ${
+                            pass.status === "ACTIVE"
+                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : pass.status === "REVOKED"
+                              ? "bg-rose-50 text-rose-700 border border-rose-200"
+                              : "bg-amber-50 text-amber-700 border border-amber-200"
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              pass.status === "ACTIVE"
+                                ? "bg-emerald-500"
+                                : pass.status === "REVOKED"
+                                ? "bg-rose-500"
+                                : "bg-amber-500"
+                            }`}
                           />
-                          <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
-                            <a
-                              href={`/record/${encodeURIComponent(pass.pass_code)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                          <span>{pass.status}</span>
+                        </span>
+                      </td>
+
+                      {/* Minimalist 3-dot Kebab Menu */}
+                      <td className="py-3.5 px-4 text-right relative">
+                        <button
+                          onClick={() => setOpenKebabId(openKebabId === pass.id ? null : pass.id)}
+                          className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                          aria-label="Actions"
+                        >
+                          <MoreVerticalIcon className="w-4 h-4" />
+                        </button>
+
+                        {openKebabId === pass.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
                               onClick={() => setOpenKebabId(null)}
+                            />
+                            <div
+                              className={`absolute right-3 ${
+                                isNearBottom ? "bottom-full mb-1" : "top-10"
+                              } w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
                             >
-                              <span>Verify Dossier</span>
-                              <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
-                            </a>
-                            <button
-                              onClick={() => {
-                                copyCode(pass.pass_code);
-                                setOpenKebabId(null);
-                              }}
-                              className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
-                            >
-                              <span>Copy Pass Code</span>
-                            </button>
-                            <div className="border-t border-slate-100 my-1" />
-                            <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                              Set Status
-                            </div>
-                            {(["ACTIVE", "REVOKED", "EXPIRED"] as const).map((st) => (
+                              <a
+                                href={`/ledger/${encodeURIComponent(pass.pass_code)}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                onClick={() => setOpenKebabId(null)}
+                              >
+                                <span>Verify Certificate</span>
+                                <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
+                              </a>
                               <button
-                                key={st}
                                 onClick={() => {
-                                  handleStatusChange(pass.id, pass.pass_code, st);
+                                  copyCode(pass.pass_code);
                                   setOpenKebabId(null);
                                 }}
-                                className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
-                                  pass.status === st
-                                    ? "text-[#E25C38] font-bold bg-orange-50/50"
-                                    : "text-slate-600 hover:bg-slate-50"
-                                }`}
+                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
                               >
-                                <span>{st}</span>
-                                {pass.status === st && <span className="text-xs">&bull;</span>}
+                                <span>Copy Pass Code</span>
                               </button>
-                            ))}
-                            <div className="border-t border-slate-100 my-1" />
-                            <button
-                              onClick={() => {
-                                setOpenKebabId(null);
-                                handleDeleteSingle(pass.id, pass.pass_code);
-                              }}
-                              className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
-                            >
-                              <span>Delete Pass</span>
-                            </button>
-                          </div>
-                        </>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                              <div className="border-t border-slate-100 my-1" />
+                              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Set Status
+                              </div>
+                              {(["ACTIVE", "REVOKED", "EXPIRED"] as const).map((st) => (
+                                <button
+                                  key={st}
+                                  onClick={() => {
+                                    handleStatusChange(pass.id, pass.pass_code, st);
+                                    setOpenKebabId(null);
+                                  }}
+                                  className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
+                                    pass.status === st
+                                      ? "text-[#E25C38] font-bold bg-orange-50/50"
+                                      : "text-slate-600 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span>{st}</span>
+                                  {pass.status === st && <span className="text-xs">&bull;</span>}
+                                </button>
+                              ))}
+                              <div className="border-t border-slate-100 my-1" />
+                              <button
+                                onClick={() => {
+                                  setOpenKebabId(null);
+                                  handleDeleteSingle(pass.id, pass.pass_code);
+                                }}
+                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                              >
+                                <span>Delete Pass</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
+
+        {/* Table Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredPasses.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* Issue Pass Modal */}

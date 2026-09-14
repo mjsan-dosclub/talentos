@@ -15,8 +15,13 @@ export interface EnquiryRecord {
   status: "NEW" | "CONTACTED" | "ACCEPTED" | "INACTIVE";
   created_at: string;
 }
+import fs from "fs";
+import path from "path";
 
-let ENQUIRIES_LEDGER: EnquiryRecord[] = [
+const DATA_DIR = path.join(process.cwd(), "data");
+const ENQUIRIES_FILE = path.join(DATA_DIR, "enquiries.json");
+
+const INITIAL_ENQUIRIES: EnquiryRecord[] = [
   {
     id: "enq-001",
     enquiry_ref: "ENQ-2026-4819",
@@ -43,6 +48,41 @@ let ENQUIRIES_LEDGER: EnquiryRecord[] = [
   },
 ];
 
+function ensureEnquiriesFile(): void {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(ENQUIRIES_FILE)) {
+      fs.writeFileSync(ENQUIRIES_FILE, JSON.stringify(INITIAL_ENQUIRIES, null, 2), "utf-8");
+    }
+  } catch {
+    // Non-blocking fallback
+  }
+}
+
+function loadEnquiries(): EnquiryRecord[] {
+  ensureEnquiriesFile();
+  try {
+    if (fs.existsSync(ENQUIRIES_FILE)) {
+      const raw = fs.readFileSync(ENQUIRIES_FILE, "utf-8");
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn("Failed reading enquiries.json:", e);
+  }
+  return [...INITIAL_ENQUIRIES];
+}
+
+function saveEnquiries(data: EnquiryRecord[]): void {
+  ensureEnquiriesFile();
+  try {
+    fs.writeFileSync(ENQUIRIES_FILE, JSON.stringify(data, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed writing enquiries.json:", e);
+  }
+}
+
 export async function GET() {
   try {
     // Try querying Supabase
@@ -55,10 +95,10 @@ export async function GET() {
       return NextResponse.json({ enquiries: data });
     }
   } catch (err) {
-    // Use fallback ledger
+    // Fallback to disk
   }
 
-  return NextResponse.json({ enquiries: ENQUIRIES_LEDGER });
+  return NextResponse.json({ enquiries: loadEnquiries() });
 }
 
 export async function POST(req: NextRequest) {
@@ -94,7 +134,9 @@ export async function POST(req: NextRequest) {
       created_at: timestamp,
     };
 
-    ENQUIRIES_LEDGER.unshift(newRecord);
+    const enquiries = loadEnquiries();
+    enquiries.unshift(newRecord);
+    saveEnquiries(enquiries);
 
     // Best-effort insertion into Supabase
     try {
@@ -298,13 +340,15 @@ export async function PATCH(req: NextRequest) {
     }
 
     let updatedCount = 0;
-    ENQUIRIES_LEDGER = ENQUIRIES_LEDGER.map((enq) => {
+    const enquiries = loadEnquiries();
+    const updated = enquiries.map((enq) => {
       if (targetIds.includes(enq.id) || targetIds.includes(enq.enquiry_ref)) {
         updatedCount++;
         return { ...enq, status: status as EnquiryRecord["status"] };
       }
       return enq;
     });
+    saveEnquiries(updated);
 
     // Best-effort update in Supabase
     try {
@@ -358,11 +402,13 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const initialLen = ENQUIRIES_LEDGER.length;
-    ENQUIRIES_LEDGER = ENQUIRIES_LEDGER.filter(
+    const enquiries = loadEnquiries();
+    const initialLen = enquiries.length;
+    const filtered = enquiries.filter(
       (enq) => !targetIds.includes(enq.id) && !targetIds.includes(enq.enquiry_ref)
     );
-    const deletedCount = initialLen - ENQUIRIES_LEDGER.length;
+    const deletedCount = initialLen - filtered.length;
+    saveEnquiries(filtered);
 
     // Best-effort delete in Supabase
     try {

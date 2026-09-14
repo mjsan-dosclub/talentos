@@ -477,8 +477,8 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
   useEffect(() => {
     const session = getClientSession();
     if (!session) {
-      const redirectUrl = typeof window !== "undefined" ? window.location.pathname : `/record/${identifier}`;
-      window.location.href = `/login?redirect=${encodeURIComponent(redirectUrl)}&error=ERR_AUTH_REQUIRED`;
+      // Unauthenticated visitors inspecting a clearance key or student ID see the public certificate ledger
+      window.location.href = `/ledger/${encodeURIComponent(identifier)}`;
       return;
     }
     setCurrentUser(session);
