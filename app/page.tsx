@@ -333,8 +333,8 @@ export default function Home() {
               <div className="relative rounded-3xl overflow-hidden border border-neutral-200 shadow-xl aspect-4/5 sm:aspect-square lg:aspect-4/5 bg-[#FAFAF9]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=1000&q=80"
-                  alt="Focused engineering builder in modern workspace"
+                  src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1000&q=80"
+                  alt="Authentic Indian engineering students in collaborative workspace"
                   className="w-full h-full object-cover"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
@@ -605,7 +605,7 @@ export default function Home() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2.5 bg-[#E25C38] hover:bg-[#CC4F2E] text-white px-7 py-3.5 rounded-full text-xs sm:text-sm font-semibold tracking-wider uppercase transition-all shadow-sm active:scale-95 text-center justify-center"
                 >
-                  <span>Apply directly at membership.descienceosclub.com -&gt;</span>
+                  <span>Apply for Student Pass &rarr;</span>
                 </a>
                 <span className="text-xs text-neutral-500 font-medium">
                   Intake open for upcoming cohort calibration.
@@ -807,39 +807,7 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          MODULE 9: LIVE COHORT LAB BANNER
-          ========================================================================= */}
-      <section className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto py-12">
-        <Reveal className="relative rounded-3xl overflow-hidden border border-neutral-200 shadow-md aspect-16/9 sm:aspect-21/9 bg-[#FAFAF9]">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=1400&q=80"
-            alt="Restricted access live cohort workspace"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-black/30" />
-
-          {/* Overlay Tag */}
-          <div className="absolute top-4 left-4 sm:top-6 sm:left-6">
-            <span className="px-3.5 py-1.5 rounded-lg bg-black/80 backdrop-blur-md border border-white/20 text-white font-mono text-[10px] sm:text-xs tracking-wider uppercase flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
-              <span>RESTRICTED ACCESS // LIVE COHORT WORKSPACE</span>
-            </span>
-          </div>
-
-          <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 right-4 sm:right-6 text-white">
-            <p className="text-xs sm:text-sm font-semibold tracking-wide text-neutral-300">
-              PHYSICAL EXECUTION BENCHMARK
-            </p>
-            <h2 className="text-lg sm:text-2xl font-bold mt-1">
-              Physical presence, real-time collaboration, and uncompromised peer benchmarking.
-            </h2>
-          </div>
-        </Reveal>
-      </section>
-
-      {/* =========================================================================
-          MODULE 10: CASE STUDIES SLIDER (HORIZONTAL SINGLE-LINE CAROUSEL)
+          MODULE 9: CASE STUDIES SLIDER (HORIZONTAL SINGLE-LINE CAROUSEL)
           ========================================================================= */}
       <section id="case-studies" className="py-24 bg-[#FAFAF9] border-y border-neutral-200 scroll-mt-20 overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -847,13 +815,13 @@ export default function Home() {
           <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-12">
             <div className="max-w-2xl">
               <span className="font-mono text-xs font-bold text-[#E25C38] uppercase tracking-widest">
-                VERIFIED OUTCOMES
+                VERIFIED COHORT OUTCOMES
               </span>
               <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-[#14171A] mt-2">
-                Longitudinal Evidence in Practice
+                Case Studies
               </h2>
               <p className="mt-3 text-base text-neutral-600 leading-relaxed">
-                Verifiable candidate trajectories across international cohorts.
+                Real candidate trajectories, verified deployments, and global hackathon selections.
               </p>
             </div>
 
@@ -973,29 +941,7 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          MODULE 11: MEMBER PERSPECTIVE
-          ========================================================================= */}
-      <section className="py-24 bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="bg-white border border-neutral-200 rounded-3xl p-8 sm:p-12 shadow-sm relative">
-            <div className="text-4xl text-[#E25C38] font-serif mb-4 leading-none">&ldquo;</div>
-            <p className="text-base sm:text-xl font-medium text-[#14171A] leading-relaxed">
-              While everyone else in my department was panicking over 45-minute campus interviews and blasting 300 identical resumes, my DOS Club dossier already proved months of production code, late-night debugging, and hackathon execution. I didn&apos;t have to pitch myself: the telemetry spoke for me.
-            </p>
-            <div className="mt-6 pt-6 border-t border-neutral-100 flex items-center justify-between">
-              <span className="font-mono text-xs font-bold uppercase tracking-wider text-neutral-500">
-                BATCH 2 COHORT MEMBER : DEPLOYED IN GLOBAL AI TEAM
-              </span>
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-mono text-[10px] font-bold border border-emerald-200">
-                VERIFIED STATUS
-              </span>
-            </div>
-          </Reveal>
-        </div>
-      </section>
-
-      {/* =========================================================================
-          MODULE 12: EDITORIAL PHILOSOPHY
+          MODULE 10: EDITORIAL PHILOSOPHY
           ========================================================================= */}
       <section className="bg-[#FAFAF9] border-y border-neutral-200 py-20 px-4 sm:px-6 lg:px-8 text-center">
         <Reveal className="max-w-4xl mx-auto">
@@ -1009,7 +955,7 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          MODULE 13: REQUEST ACCESS INTAKE FORM
+          MODULE 11: REQUEST ACCESS INTAKE FORM
           ========================================================================= */}
       <section id="request-access" className="py-24 bg-white scroll-mt-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1019,10 +965,10 @@ export default function Home() {
                 INSTITUTIONAL &amp; ENTERPRISE CLEARANCE
               </span>
               <h2 className="text-3xl font-extrabold text-[#14171A] mt-2">
-                Request Cohort Access
+                Request Access
               </h2>
               <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
-                For partner institutions, colleges, and enterprise sponsors seeking dedicated batches.
+                For engineering colleges, placement cells, and hiring partners seeking dedicated institutional programs.
               </p>
             </div>
 
@@ -1135,7 +1081,7 @@ export default function Home() {
                     rel="noopener noreferrer"
                     className="text-[#E25C38] hover:underline font-semibold"
                   >
-                    Apply directly at membership.descienceosclub.com -&gt;
+                    Apply for Student Pass &rarr;
                   </a>
                 </p>
               </form>
@@ -1145,7 +1091,7 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          MODULE 14: ENTERPRISE FOOTER & GLOBAL REACH
+          MODULE 12: ENTERPRISE FOOTER & GLOBAL REACH
           ========================================================================= */}
       <footer className="py-16 bg-white border-t border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
