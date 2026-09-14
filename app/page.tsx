@@ -23,12 +23,36 @@ import {
 } from "@/components/Icons";
 import WelcomePopupModal from "@/components/WelcomePopupModal";
 import BackToTopButton from "@/components/BackToTopButton";
+import CaseStudyModal from "@/components/CaseStudyModal";
+import { INITIAL_CASE_STUDIES, CaseStudy } from "@/lib/casestudies";
 import { DEFAULT_LANDING_CMS, LandingCmsData } from "@/lib/cms-defaults";
 
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<TalentosUser | null>(null);
   const [cms, setCms] = useState<LandingCmsData>(DEFAULT_LANDING_CMS);
+
+  // Case Studies & Student Achievements (Zenler-Inspired API Mesh)
+  const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
+  const [caseStudyCategory, setCaseStudyCategory] = useState<string>("all");
+  const [copiedApi, setCopiedApi] = useState(false);
+
+  const copyApiUrl = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(`${window.location.origin}/api/casestudies`);
+      setCopiedApi(true);
+      setTimeout(() => setCopiedApi(false), 2500);
+    }
+  };
+
+  const filteredCaseStudies =
+    caseStudyCategory === "all"
+      ? INITIAL_CASE_STUDIES
+      : INITIAL_CASE_STUDIES.filter(
+          (cs) =>
+            cs.category.toLowerCase().includes(caseStudyCategory.toLowerCase()) ||
+            cs.student.track.toLowerCase().includes(caseStudyCategory.toLowerCase())
+        );
 
   // Active Cohort / Team Filter Tabs
   const [activeTab, setActiveTab] = useState<"all" | "systems" | "ai" | "commons">("all");
@@ -196,7 +220,7 @@ export default function Home() {
           </Link>
 
           {/* Navigation Links — Strict Single Line */}
-          <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold text-[#777E90] whitespace-nowrap">
+          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-[#777E90] whitespace-nowrap">
             <a href="#how-it-works" className="hover:text-[#23262F] transition-colors py-1">
               How It Works
             </a>
@@ -205,6 +229,10 @@ export default function Home() {
             </a>
             <a href="#lounge" className="hover:text-[#23262F] transition-colors py-1">
               Lounge Access
+            </a>
+            <a href="#case-studies" className="hover:text-[#23262F] transition-colors py-1 flex items-center gap-1.5">
+              <span>Case Studies</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FF592C]/10 text-[#FF592C] leading-none">API</span>
             </a>
             <a href="#roster" className="hover:text-[#23262F] transition-colors py-1">
               Student Roster
@@ -280,22 +308,25 @@ export default function Home() {
                 Where student builders master 27 production systems through peer architecture defense, collaborative codebases, and open-source rigor. Not competition. Collective capability.
               </p>
 
-              {/* Buttons: Strictly Single Line, No Wrapping */}
+              {/* Buttons: Strictly Single Line, No Wrapping (Zenler-Inspired CTA with icon circles) */}
               <div className="pt-2 flex flex-wrap items-center gap-4">
                 <a
                   href="https://membership.descienceosclub.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="h-12 px-7 rounded-full bg-[#FF592C] hover:bg-[#E04F26] text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2.5 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                  className="h-12 px-7 rounded-full bg-[#FF592C] hover:bg-[#E04F26] text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-3 shadow-sm hover:shadow-md transition-all whitespace-nowrap group"
                 >
                   <span>Become a Member</span>
-                  <ArrowRightIcon className="w-4 h-4" />
+                  <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                    <ArrowRightIcon className="w-3.5 h-3.5" />
+                  </span>
                 </a>
                 <a
-                  href="#enquire"
-                  className="h-12 px-7 rounded-full border-2 border-[#E6E8EC] hover:border-[#23262F] bg-white text-sm sm:text-base font-semibold text-[#23262F] flex items-center justify-center transition-all whitespace-nowrap hover:bg-[#F4F5F6]"
+                  href="#case-studies"
+                  className="h-12 px-7 rounded-full border-2 border-[#E6E8EC] hover:border-[#23262F] bg-white text-sm sm:text-base font-semibold text-[#23262F] flex items-center justify-center gap-2.5 transition-all whitespace-nowrap hover:bg-[#F4F5F6]"
                 >
-                  <span>Enquire for Batch 3</span>
+                  <span>Explore Case Studies</span>
+                  <span className="text-[10px] font-bold text-[#FF592C] bg-[#FF592C]/10 px-2 py-0.5 rounded-full uppercase">API</span>
                 </a>
               </div>
 
@@ -845,7 +876,188 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          SECTION 8: UI8 TEAM (.team) — STUDENT COHORT ROSTER
+          SECTION: ZENLER-INSPIRED CASE STUDIES & STUDENT ACHIEVEMENTS (#case-studies)
+          ========================================================================= */}
+      <section id="case-studies" className="py-24 border-b border-[#E6E8EC] scroll-mt-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+            <div className="max-w-2xl">
+              <span className="ui8-stage">AUTHENTIC TECHNICAL IMPACT</span>
+              <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#23262F]">
+                Case Studies &amp; Student Achievements
+              </h2>
+              <p className="mt-3 text-base sm:text-lg text-[#777E90] leading-relaxed">
+                Real students, 27 production systems, zero whiteboard fluff. See how our builders authored distributed consensus, engineered AI runtimes, and passed zero-grace peer defense.
+              </p>
+            </div>
+
+            {/* Quick Actions (View All & API Link) */}
+            <div className="flex items-center gap-3 shrink-0">
+              <a
+                href="/api/casestudies"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-10 px-4.5 rounded-full border border-[#E6E8EC] hover:border-[#23262F] bg-[#F4F5F6] hover:bg-white text-xs font-bold text-[#23262F] inline-flex items-center gap-2 transition-all whitespace-nowrap"
+                title="View JSON endpoint for DeScience OS Club website"
+              >
+                <TerminalIcon className="w-3.5 h-3.5 text-[#FF592C]" />
+                <span>REST API (JSON)</span>
+                <ExternalLinkIcon className="w-3 h-3 text-[#777E90]" />
+              </a>
+              <button
+                onClick={copyApiUrl}
+                className="h-10 px-4.5 rounded-full bg-[#23262F] hover:bg-[#FF592C] text-white text-xs font-bold transition-colors whitespace-nowrap"
+              >
+                {copiedApi ? "✓ URL Copied!" : "Copy API URL"}
+              </button>
+            </div>
+          </div>
+
+          {/* Zenler-Style Category Filter Buttons */}
+          <div className="flex items-center gap-2 p-1.5 rounded-full bg-[#F4F5F6] border border-[#E6E8EC] overflow-x-auto mb-12 max-w-max">
+            {[
+              { id: "all", label: "All Achievements" },
+              { id: "distributed", label: "Distributed Systems" },
+              { id: "ai", label: "AI & Runtimes" },
+              { id: "storage", label: "Storage & Compaction" },
+              { id: "security", label: "Security & Protocols" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setCaseStudyCategory(tab.id)}
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  caseStudyCategory === tab.id
+                    ? "bg-[#23262F] text-white shadow-sm"
+                    : "text-[#777E90] hover:text-[#23262F]"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Case Studies Cards Grid (Zenler Card Design with Author Row & Performance Metrics) */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {filteredCaseStudies.map((study) => (
+              <div
+                key={study.id}
+                className="bg-white rounded-3xl border border-[#E6E8EC] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden group cursor-pointer"
+                onClick={() => setSelectedCaseStudy(study)}
+              >
+                {/* Cover Image Container */}
+                <div className="aspect-16/10 overflow-hidden relative bg-[#F4F5F6]">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={study.coverImage}
+                    alt={study.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  {/* Floating Badges */}
+                  <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[#23262F] text-[10px] font-bold uppercase tracking-wider border border-[#E6E8EC] shadow-xs">
+                    {study.category}
+                  </div>
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#45B26B] text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs">
+                    <CheckIcon className="w-3 h-3" />
+                    <span>{study.defenseStatus === "PASSED_WITH_DISTINCTION" ? "DISTINCTION" : "VERIFIED"}</span>
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
+                  <div>
+                    {/* Key Telemetry Metric Bar */}
+                    <div className="flex items-center gap-2 mb-3">
+                      {study.metrics.slice(0, 2).map((m, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2.5 py-1 rounded-lg bg-[#F4F5F6] border border-[#E6E8EC] text-[11px] font-bold text-[#23262F]"
+                        >
+                          <strong className="text-[#FF592C]">{m.value}</strong> {m.label}
+                        </span>
+                      ))}
+                    </div>
+
+                    {/* Case Study Title */}
+                    <h3 className="text-lg font-bold text-[#23262F] group-hover:text-[#FF592C] transition-colors leading-snug">
+                      {study.title}
+                    </h3>
+
+                    {/* Excerpt */}
+                    <p className="mt-2 text-xs sm:text-sm text-[#777E90] leading-relaxed line-clamp-3">
+                      {study.summary}
+                    </p>
+                  </div>
+
+                  {/* Author / Student Row (Zenler zen-case-author layout) */}
+                  <div className="pt-4 border-t border-[#E6E8EC]">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={study.student.avatar}
+                          alt={study.student.name}
+                          className="w-10 h-10 rounded-full object-cover border border-[#E6E8EC]"
+                        />
+                        <div>
+                          <div className="text-xs font-bold text-[#23262F]">
+                            {study.student.name}
+                          </div>
+                          <div className="text-[11px] text-[#777E90]">
+                            {study.student.college} &bull; {study.publishedAt}
+                          </div>
+                        </div>
+                      </div>
+
+                      <span className="text-xs font-bold text-[#FF592C] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
+                        <span>Read</span>
+                        <ArrowRightIcon className="w-3.5 h-3.5" />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Zenler-Inspired Headless API Sharing Callout Banner */}
+          <div className="mt-16 p-8 rounded-3xl bg-gradient-to-r from-[#23262F] to-[#141416] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+            <div className="space-y-2 max-w-xl text-center md:text-left">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-bold uppercase tracking-wider">
+                <span className="w-2 h-2 rounded-full bg-[#45B26B] animate-pulse" />
+                <span>DE-SCIENCE OS CLUB SYNDICATION MESH</span>
+              </div>
+              <h3 className="text-2xl font-bold tracking-tight">
+                Live Case Study API for descienceosclub.com
+              </h3>
+              <p className="text-sm text-[#777E90] leading-relaxed">
+                All student achievements, verified benchmark numbers, and peer defense dossiers are exposed via our secure headless API. Effortlessly query, syndicate, and display student records across partner platforms.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+              <a
+                href="/api/casestudies"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-11 px-6 rounded-full bg-[#FF592C] hover:bg-[#E04F26] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all whitespace-nowrap"
+              >
+                <span>Inspect API Endpoint</span>
+                <ExternalLinkIcon className="w-3.5 h-3.5" />
+              </a>
+              <button
+                onClick={copyApiUrl}
+                className="h-11 px-6 rounded-full border border-white/20 hover:border-white bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-all whitespace-nowrap"
+              >
+                {copiedApi ? "✓ Copied Endpoint" : "Copy cURL / URL"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 9: UI8 TEAM (.team) — STUDENT COHORT ROSTER
           ========================================================================= */}
       <section id="roster" className="py-24 border-b border-[#E6E8EC] scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1448,6 +1660,12 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Interactive Case Study Reader Modal (Zenler Style) */}
+      <CaseStudyModal
+        study={selectedCaseStudy}
+        onClose={() => setSelectedCaseStudy(null)}
+      />
 
       {/* Floating Smooth Back To Top Action Button */}
       <BackToTopButton />
