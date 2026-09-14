@@ -33,8 +33,10 @@ export type SubmissionStatus =
 export type AttendanceStatus =
   | "NOT_STARTED"
   | "CHECKED_IN"
+  | "PRESENT"
   | "LATE"
   | "PARTIAL"
+  | "PARTIAL_ATTENDANCE"
   | "COMPLETED"
   | "ABSENT_UNCONFIRMED"
   | "ABSENT_CONFIRMED"
@@ -110,6 +112,8 @@ export interface Student {
   department?: string | null;
   year_of_study?: number | null;
   avatar_url?: string | null;
+  bio?: string | null;
+  headline?: string | null;
   baseline_assessment_notes?: string | null;
   is_archived: boolean;
   created_at: string;

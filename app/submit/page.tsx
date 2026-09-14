@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
+import { WORKSHOP_TOPICS_27, WORKSHOP_PHASES_27 } from "@/lib/db";
+import { CheckCircleIcon, DocumentTextIcon, CloudArrowUpIcon, AlertTriangleIcon } from "@/components/Icons";
 
 // 9 APPROVED LIFECYCLE STATES FROM PROJECT_RULES.md
 type ApprovedState =
@@ -23,35 +25,17 @@ interface WorkshopMeta {
   defaultTests: number;
 }
 
-const WORKSHOPS: WorkshopMeta[] = [
-  { code: "WS-01", name: "Linux Internals, File Descriptors & Syscalls", focus: "Kernel I/O", defaultTests: 15 },
-  { code: "WS-02", name: "POSIX Threads, Synchronization & Race Conditions", focus: "Concurrency", defaultTests: 18 },
-  { code: "WS-03", name: "Memory Allocators, Virtual Memory & Page Tables", focus: "Systems", defaultTests: 20 },
-  { code: "WS-04", name: "Network Stack, Sockets & epoll Event Loops", focus: "Networking", defaultTests: 16 },
-  { code: "WS-05", name: "TCP/IP Flow Control & Congestion Algorithms", focus: "Networking", defaultTests: 18 },
-  { code: "WS-06", name: "HTTP/2 & HTTP/3 Frame Parsing & Multiplexing", focus: "Protocols", defaultTests: 22 },
-  { code: "WS-07", name: "Protocol Buffers & gRPC Streaming Architectures", focus: "Distributed RPC", defaultTests: 20 },
-  { code: "WS-08", name: "Key-Value Stores & LSM-Tree Engine Architecture", focus: "Storage Engines", defaultTests: 24 },
-  { code: "WS-09", name: "B-Tree Indexing, Page Cache & WAL Crash Recovery", focus: "Database Internals", defaultTests: 25 },
-  { code: "WS-10", name: "Relational Query Planners & Cost Estimators", focus: "Query Optimization", defaultTests: 20 },
-  { code: "WS-11", name: "Raft Consensus & Distributed Log Replication", focus: "Distributed Systems", defaultTests: 25 },
-  { code: "WS-12", name: "Vector Clocks & Distributed Transaction Isolation", focus: "Consistency Models", defaultTests: 18 },
-  { code: "WS-13", name: "Paxos Algorithm & Quorum Lease Protocols", focus: "Consensus", defaultTests: 20 },
-  { code: "WS-14", name: "Resilient Microservices & Circuit Breakers", focus: "Fault Tolerance", defaultTests: 20 },
-  { code: "WS-15", name: "Distributed Tracing, OpenTelemetry & Span Contexts", focus: "Observability", defaultTests: 16 },
-  { code: "WS-16", name: "High-Throughput Event Streaming & Kafka Topologies", focus: "Stream Processing", defaultTests: 22 },
-  { code: "WS-17", name: "Actor Model & Fault-Tolerant Supervision Trees", focus: "Erlang/OTP Patterns", defaultTests: 18 },
-  { code: "WS-18", name: "Zero-Knowledge Proofs & Cryptographic Commitments", focus: "Applied Cryptography", defaultTests: 15 },
-  { code: "WS-19", name: "Elliptic Curve Cryptography & Digital Signatures", focus: "Security Systems", defaultTests: 16 },
-  { code: "WS-20", name: "eBPF Kernel Tracing & Network Packet Filtering", focus: "Kernel Engineering", defaultTests: 20 },
-  { code: "WS-21", name: "Container Runtimes, cgroups & Linux Namespaces", focus: "Infrastructure", defaultTests: 22 },
-  { code: "WS-22", name: "WebAssembly Runtimes, Memory Sandboxing & JIT", focus: "Virtual Machines", defaultTests: 20 },
-  { code: "WS-23", name: "Garbage Collection Algorithms & Stop-the-World Tuning", focus: "Runtimes", defaultTests: 18 },
-  { code: "WS-24", name: "GPU Compute Shaders & Parallel Matrix Multiplication", focus: "High Performance", defaultTests: 20 },
-  { code: "WS-25", name: "Async IO Runtimes & Future Polling State Machines", focus: "Async Runtimes", defaultTests: 24 },
-  { code: "WS-26", name: "Cache Coherence, MESI Protocols & Memory Fences", focus: "Hardware Architecture", defaultTests: 16 },
-  { code: "WS-27", name: "Production War Room: Multi-Region Disaster Recovery", focus: "Incident Response", defaultTests: 30 },
-];
+// Generate the canonical 27 workshops from CodeZap 3.0 curriculum
+const WORKSHOPS: WorkshopMeta[] = WORKSHOP_TOPICS_27.map((topic, idx) => {
+  const code = `WS-${String(idx + 1).padStart(2, "0")}`;
+  const phase = WORKSHOP_PHASES_27[idx] || "Systems Track";
+  return {
+    code,
+    name: topic,
+    focus: phase,
+    defaultTests: 15 + (idx % 6) * 2,
+  };
+});
 
 export default function DeliverableSubmitPage() {
   const [selectedWsCode, setSelectedWsCode] = useState<string>("WS-14");
@@ -66,15 +50,58 @@ export default function DeliverableSubmitPage() {
     "Implemented exponential backoff with full jitter and half-open state recovery. Passed concurrency race benchmark."
   );
 
+  const [uploadedFile, setUploadedFile] = useState<{
+    name: string;
+    url: string;
+    size: number;
+  } | null>(null);
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   const [isVerifying, setIsVerifying] = useState(false);
   const [submissionReceipt, setSubmissionReceipt] = useState<{
     status: ApprovedState;
     timestamp: string;
     digest: string;
     testsResult: string;
+    attachedDoc?: { name: string; url: string; size: number };
   } | null>(null);
 
-  const currentWorkshop = WORKSHOPS.find((w) => w.code === selectedWsCode) || WORKSHOPS[13];
+  const currentWorkshop = WORKSHOPS.find((w) => w.code === selectedWsCode) || WORKSHOPS[0];
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingDoc(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("type", "evidence");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.url) {
+        setUploadedFile({
+          name: file.name,
+          url: data.url,
+          size: file.size,
+        });
+      } else {
+        setUploadError(data.error || "Failed to upload evidence document.");
+      }
+    } catch {
+      setUploadError("Network error during document upload.");
+    } finally {
+      setIsUploadingDoc(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -91,6 +118,7 @@ export default function DeliverableSubmitPage() {
         timestamp: new Date().toISOString().replace("T", " ").substring(0, 19) + " UTC",
         digest: "sha256:d8c91a0f443b8e7c10b65ad57c2e39b74052f87a8b661c94b2a8fe402f1a94bb",
         testsResult: `${testsPassedCount} / ${currentWorkshop.defaultTests} hermetic tests passed`,
+        attachedDoc: uploadedFile || undefined,
       });
     }, 800);
   };
@@ -286,6 +314,81 @@ export default function DeliverableSubmitPage() {
                 />
               </div>
 
+              {/* 03 // DOCUMENTATION & PDF EVIDENCE (TAL-074) */}
+              <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-900 font-semibold border-b border-neutral-200 pb-3 pt-4">
+                03 // ARCHITECTURAL EVIDENCE & PDF ATTACHMENT (TAL-074)
+              </h2>
+
+              <div className="border border-dashed border-neutral-300 hover:border-neutral-700 bg-neutral-50/60 p-5 rounded-xs flex flex-col items-center justify-center text-center gap-3 transition-colors">
+                <input
+                  type="file"
+                  id="evidence-file-upload"
+                  accept=".pdf,.docx,.zip,.tar.gz,.json,.md,.txt"
+                  onChange={handleFileUpload}
+                  disabled={isUploadingDoc}
+                  className="hidden"
+                />
+
+                {uploadedFile ? (
+                  <div className="w-full flex items-center justify-between p-3 bg-white border border-emerald-300 rounded-xs">
+                    <div className="flex items-center gap-2.5 text-left">
+                      <div className="w-8 h-8 rounded bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                        <DocumentTextIcon className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="font-mono text-xs font-semibold text-neutral-900 block truncate max-w-[280px]">
+                          {uploadedFile.name}
+                        </span>
+                        <span className="font-mono text-[10px] text-neutral-500 block">
+                          {(uploadedFile.size / 1024).toFixed(1)} KB • Evidence Verified
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={uploadedFile.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-mono text-[11px] text-neutral-700 hover:text-neutral-950 underline px-2 py-1"
+                      >
+                        Inspect &rarr;
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => setUploadedFile(null)}
+                        className="font-mono text-[11px] text-red-600 hover:text-red-800 px-2 py-1 rounded hover:bg-red-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-10 h-10 rounded-full bg-neutral-200/60 text-neutral-700 flex items-center justify-center">
+                      <CloudArrowUpIcon className="w-5 h-5" />
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                      <label
+                        htmlFor="evidence-file-upload"
+                        className="font-mono text-xs font-semibold text-neutral-900 cursor-pointer underline hover:text-neutral-600"
+                      >
+                        {isUploadingDoc ? "Uploading Evidence Document..." : "Upload Deliverable PDF / Document"}
+                      </label>
+                      <p className="font-mono text-[10px] text-neutral-500">
+                        Supports PDF architectural specs, design dossiers, or project archive (up to 10MB)
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {uploadError && (
+                  <div className="w-full p-2.5 bg-red-50 border border-red-200 text-red-700 text-xs font-mono flex items-center gap-2">
+                    <AlertTriangleIcon className="w-3.5 h-3.5 shrink-0" />
+                    <span>{uploadError}</span>
+                  </div>
+                )}
+              </div>
+
               {/* Submit Button */}
               <button
                 type="submit"
@@ -347,6 +450,24 @@ export default function DeliverableSubmitPage() {
                     <span className="font-medium text-neutral-900">{commitSha}</span>
                   </div>
                 </div>
+
+                {submissionReceipt.attachedDoc && (
+                  <div className="flex justify-between items-center bg-neutral-50 border border-neutral-200 p-2.5 font-mono text-xs">
+                    <div className="flex items-center gap-2">
+                      <DocumentTextIcon className="w-3.5 h-3.5 text-neutral-700" />
+                      <span className="text-neutral-600">Attached Evidence:</span>
+                      <strong className="text-neutral-900">{submissionReceipt.attachedDoc.name}</strong>
+                    </div>
+                    <a
+                      href={submissionReceipt.attachedDoc.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-neutral-900 underline hover:text-neutral-600 font-medium"
+                    >
+                      Download Deliverable &rarr;
+                    </a>
+                  </div>
+                )}
 
                 <div className="font-mono text-[11px] bg-neutral-50 border border-neutral-200 p-2.5 break-all text-neutral-700">
                   <span className="text-neutral-400 block text-[10px]">IMMUTABLE AUDIT HASH:</span>

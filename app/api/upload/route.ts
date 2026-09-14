@@ -26,19 +26,24 @@ export async function POST(request: Request) {
     // 2. Handle multipart/form-data file upload
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
-    const type = (formData.get("type") as string) || "logo";
+    const type = (formData.get("type") as string) || "logo"; // "logo" | "favicon" | "avatar" | "evidence"
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      return NextResponse.json({ error: "File exceeds 2MB limit" }, { status: 400 });
+    // Allow up to 10MB for documents and project deliverables, 2MB for images
+    const maxSizeBytes = type === "evidence" ? 10 * 1024 * 1024 : 2 * 1024 * 1024;
+    if (file.size > maxSizeBytes) {
+      return NextResponse.json(
+        { error: `File exceeds the maximum permitted limit of ${type === "evidence" ? "10MB" : "2MB"}` },
+        { status: 400 }
+      );
     }
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
-    const base64Data = `data:${file.type};base64,${buffer.toString("base64")}`;
+    const base64Data = `data:${file.type || "application/octet-stream"};base64,${buffer.toString("base64")}`;
 
     if (type === "logo") {
       updateSystemConfig({
@@ -46,7 +51,14 @@ export async function POST(request: Request) {
       });
     }
 
-    return NextResponse.json({ success: true, url: base64Data, fileName: file.name, type });
+    return NextResponse.json({
+      success: true,
+      url: base64Data,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      type,
+    });
   } catch (err: any) {
     return NextResponse.json(
       { error: err?.message || "Failed to process image upload" },

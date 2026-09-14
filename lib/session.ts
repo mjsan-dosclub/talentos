@@ -7,6 +7,10 @@ export interface TalentosUser {
   role: UserRole;
   dos_id?: string;
   institution_id?: string;
+  avatar_url?: string;
+  bio?: string;
+  headline?: string;
+  github_handle?: string;
   loginTime?: string;
 }
 

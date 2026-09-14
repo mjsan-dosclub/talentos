@@ -13,19 +13,19 @@
 =================================================================================
 TALENTOS V1 DELIVERY CONTROL DASHBOARD
 =================================================================================
-Total Requirements Tracked:      97
-Completed (Level 1/2 Verified):  71
-Ready for Test:                  12
-In Progress:                      7
+Total Requirements Tracked:      99
+Completed (Level 1/2 Verified):  76
+Ready for Test:                  10
+In Progress:                      6
 Blocked:                          0
 Not Started / Deferred:           7
 
 Critical Deviations:              3 (Logged in docs/deviation-register.md)
-Open Product Decisions:           2 (Logged below)
+Open Product Decisions:           0 (Resolved: DEC-01, DEC-02)
 Critical Bugs:                    0
 ---------------------------------------------------------------------------------
-BUILD COMPLETION (Code Exists):          71 / 97  =  73.2%
-ACCEPTED COMPLETION (Level 3 Approved):  51 / 97  =  52.5%
+BUILD COMPLETION (Code Exists):          76 / 99  =  76.8%
+ACCEPTED COMPLETION (Level 3 Approved):  56 / 99  =  56.6%
 =================================================================================
 ```
 
@@ -196,7 +196,7 @@ When N reaches 40, system automatically allocates new students to Group Beta
 | TAL-047 | 30-Second Dynamic Rotating QR Token | MUST | Complete | Passed | DEV_VERIFIED | DEV-03 | Dev |
 | TAL-048 | Time-Logged Attendance Timestamp (IST) | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-049 | Late Attendance Flagging (> 15 mins) | MUST | Complete | Passed | DEV_VERIFIED | None | Dev |
-| TAL-050 | Check-Out QR Scanning | SHOULD | In Progress | Ready for Test | DEV_VERIFIED | None | Dev |
+| TAL-050 | Check-Out QR Scanning | SHOULD | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-051 | Manual Trainer Attendance Override | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-052 | Mandatory Justification Reason for Overrides | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-053 | DOS Organiser Attendance Correction | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
@@ -209,7 +209,7 @@ When N reaches 40, system automatically allocates new students to Group Beta
 | TAL-060 | Post-Workshop Rating (1–4 Scale) | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-061 | Learning Reflection Text Field | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-062 | Confidence Rating (1–5 Scale) | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
-| TAL-063 | Checkout Gating by Mandatory Feedback | SHOULD | In Progress | Ready for Test | DEV_VERIFIED | None | Dev |
+| TAL-063 | Checkout Gating by Mandatory Feedback | SHOULD | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-064 | Consolidated Analytics on Trainer & College Views | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 
 ### Module 7: Evidence & Deliverables
@@ -221,7 +221,7 @@ When N reaches 40, system automatically allocates new students to Group Beta
 | TAL-071 | Technical Reflection Notes | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-072 | Deliverable Drawer View on Dossier | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-073 | Review Status (`PENDING`, `VERIFIED`, `NEEDS_REVISION`) | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
-| TAL-074 | Document & PDF Upload Support | SHOULD | In Progress | Ready for Test | DEV_VERIFIED | None | Dev |
+| TAL-074 | Document & PDF Upload Support | SHOULD | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 
 ### Module 8: Certifications
 | ID | Requirement | Priority | Build Status | Test Status | Acceptance Level | Deviation | Owner |
@@ -283,24 +283,35 @@ When N reaches 40, system automatically allocates new students to Group Beta
 | TAL-117 | Absolute Zero Informal Emojis Across UI | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-118 | Touchmark Descience Footer Attribution with URL | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 
+### Module 15: Profile & Password Management
+| ID | Requirement | Priority | Build Status | Test Status | Acceptance Level | Deviation | Owner |
+|---|---|---|---|---|---|---|---|
+| TAL-120 | Self-Service Profile Update (Photo Upload, Display Name, Bio, Tamper-Guarded Email & Dossier) | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
+| TAL-121 | Self-Service Password Change (Current Password Verification across all 4 roles) | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
+
 ---
 
-## 6. Focused Presentation Baseline Dataset
+## 6. Focused Presentation Baseline Dataset (CodeZap 3.0 Alignment)
 
-To communicate the full end-to-end vision cleanly without requiring all 27 workshops seeded with live data simultaneously, the following baseline dataset is configured:
+Aligned with *"The Runway: 27 Days to CodeZap 3.0's 36-Hour Hackathon"* curriculum:
 
 - **1 Institution**: `Anna University & DOS Club Hub` (`INST-AU-01`)
 - **1 Batch**: `Batch 3 (2026)` (`BATCH-2026-B3`)
 - **1 Pod**: `Systems Engineering - Pod Alpha` (`POD-ALPHA`)
-- **12 Sample Students**: Fully populated records (`DOS-B3-001` through `DOS-B3-012`) with authentic student photos, skills, and PR links.
-- **3 Focused Workshops**:
-  1. `WS-01`: *Distributed Consensus & Linux Internals* — Completed Technical Workshop with 100% verified attendance, feedback scores, and GitHub commit SHAs.
-  2. `WS-02`: *Open Source Systems Architecture Defense* — Completed Non-Technical Workshop with peer defense remarks and reflections.
-  3. `WS-03`: *High-Throughput Streaming & Zero-Copy I/O* — Upcoming Active Workshop with geofence coordinates and open check-in countdown.
+- **12 Canonical Students**: Fully populated records (`DOS-B3-001` through `DOS-B3-012`) with authentic student photos, GitHub handles, technical skills, and deliverable PR links.
+- **3 Focused Workshop Stages**:
+  1. `WS-01`: *Mission Briefing & Systems Engineering Foundations* — Completed Technical Workshop with 100% verified attendance, feedback scores, and GitHub commit SHAs.
+  2. `WS-04`: *Deep Systems Engineering Defense* — Completed Defense Workshop with peer defense remarks and reflections.
+  3. `WS-07`: *Build Arena — Day 1: Architecture & Data Modelling* — Upcoming Active Workshop with campus geofence perimeter and active check-in/check-out verification.
 
 ---
 
-## 7. Open Product Decisions
+## 7. Product Decisions Register
 
-1. **`DEC-01`**: Automatic B2C capacity overflow behavior — When Pod reaches 40 students, should the system auto-create "Pod Beta" immediately or notify the Super Admin for manual cohort assignment?
-2. **`DEC-02`**: Check-out requirement — Should incomplete check-out penalize the student's attendance percentage, or mark status as `PARTIAL_ATTENDANCE`?
+1. **`DEC-01`**: Automatic B2C capacity overflow behavior:
+   - **Resolution**: In V1, B2C students are manually created and assigned to batches/pods by the Super Admin. Automated capacity splitting at 40 students is scheduled for V2.
+   - **Status**: `RESOLVED (PRODUCT_ACCEPTED)`
+
+2. **`DEC-02`**: Check-out requirement & partial attendance handling:
+   - **Resolution**: Check-in without check-out marks attendance status as `PARTIAL_ATTENDANCE`. Successful check-out gates feedback and upgrades status to `PRESENT`.
+   - **Status**: `RESOLVED (PRODUCT_ACCEPTED)`
