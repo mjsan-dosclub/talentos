@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStudents, Student } from "@/lib/db";
 import { formatConfigTime } from "@/lib/datetime";
+import { getClientSession } from "@/lib/session";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
 import {
@@ -41,6 +42,15 @@ export default function TrainerDashboardPage() {
   const [activeTab, setActiveTab] = useState<string>("session");
   const [searchQuery, setSearchQuery] = useState("");
   const [origin, setOrigin] = useState<string>("");
+  const [trainerName, setTrainerName] = useState<string>("Priya Sundaram");
+
+  // Read authenticated trainer identity from session
+  useEffect(() => {
+    const session = getClientSession();
+    if (session?.role === "TRAINER" && session.name) {
+      setTrainerName(session.name);
+    }
+  }, []);
 
   // Detect current hostname/origin for optical QR generation
   useEffect(() => {
@@ -210,7 +220,7 @@ export default function TrainerDashboardPage() {
           {activeTab === "schedule" ? (
             <WorkshopCalendar
               role="TRAINER"
-              trainerName="Priya Sundaram"
+              trainerName={trainerName}
               title="Expert Teaching Itinerary & Calendar"
               subtitle="Your assigned workshops across university hubs. Verify upcoming delivery dates, student cohorts, and campus venues."
             />

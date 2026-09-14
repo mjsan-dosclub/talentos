@@ -46,6 +46,13 @@ export default function WorkshopCalendar({
     "Thiagarajar College of Engineering Hub",
   ];
 
+  // Sync institutional selection if prop updates
+  useEffect(() => {
+    if (institutionName) {
+      setSelectedInstitution(institutionName);
+    }
+  }, [institutionName]);
+
   // Fetch role & institution filtered schedule
   const fetchSchedule = async (inst: string) => {
     setLoading(true);
@@ -73,8 +80,13 @@ export default function WorkshopCalendar({
   };
 
   useEffect(() => {
-    fetchSchedule(selectedInstitution);
-  }, [selectedInstitution, trainerName, role]);
+    // For students and college coordinators, always force their campus hub
+    if (role === "STUDENT" || role === "COLLEGE_ADMIN") {
+      fetchSchedule(institutionName);
+    } else {
+      fetchSchedule(selectedInstitution);
+    }
+  }, [selectedInstitution, institutionName, trainerName, role]);
 
   // Days in September 2026 (Starts on Tuesday Sep 1, 30 days)
   const daysInMonth = 30;
@@ -104,14 +116,16 @@ export default function WorkshopCalendar({
           <p className="text-xs text-slate-500 mt-0.5">
             {subtitle ||
               (role === "STUDENT"
-                ? `Showing scheduled systems sessions assigned specifically to ${selectedInstitution}.`
+                ? `Showing scheduled systems sessions assigned specifically to ${institutionName}.`
                 : role === "TRAINER"
-                ? `Showing assigned workshop travels across partner colleges.`
+                ? `Showing your personal teaching itinerary and assigned workshops across university hubs.`
+                : role === "COLLEGE_ADMIN"
+                ? `Showing scheduled systems sessions assigned specifically to ${institutionName}.`
                 : `Campus workshop timeline and multi-college delivery schedule.`)}
           </p>
         </div>
 
-        {/* Institution Switcher (for Admins, Trainers, or demo exploring) */}
+        {/* Institution Switcher (ONLY for Admins or Trainers filtering among their assigned hubs) */}
         {(role === "SUPER_ADMIN" || role === "TRAINER") && (
           <div className="flex items-center gap-2 shrink-0">
             <span className="text-xs font-bold text-slate-600">Filter Hub:</span>
@@ -122,7 +136,11 @@ export default function WorkshopCalendar({
             >
               {AVAILABLE_HUBS.map((hub) => (
                 <option key={hub} value={hub}>
-                  {hub === "ALL" ? "All Partner Hubs (Master View)" : hub}
+                  {hub === "ALL"
+                    ? role === "TRAINER"
+                      ? "All My Assigned Campus Hubs"
+                      : "All Partner Hubs (Master View)"
+                    : hub}
                 </option>
               ))}
             </select>

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
+import { getClientSession } from "@/lib/session";
 import {
   UsersIcon,
   ChartBarIcon,
@@ -146,6 +147,21 @@ export default function CollegeCoordinatorPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("All");
   const [toast, setToast] = useState<string | null>(null);
+  const [institutionName, setInstitutionName] = useState<string>("Anna University Campus Hub");
+
+  // Read authenticated college affiliation from session
+  useEffect(() => {
+    const session = getClientSession();
+    if (session?.institution_id) {
+      if (session.institution_id === "inst-002" || session.institution_id.includes("PSG")) {
+        setInstitutionName("PSG College of Technology Hub");
+      } else if (session.institution_id === "inst-003" || session.institution_id.includes("TCE")) {
+        setInstitutionName("Thiagarajar College of Engineering Hub");
+      } else {
+        setInstitutionName("Anna University Campus Hub");
+      }
+    }
+  }, []);
 
   const triggerToast = (msg: string) => {
     setToast(msg);
@@ -593,9 +609,9 @@ export default function CollegeCoordinatorPage() {
         {activeTab === "calendar" && (
           <WorkshopCalendar
             role="COLLEGE_ADMIN"
-            institutionName="Anna University Campus Hub"
-            title="Anna University Workshop Itinerary & Calendar"
-            subtitle="Upcoming and completed technical workshop sessions for Anna University Campus Hub. Direct sync with Google and Apple Calendar."
+            institutionName={institutionName}
+            title={`${institutionName} Workshop Itinerary & Calendar`}
+            subtitle={`Upcoming and completed technical workshop sessions for ${institutionName}. Direct sync with Google and Apple Calendar.`}
           />
         )}
       </main>

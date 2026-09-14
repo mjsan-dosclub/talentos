@@ -12,6 +12,9 @@ import {
   SparklesIcon,
   ClipboardListIcon,
   SettingsIcon,
+  BellIcon,
+  RadioIcon,
+  MailIcon,
   XIcon,
 } from "@/components/Icons";
 
@@ -34,6 +37,9 @@ import InstitutionsTab from "@/components/admin/InstitutionsTab";
 import MentorsTab from "@/components/admin/MentorsTab";
 import LandingCmsHubTab from "@/components/admin/LandingCmsHubTab";
 import GovernanceTab from "@/components/admin/GovernanceTab";
+import PopupsTab from "@/components/admin/PopupsTab";
+import PushNotificationsTab from "@/components/admin/PushNotificationsTab";
+import NotificationEngineTab from "@/components/admin/NotificationEngineTab";
 
 function AdminDashboardContent() {
   const searchParams = useSearchParams();
@@ -84,7 +90,16 @@ function AdminDashboardContent() {
   };
 
   // Determine active module with full URL and alias compatibility
-  let activeModule: "students" | "workshops" | "institutions" | "mentors" | "cms" | "governance" = "students";
+  let activeModule:
+    | "students"
+    | "workshops"
+    | "institutions"
+    | "mentors"
+    | "popups"
+    | "push"
+    | "notifications"
+    | "cms"
+    | "governance" = "students";
   let cmsSubTab: "casestudies" | "enquiries" | "passes" = "casestudies";
 
   if (rawTab === "students") {
@@ -95,6 +110,12 @@ function AdminDashboardContent() {
     activeModule = "institutions";
   } else if (rawTab === "mentors" || rawTab === "experts") {
     activeModule = "mentors";
+  } else if (rawTab === "popups") {
+    activeModule = "popups";
+  } else if (rawTab === "push") {
+    activeModule = "push";
+  } else if (rawTab === "notifications") {
+    activeModule = "notifications";
   } else if (
     rawTab === "cms" ||
     rawTab === "casestudies" ||
@@ -111,7 +132,7 @@ function AdminDashboardContent() {
     activeModule = "students";
   }
 
-  // Sidebar Menu Groups (6 primary modules)
+  // Sidebar Menu Groups (Core Operations, Content & Broadcast, Platform & Security)
   const sidebarGroups: SidebarGroup[] = [
     {
       title: "Core Operations",
@@ -144,11 +165,29 @@ function AdminDashboardContent() {
       ],
     },
     {
-      title: "Landing & Growth",
+      title: "Content & Broadcast",
       items: [
         {
+          id: "popups",
+          label: "Welcome Popups & News",
+          icon: <RadioIcon className="w-4 h-4" />,
+          badge: "LIVE",
+        },
+        {
+          id: "push",
+          label: "Push Notifications (FCM)",
+          icon: <BellIcon className="w-4 h-4" />,
+          badge: "WEB PUSH",
+        },
+        {
+          id: "notifications",
+          label: "Notification Engine",
+          icon: <MailIcon className="w-4 h-4" />,
+          badge: "3-WAY",
+        },
+        {
           id: "cms",
-          label: "Landing & CMS",
+          label: "Landing & CMS Hub",
           icon: <SparklesIcon className="w-4 h-4" />,
           badge: "3 PORTALS",
         },
@@ -252,6 +291,21 @@ function AdminDashboardContent() {
               onToast={triggerToast}
               onAuditLog={logAdminAudit}
             />
+          )}
+
+          {/* MODULE: WELCOME POPUPS & FLASH ANNOUNCEMENTS */}
+          {activeModule === "popups" && (
+            <PopupsTab onToast={triggerToast} />
+          )}
+
+          {/* MODULE: PUSH NOTIFICATIONS (FCM) */}
+          {activeModule === "push" && (
+            <PushNotificationsTab onToast={triggerToast} />
+          )}
+
+          {/* MODULE: 3-WAY NOTIFICATION ENGINE (EMAIL / WA / PUSH) */}
+          {activeModule === "notifications" && (
+            <NotificationEngineTab onToast={triggerToast} />
           )}
 
           {/* MODULE 6: PLATFORM & GOVERNANCE */}

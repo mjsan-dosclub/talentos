@@ -263,22 +263,54 @@ export function getFilteredSchedule(params: {
 }): ScheduledWorkshopSession[] {
   let result = [...SCHEDULED_SESSIONS_LEDGER];
 
-  // If filtered by college/institution (Student or College Coordinator)
-  if (params.institutionName && params.institutionName !== "ALL") {
-    const cleanInst = params.institutionName.toLowerCase().trim();
+  // 1. Role: TRAINER (Expert Lead) - strictly restricted to workshops assigned to this expert
+  if (params.role === "TRAINER") {
+    const trainerToMatch = (params.trainerName && params.trainerName !== "ALL" ? params.trainerName : "Priya Sundaram")
+      .toLowerCase()
+      .trim();
     result = result.filter(
       (s) =>
-        s.institutionName.toLowerCase().includes(cleanInst) ||
-        cleanInst.includes(s.institutionName.toLowerCase())
+        s.trainerName.toLowerCase().includes(trainerToMatch) ||
+        trainerToMatch.includes(s.trainerName.toLowerCase())
+    );
+    // If the trainer optionally filters by a specific campus hub they teach at
+    if (params.institutionName && params.institutionName !== "ALL") {
+      const cleanInst = params.institutionName.toLowerCase().trim();
+      result = result.filter(
+        (s) =>
+          s.institutionName.toLowerCase().includes(cleanInst) ||
+          cleanInst.includes(s.institutionName.toLowerCase())
+      );
+    }
+  }
+  // 2. Role: COLLEGE_ADMIN or STUDENT - strictly restricted to workshops scheduled for their college
+  else if (params.role === "COLLEGE_ADMIN" || params.role === "STUDENT") {
+    const instToMatch = (params.institutionName && params.institutionName !== "ALL" ? params.institutionName : "Anna University Campus Hub")
+      .toLowerCase()
+      .trim();
+    result = result.filter(
+      (s) =>
+        s.institutionName.toLowerCase().includes(instToMatch) ||
+        instToMatch.includes(s.institutionName.toLowerCase())
     );
   }
+  // 3. Role: SUPER_ADMIN (Platform Administrator) - full visibility with flexible filters
+  else {
+    if (params.institutionName && params.institutionName !== "ALL") {
+      const cleanInst = params.institutionName.toLowerCase().trim();
+      result = result.filter(
+        (s) =>
+          s.institutionName.toLowerCase().includes(cleanInst) ||
+          cleanInst.includes(s.institutionName.toLowerCase())
+      );
+    }
 
-  // If filtered by trainer/expert
-  if (params.trainerName && params.trainerName !== "ALL") {
-    const cleanTrainer = params.trainerName.toLowerCase().trim();
-    result = result.filter((s) =>
-      s.trainerName.toLowerCase().includes(cleanTrainer)
-    );
+    if (params.trainerName && params.trainerName !== "ALL") {
+      const cleanTrainer = params.trainerName.toLowerCase().trim();
+      result = result.filter((s) =>
+        s.trainerName.toLowerCase().includes(cleanTrainer)
+      );
+    }
   }
 
   // Sort by date ascending
