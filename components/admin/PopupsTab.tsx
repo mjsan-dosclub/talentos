@@ -663,19 +663,19 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
           onClick={() => setPreviewPopup(null)}
         >
           <div
-            className="relative w-full max-w-2xl bg-[#0c3346] text-slate-100 rounded-2xl shadow-2xl border border-slate-700/80 overflow-hidden"
+            className="relative w-full max-w-2xl bg-white text-[#10222b] rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-700/60 bg-[#10222b]">
+            <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50">
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-[#4caf50] animate-pulse" />
-                <span className="font-mono text-xs uppercase tracking-widest text-[#8bd08e] font-semibold">
+                <span className="font-mono text-xs uppercase tracking-widest text-[#2f8a36] font-bold">
                   PREVIEW // {previewPopup.badge}
                 </span>
               </div>
               <button
                 onClick={() => setPreviewPopup(null)}
-                className="text-slate-400 hover:text-white p-1"
+                className="text-slate-400 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors"
                 aria-label="Close"
               >
                 <XIcon className="w-5 h-5" />
@@ -683,7 +683,7 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
             </div>
 
             {previewPopup.contentType === "YOUTUBE" && (
-              <div className="w-full aspect-video bg-black">
+              <div className="w-full aspect-video bg-black border-b border-slate-200">
                 <iframe
                   src={getYouTubeEmbedUrl(previewPopup.mediaUrl) || ""}
                   title="YouTube Preview"
@@ -693,7 +693,7 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
             )}
 
             {previewPopup.contentType === "FLYER" && previewPopup.mediaUrl && (
-              <div className="max-h-72 w-full overflow-hidden bg-slate-900">
+              <div className="max-h-72 w-full overflow-hidden bg-slate-100 border-b border-slate-200">
                 <img
                   src={previewPopup.mediaUrl}
                   alt={previewPopup.title}
@@ -703,17 +703,17 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
             )}
 
             {previewPopup.contentType === "ACHIEVER" && previewPopup.mediaUrl && (
-              <div className="p-6 bg-slate-900 border-b border-slate-700/60 flex items-center gap-5">
+              <div className="p-6 bg-slate-50 border-b border-slate-200 flex items-center gap-5">
                 <img
                   src={previewPopup.mediaUrl}
                   alt={previewPopup.title}
-                  className="w-24 h-24 rounded-xl object-cover border-2 border-[#4caf50]"
+                  className="w-24 h-24 rounded-xl object-cover border-2 border-[#4caf50]/60 shadow-md bg-white"
                 />
                 <div>
-                  <span className="font-mono text-xs text-[#1593c3] uppercase tracking-wider block mb-1">
+                  <span className="font-mono text-xs text-[#0d6b90] uppercase tracking-wider font-bold block mb-1">
                     HALL OF ACHIEVERS
                   </span>
-                  <h3 className="text-xl font-bold text-white leading-snug">
+                  <h3 className="text-xl font-bold text-[#10222b] leading-snug">
                     {previewPopup.title}
                   </h3>
                 </div>
@@ -722,22 +722,22 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
 
             <div className="p-6 space-y-4">
               {previewPopup.contentType !== "ACHIEVER" && (
-                <h3 className="text-2xl font-bold text-white font-['Space_Grotesk']">
+                <h3 className="text-2xl font-bold text-[#10222b] font-['Space_Grotesk']">
                   {previewPopup.title}
                 </h3>
               )}
-              <p className="text-slate-300 text-sm leading-relaxed">
+              <p className="text-slate-600 text-sm leading-relaxed">
                 {previewPopup.description}
               </p>
-              <div className="pt-3 border-t border-slate-700/50 flex items-center justify-between">
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-between">
                 <button
                   onClick={() => setPreviewPopup(null)}
-                  className="text-xs font-mono text-slate-400 hover:text-slate-200 uppercase"
+                  className="text-xs font-mono text-slate-500 hover:text-slate-800 uppercase font-medium"
                 >
                   Close Preview
                 </button>
                 {previewPopup.actionUrl && previewPopup.actionLabel && (
-                  <span className="px-4 py-2 bg-gradient-to-r from-[#4caf50] to-[#2f8a36] text-white text-xs font-semibold rounded-lg inline-flex items-center gap-1.5">
+                  <span className="px-4 py-2 bg-gradient-to-r from-[#4caf50] to-[#2f8a36] text-white text-xs font-semibold rounded-lg inline-flex items-center gap-1.5 shadow-sm">
                     <span>{previewPopup.actionLabel}</span>
                     <ArrowRightIcon className="w-3.5 h-3.5" />
                   </span>

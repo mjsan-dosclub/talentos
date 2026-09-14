@@ -161,7 +161,7 @@ export default function Home() {
                       />
                       <button
                         type="submit"
-                        className="px-3 py-1.5 bg-[#10222b] text-white text-xs rounded-lg hover:bg-[#4caf50] transition-colors"
+                        className="px-3 py-1.5 bg-[#2f8a36] text-white text-xs font-semibold rounded-lg hover:bg-[#256f2b] transition-colors"
                       >
                         Verify
                       </button>
@@ -196,237 +196,195 @@ export default function Home() {
       {/* Main Narrative Canvas */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 flex flex-col gap-20 sm:gap-28 w-full">
         {/* =========================================================================
-            SECTION 1: GRAND FULL-SCREEN HERO (INSPIRED BY AMPEROS.COM)
-            Full screen, grand presence, facelift for existing members, urge to join for visitors.
-            Emphasizes collaboration mindset (peer defense pods, shared commons, hivemind).
+            SECTION 1: MINIMALISTIC LIGHT HERO - THE PORTAL / INVITATION
+            Clean, light, airy, editorial aesthetic (inspired by Equals.com & WorkOS Atlas).
+            Collaborative mindset: peer defense pods, shared commons, collective capability.
+            Zero dark colors.
             ========================================================================= */}
-        <section aria-label="Hero Introduction" className="w-full">
-          {/* Grand Amperos-style Cinematic Stage */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-b from-[#081820] via-[#0c2836] to-[#07161e] text-white p-6 sm:p-10 lg:p-14 border border-slate-700/70 shadow-2xl min-h-[85vh] lg:min-h-[88vh] flex flex-col justify-between">
-            {/* Ambient Background Glows & Mesh Grid Overlay */}
-            <div className="absolute inset-0 bg-[radial-gradient(rgba(21,147,195,0.18)_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none opacity-40" />
-            <div className="absolute -top-32 -right-32 w-[550px] h-[550px] bg-[#1593c3]/20 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute -bottom-32 -left-32 w-[550px] h-[550px] bg-[#4caf50]/20 rounded-full blur-3xl pointer-events-none" />
+        <section aria-label="Hero Introduction" className="flex flex-col gap-10 pt-4 sm:pt-8">
+          {/* Top Live Cohort Notification Bar - Clean Light Pill */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <a
+              href="https://membership.descienceosclub.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs text-[#10222b] text-xs transition-all group cursor-pointer"
+            >
+              <span className="px-2 py-0.5 rounded bg-[#e8f5e9] text-[#2f8a36] font-mono font-bold text-[10px] tracking-wider uppercase border border-[#4caf50]/30">
+                LIVE COHORT
+              </span>
+              <span className="text-slate-600 font-mono text-xs">
+                Batch 3 Systems Engineering Active // 42 Engineers in Collaborative Defense
+              </span>
+              <ArrowRightIcon className="w-3.5 h-3.5 text-[#2f8a36] group-hover:translate-x-0.5 transition-transform" />
+            </a>
 
-            {/* Top Live Cohort Ticker / News Bar (Amperos style) */}
-            <div className="relative z-10 flex flex-wrap items-center justify-between gap-3 pb-6 border-b border-white/10">
-              <a
-                href="https://membership.descienceosclub.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-white/10 hover:bg-white/15 border border-white/15 backdrop-blur-md text-white text-xs transition-all group cursor-pointer"
-              >
-                <span className="px-2 py-0.5 rounded bg-[#4caf50] text-[#081820] font-mono font-bold text-[10px] tracking-wider uppercase">
-                  LIVE COHORT
-                </span>
-                <span className="text-slate-200 font-mono text-xs sm:text-xs">
-                  Batch 3 Systems Engineering Active // 42 Engineers in Collaborative Defense
-                </span>
-                <ArrowRightIcon className="w-3.5 h-3.5 text-[#8bd08e] group-hover:translate-x-0.5 transition-transform" />
-              </a>
-
-              <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-400">
-                <span className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse" />
-                <span>CEG CAMPUS HUB • ZERO-GRACE EVALUATIONS IN SESSION</span>
-              </div>
+            <div className="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-500">
+              <span className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse" />
+              <span>CEG CAMPUS HUB • ZERO-GRACE EVALUATIONS IN SESSION</span>
             </div>
+          </div>
 
-            {/* Grand Two-Column Grid: Narrative on Left, Collaborative Systems Canvas on Right */}
-            <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center py-6 sm:py-10">
-              {/* Left Column: Grand Typography & Collaboration Manifesto */}
-              <div className="lg:col-span-7 space-y-6 sm:space-y-8">
-                {/* Eyebrow Pill */}
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#4caf50]/20 border border-[#4caf50]/40 text-xs font-mono tracking-widest text-[#8bd08e] font-semibold">
-                  <UsersIcon className="w-3.5 h-3.5 text-[#4caf50]" />
-                  <span>{cms.hero.eyebrow}</span>
-                </div>
+          {/* Editorial Grid: Narrative on Left, Collaborative Showcase on Right */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16 items-center">
+            {/* Left Column: Editorial Manifesto */}
+            <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+              {/* Terminal Eyebrow Badge */}
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#e8f5e9] border border-[#4caf50]/30 text-xs font-mono tracking-wide text-[#2f8a36] font-semibold">
+                <UsersIcon className="w-3.5 h-3.5 text-[#2f8a36]" />
+                <span>{cms.hero.eyebrow}</span>
+              </div>
 
-                {/* Grand Display Headline */}
-                <div className="space-y-3">
-                  <h1 className="text-4xl sm:text-6xl lg:text-7xl font-['Space_Grotesk'] font-bold tracking-tight text-white leading-[1.06]">
-                    {cms.hero.title}{" "}
-                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4caf50] via-[#8bd08e] to-[#1593c3] block mt-1">
-                      {cms.hero.highlight}
-                    </span>
-                  </h1>
-                  <p className="text-xl sm:text-2xl text-slate-300 font-['Space_Grotesk'] font-medium pt-1">
-                    {cms.hero.subtitle}
-                  </p>
-                </div>
-
-                {/* Narrative Description: Emphasizing Collaboration & Shared Rigor */}
-                <p className="text-base sm:text-lg text-slate-300 font-normal leading-relaxed max-w-2xl">
-                  {cms.hero.description}
-                </p>
-
-                {/* Dual Impactful Action Buttons (Amperos style) */}
-                <div className="pt-2 flex flex-wrap items-center gap-4">
-                  <a
-                    href={cms.hero.ctaPrimaryUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2.5 px-7 py-3.5 rounded-xl bg-gradient-to-r from-[#4caf50] to-[#2f8a36] hover:brightness-110 text-white text-sm font-semibold tracking-wide shadow-xl hover:shadow-[#4caf50]/25 active:scale-[0.98] transition-all cursor-pointer"
-                  >
-                    <span>{cms.hero.ctaPrimaryText}</span>
-                    <ArrowRightIcon className="w-4 h-4" />
-                  </a>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowVerify(true)}
-                    className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-white/25 bg-white/10 hover:bg-white/15 text-white text-sm font-semibold backdrop-blur-md transition-colors cursor-pointer"
-                  >
-                    <SearchIcon className="w-4 h-4 text-[#8bd08e]" />
-                    <span>Verify Cohort Dossier</span>
-                  </button>
-                </div>
-
-                {/* Sub-Attribution Line */}
-                <div className="pt-2 text-xs text-slate-400 font-mono flex items-center gap-3">
-                  <span className="inline-flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-[#1593c3]" />
-                    {cms.hero.subAttribution}
+              {/* Large Typography Headline */}
+              <div className="space-y-3">
+                <h1 className="text-4xl sm:text-6xl font-['Space_Grotesk'] font-bold tracking-tight text-[#10222b] leading-[1.08]">
+                  {cms.hero.title}{" "}
+                  <span className="text-[#2f8a36] block sm:inline">
+                    {cms.hero.highlight}
                   </span>
-                </div>
+                </h1>
+                <p className="text-xl sm:text-2xl text-slate-600 font-['Space_Grotesk'] font-medium pt-1">
+                  {cms.hero.subtitle}
+                </p>
               </div>
 
-              {/* Right Column: Grand Collaborative Systems Canvas (No Solo Focus!) */}
-              <div className="lg:col-span-5 relative">
-                <div className="relative mx-auto max-w-lg">
-                  {/* Primary Stage: Team Systems Pod around Active Terminals */}
-                  <TiltCard
-                    maxTilt={4}
-                    scale={1.01}
-                    className="rounded-2xl overflow-hidden border border-slate-700/80 shadow-2xl bg-[#081820] group cursor-pointer relative"
-                  >
-                    {/* Terminal Header on top of image */}
-                    <div className="flex items-center justify-between px-4 py-2.5 bg-[#0e222d] border-b border-slate-700/80 font-mono text-[11px] text-slate-300">
-                      <div className="flex items-center gap-2">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#4caf50] animate-pulse" />
-                        <span className="font-semibold text-[#8bd08e]">~/dos-club $ ./peer_systems_defense</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400">42 IN SYNC</span>
-                    </div>
+              {/* Editorial Description */}
+              <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-xl">
+                {cms.hero.description}
+              </p>
 
-                    <div className="relative h-72 sm:h-80 overflow-hidden">
-                      {/* Panoramic student collaboration photo */}
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/images/students/student-workshop-build.jpg"
-                        alt="Indian university students collaborating on systems engineering"
-                        className="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-[#081820] via-transparent to-transparent opacity-90" />
+              {/* Action Bar */}
+              <div className="pt-2 flex flex-wrap items-center gap-4">
+                <a
+                  href={cms.hero.ctaPrimaryUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#4caf50] to-[#2f8a36] hover:brightness-110 text-white text-sm font-semibold tracking-wide shadow-md hover:shadow-[#4caf50]/20 active:scale-[0.98] transition-all cursor-pointer"
+                >
+                  <span>{cms.hero.ctaPrimaryText}</span>
+                  <ArrowRightIcon className="w-4 h-4" />
+                </a>
 
-                      {/* Campus Hub Live Pod Badge */}
-                      <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md text-white text-[10px] font-mono tracking-wide flex items-center gap-2 border border-white/15 shadow-md">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[#4caf50] animate-pulse" />
-                        <span>Systems Pod Alpha • CEG Hub</span>
-                      </div>
+                <button
+                  type="button"
+                  onClick={() => setShowVerify(true)}
+                  className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-[#10222b] text-sm font-medium shadow-xs transition-colors cursor-pointer"
+                >
+                  <SearchIcon className="w-4 h-4 text-[#2f8a36]" />
+                  <span>Verify Cohort Dossier</span>
+                </button>
+              </div>
 
-                      {/* Collective Metric Pill */}
-                      <div className="absolute bottom-3 left-3 right-3 p-3 rounded-xl bg-[#0e222d]/90 backdrop-blur-md border border-slate-700/80 flex items-center justify-between text-xs">
-                        <div className="flex flex-col">
-                          <span className="font-['Space_Grotesk'] font-bold text-white text-sm">
-                            Collective Architecture Defense
-                          </span>
-                          <span className="text-[10px] font-mono text-slate-400">
-                            Zero Solo Silos • 100% Peer Code Review
-                          </span>
-                        </div>
-                        <span className="px-2.5 py-1 rounded bg-[#4caf50]/20 text-[#8bd08e] text-[10px] font-mono font-bold border border-[#4caf50]/40">
-                          VERIFIED COMMONS
-                        </span>
-                      </div>
-                    </div>
-                  </TiltCard>
-
-                  {/* Floating Peer Collaboration Window (Top-right overlap) */}
-                  <TiltCard
-                    maxTilt={6}
-                    scale={1.02}
-                    glare={false}
-                    className="hidden sm:flex absolute -top-8 -right-6 w-60 rounded-xl overflow-hidden border border-slate-600/80 shadow-2xl bg-[#0e222d] p-2.5 flex-col gap-2 z-20 animate-tilt-float cursor-pointer"
-                  >
-                    <div className="h-24 rounded-lg overflow-hidden relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/images/students/student-1.jpg"
-                        alt="Indian student discussing code architecture with peers"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-xs text-[#8bd08e] text-[9px] font-mono font-bold">
-                        Peer Defense
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-[11px] font-['Space_Grotesk'] text-white font-semibold">
-                        4 Engineers Per Pod
-                      </span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#1593c3]/20 text-[#1593c3] font-mono font-bold border border-[#1593c3]/40">
-                        SHARED PASS
-                      </span>
-                    </div>
-                  </TiltCard>
-
-                  {/* Floating Collective Commons Window (Bottom-left overlap) */}
-                  <TiltCard
-                    maxTilt={6}
-                    scale={1.02}
-                    glare={false}
-                    className="hidden sm:flex absolute -bottom-8 -left-8 w-64 rounded-xl overflow-hidden border border-slate-600/80 shadow-2xl bg-[#0e222d] p-2.5 flex-col gap-2 z-20 animate-tilt-float-delayed cursor-pointer"
-                  >
-                    <div className="h-24 rounded-lg overflow-hidden relative">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src="/images/students/student-4.jpg"
-                        alt="Indian students collaborating on open source codebase"
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-1.5 left-1.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-xs text-white text-[9px] font-mono">
-                        Commons Git Stream
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between px-1">
-                      <span className="text-[11px] font-['Space_Grotesk'] text-white font-semibold">
-                        1,420+ Merged PRs
-                      </span>
-                      <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#4caf50]/20 text-[#8bd08e] font-mono font-bold border border-[#4caf50]/40">
-                        COMMONS
-                      </span>
-                    </div>
-                  </TiltCard>
-                </div>
+              {/* Minimal Sub-Attribution */}
+              <div className="pt-2 text-[11px] text-slate-500 font-mono flex items-center gap-3">
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1593c3]" />
+                  {cms.hero.subAttribution}
+                </span>
               </div>
             </div>
 
-            {/* Bottom Collaboration Tenets Strip (Amperos style) */}
-            <div className="relative z-10 pt-6 mt-6 border-t border-white/10 grid grid-cols-2 md:grid-cols-4 gap-4 text-xs font-mono">
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8bd08e] font-bold">01 // MUTUAL CODE REVIEW</span>
-                <span className="text-slate-400 text-[11px]">Every commit verified by 2 peers</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#1593c3] font-bold">02 // ZERO SOLO SILOS</span>
-                <span className="text-slate-400 text-[11px]">Systems authored in pods</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#8bd08e] font-bold">03 // SHARED COMMONS</span>
-                <span className="text-slate-400 text-[11px]">Public RFCs & zero hoarding</span>
-              </div>
-              <div className="flex flex-col gap-1">
-                <span className="text-[#1593c3] font-bold">04 // COLLECTIVE HONOUR</span>
-                <span className="text-slate-400 text-[11px]">Whole batch elevates together</span>
+            {/* Right Column: Clean Light Collaborative Systems Cards (No Solo Focus) */}
+            <div className="lg:col-span-5 relative">
+              <div className="relative mx-auto max-w-md">
+                {/* Primary Collaborative Systems Card */}
+                <TiltCard
+                  maxTilt={4}
+                  scale={1.01}
+                  className="rounded-2xl overflow-hidden border border-slate-200/90 shadow-md bg-white group cursor-pointer"
+                >
+                  <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={cms.hero.studentPhoto || "/images/students/student-workshop-build.jpg"}
+                      alt={cms.hero.studentPhotoCaption}
+                      className="w-full h-80 sm:h-96 object-cover object-top group-hover:scale-103 transition-transform duration-700"
+                    />
+
+                    {/* Contextual Collaboration Badge (Clean Light) */}
+                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[#10222b] text-[10px] font-mono tracking-wide flex items-center gap-1.5 shadow-sm border border-slate-200">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#4caf50] animate-pulse" />
+                      <span>Systems Pod Alpha • CEG Campus</span>
+                    </div>
+
+                    {/* Cohort Track Chip (Clean Light Mint) */}
+                    <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-[#e8f5e9] text-[#2f8a36] border border-[#4caf50]/40 text-[10px] font-mono font-bold tracking-wider shadow-2xs">
+                      BATCH 3 // 2026
+                    </div>
+                  </div>
+
+                  <div className="p-4 bg-white border-t border-slate-100 flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-['Space_Grotesk'] font-semibold text-[#10222b]">
+                        Peer Systems Defense & Code Review
+                      </span>
+                      <span className="text-[10px] text-slate-500 font-mono">
+                        {cms.hero.studentPhotoCaption}
+                      </span>
+                    </div>
+                    <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#e8f5e9] text-[#2f8a36] font-mono font-semibold border border-[#4caf50]/20">
+                      VERIFIED POD
+                    </span>
+                  </div>
+                </TiltCard>
+
+                {/* Floating Shared Commons Window */}
+                <TiltCard
+                  maxTilt={6}
+                  scale={1.03}
+                  glare={false}
+                  className="hidden sm:flex absolute -bottom-6 -left-8 w-68 rounded-xl overflow-hidden border border-slate-200/90 shadow-xl bg-white p-2.5 flex-col gap-2 animate-tilt-float z-30 cursor-pointer"
+                >
+                  <div className="h-28 rounded-lg overflow-hidden relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={cms.hero.collabPhoto || "/images/students/student-4.jpg"}
+                      alt={cms.hero.collabPhotoCaption}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-white/95 backdrop-blur-xs text-slate-800 text-[9px] font-mono font-semibold border border-slate-200 shadow-2xs">
+                      Commons Git Stream
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between px-1">
+                    <span className="text-[11px] font-['Space_Grotesk'] text-[#10222b] font-semibold">
+                      1,420+ Merged PRs
+                    </span>
+                    <span className="text-[9px] px-2 py-0.5 rounded bg-[#e1f5fe] text-[#0d6b90] font-mono font-bold border border-[#1593c3]/30">
+                      COMMONS
+                    </span>
+                  </div>
+                </TiltCard>
               </div>
             </div>
           </div>
 
-          {/* Full-Width Campus & Ecosystem Marquee Bar (Amperos style) */}
-          <div className="w-full pt-8 pb-4 flex flex-col gap-3">
-            <span className="text-[11px] font-mono uppercase tracking-widest text-slate-500 font-bold block text-center sm:text-left">
+          {/* Collaboration Tenets Strip - Clean Light Grid */}
+          <div className="pt-8 border-t border-black/[0.06] grid grid-cols-2 md:grid-cols-4 gap-3 text-xs font-mono">
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-1">
+              <span className="text-[#2f8a36] font-bold">01 // MUTUAL CODE REVIEW</span>
+              <span className="text-slate-600 text-[11px]">Every commit verified by 2 peers</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-1">
+              <span className="text-[#0d6b90] font-bold">02 // ZERO SOLO SILOS</span>
+              <span className="text-slate-600 text-[11px]">Systems authored in pods</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-1">
+              <span className="text-[#2f8a36] font-bold">03 // SHARED COMMONS</span>
+              <span className="text-slate-600 text-[11px]">Public RFCs & zero hoarding</span>
+            </div>
+            <div className="p-3.5 rounded-xl bg-white border border-slate-200/90 shadow-2xs flex flex-col gap-1">
+              <span className="text-[#0d6b90] font-bold">04 // COLLECTIVE HONOUR</span>
+              <span className="text-slate-600 text-[11px]">Whole batch elevates together</span>
+            </div>
+          </div>
+
+          {/* Campus & Research Ecosystem Bar - Clean Light */}
+          <div className="w-full pt-2 flex flex-col gap-3">
+            <span className="text-[11px] font-mono uppercase tracking-widest text-slate-500 font-bold">
               COLLABORATIVE HUBS & ENGINEERING RESEARCH PARKS
             </span>
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
                 { name: "Anna Univ CEG Hub", tag: "Campus Hub" },
                 { name: "IIT Madras Research Park", tag: "Innovation Hub" },
@@ -453,7 +411,7 @@ export default function Home() {
 
         {/* =========================================================================
             SECTION 2: THE INVISIBLE ENGINE - SYSTEMS EXECUTION PIPELINE
-            Bespoke engineering pipeline replacing the generic card grid.
+            Clean light technical workbench. Zero dark colors.
             ========================================================================= */}
         <section id="evidence" aria-label="Curiosity and Evidence" className="flex flex-col gap-10 border-t border-black/[0.08] pt-16 scroll-mt-24">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
@@ -471,28 +429,24 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Connected Technical Pipeline Visualizer */}
-          <div className="relative rounded-2xl bg-[#0c3346] border border-slate-700/80 p-6 sm:p-8 text-white shadow-xl overflow-hidden">
-            {/* Ambient Background Glows */}
-            <div className="absolute top-0 right-0 w-96 h-96 bg-[#1593c3]/10 rounded-full blur-3xl pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#4caf50]/10 rounded-full blur-3xl pointer-events-none" />
-
+          {/* Connected Technical Pipeline Visualizer - Clean Minimalist Light Container */}
+          <div className="relative rounded-2xl bg-white border border-slate-200/90 p-6 sm:p-8 text-[#10222b] shadow-sm overflow-hidden">
             {/* Terminal Header */}
-            <div className="flex items-center justify-between pb-6 border-b border-slate-700/60 font-mono text-xs text-slate-400">
+            <div className="flex items-center justify-between pb-5 border-b border-slate-200 font-mono text-xs text-slate-500">
               <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500/80" />
-                <span className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                <span className="w-3 h-3 rounded-full bg-rose-400" />
+                <span className="w-3 h-3 rounded-full bg-amber-400" />
                 <span className="w-3 h-3 rounded-full bg-[#4caf50]" />
-                <span className="ml-2 text-slate-300 font-semibold">
+                <span className="ml-2 text-slate-800 font-bold">
                   ~/dos-club $ ./engine_pipeline --mode=production
                 </span>
               </div>
-              <span className="hidden sm:inline text-[#8bd08e]">
+              <span className="hidden sm:inline text-[#2f8a36] font-bold">
                 ALL 6 TELEMETRY GATES ACTIVE
               </span>
             </div>
 
-            {/* The 6 Sequential Verification Stages */}
+            {/* The 6 Sequential Verification Stages - Clean Light Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-6">
               {cms.invisibleEngine.steps.map((step, idx) => (
                 <TiltCard
@@ -500,29 +454,29 @@ export default function Home() {
                   maxTilt={4}
                   scale={1.015}
                   glare={false}
-                  className="bg-[#10222b]/80 p-5 rounded-xl border border-slate-700/60 hover:border-[#4caf50] transition-all group flex flex-col justify-between min-h-[160px] relative cursor-pointer"
+                  className="bg-[#FAF9F5] hover:bg-white p-5 rounded-xl border border-slate-200/90 hover:border-[#4caf50] hover:shadow-md transition-all group flex flex-col justify-between min-h-[160px] relative cursor-pointer"
                 >
                   <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs text-[#1593c3] font-semibold tracking-wider">
+                    <span className="font-mono text-xs text-[#0d6b90] font-bold tracking-wider">
                       {step.code}
                     </span>
-                    <span className="px-2 py-0.5 rounded bg-[#4caf50]/15 text-[#8bd08e] text-[10px] font-mono border border-[#4caf50]/30 font-medium">
+                    <span className="px-2 py-0.5 rounded bg-[#e8f5e9] text-[#2f8a36] text-[10px] font-mono border border-[#4caf50]/30 font-semibold">
                       {step.badge}
                     </span>
                   </div>
 
                   <div className="my-3 space-y-1">
-                    <h3 className="text-base font-['Space_Grotesk'] font-bold text-white group-hover:text-[#4caf50] transition-colors">
+                    <h3 className="text-base font-['Space_Grotesk'] font-bold text-[#10222b] group-hover:text-[#2f8a36] transition-colors">
                       {step.title}
                     </h3>
-                    <p className="text-xs text-slate-400 font-light leading-relaxed">
+                    <p className="text-xs text-slate-600 font-normal leading-relaxed">
                       {step.telemetry}
                     </p>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                  <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[10px] font-mono text-slate-500">
                     <span>GATE {String(idx + 1).padStart(2, "0")}</span>
-                    <span className="text-[#8bd08e] group-hover:underline">VERIFIED // PASS</span>
+                    <span className="text-[#2f8a36] font-semibold group-hover:underline">VERIFIED // PASS</span>
                   </div>
                 </TiltCard>
               ))}
@@ -560,8 +514,8 @@ export default function Home() {
                   alt={cms.invisibleEngine.bannerTitle}
                   className="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700"
                 />
-                {/* Lab Evaluation Chip */}
-                <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-[#0c3346]/90 backdrop-blur-md text-white text-[10px] font-mono flex items-center gap-2 border border-[#4caf50]/40 shadow-md">
+                {/* Lab Evaluation Chip - Clean Light Pill */}
+                <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md text-slate-800 text-[10px] font-mono flex items-center gap-2 border border-slate-200 shadow-sm">
                   <span className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse" />
                   <span>Live Lab Evaluation • Anna University Hub</span>
                 </div>
@@ -607,7 +561,7 @@ export default function Home() {
                     alt={pillar.title}
                     className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                   />
-                  <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#0c3346]/85 backdrop-blur-xs text-[#8bd08e] text-[9px] font-mono tracking-wider border border-[#4caf50]/40">
+                  <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-white/95 backdrop-blur-xs text-[#2f8a36] text-[9px] font-mono tracking-wider font-bold border border-[#4caf50]/40 shadow-2xs">
                     {pillar.tag}
                   </span>
                 </div>
@@ -773,7 +727,7 @@ export default function Home() {
                 className="bg-white p-5 rounded-2xl border-2 border-slate-200 flex flex-col justify-between min-h-[180px] hover:border-[#2f8a36] hover:shadow-md transition-all cursor-pointer shadow-xs"
               >
                 <div className="flex flex-col gap-2">
-                  <span className="inline-block px-2.5 py-0.5 rounded bg-[#0c3346] text-[#8bd08e] font-mono text-xs font-bold self-start">
+                  <span className="inline-block px-2.5 py-0.5 rounded bg-[#e8f5e9] text-[#2f8a36] border border-[#4caf50]/30 font-mono text-xs font-bold self-start">
                     {dim.num}
                   </span>
                   <span className="font-['Space_Grotesk'] text-base font-bold text-[#0c3346] pt-1">
@@ -807,38 +761,35 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* High-End Member Console Block */}
+              {/* High-End Member Console Block - Clean Minimalist Light Card */}
               <TiltCard
                 maxTilt={3}
                 scale={1.01}
-                className="bg-[#0c3346] text-white p-7 rounded-2xl border border-slate-700/80 shadow-xl space-y-5 cursor-pointer relative overflow-hidden"
+                className="bg-gradient-to-br from-white via-[#f4faf5] to-[#e8f5e9]/40 text-[#10222b] p-7 rounded-2xl border border-slate-200/90 shadow-sm space-y-5 cursor-pointer relative overflow-hidden"
               >
-                {/* Glow accent */}
-                <div className="absolute top-0 right-0 w-48 h-48 bg-[#4caf50]/15 rounded-full blur-2xl pointer-events-none" />
-
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#4caf50] animate-pulse" />
-                    <span className="text-xs font-mono font-semibold text-slate-200 tracking-wider">
+                    <span className="text-xs font-mono font-bold text-slate-800 tracking-wider">
                       MEMBER PRIVILEGE PASS
                     </span>
                   </div>
-                  <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-[#4caf50]/20 text-[#8bd08e] font-semibold border border-[#4caf50]/40">
+                  <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-[#e8f5e9] text-[#2f8a36] font-bold border border-[#4caf50]/40">
                     PRIORITY ONBOARDING
                   </span>
                 </div>
 
-                <div className="space-y-2.5 text-xs text-slate-300">
+                <div className="space-y-2.5 text-xs text-slate-700 font-medium">
                   <div className="flex items-center gap-2">
-                    <CheckIcon className="w-4 h-4 text-[#4caf50] shrink-0" />
+                    <CheckIcon className="w-4 h-4 text-[#2f8a36] shrink-0" />
                     <span>27-Workshop Intensive Systems Track</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckIcon className="w-4 h-4 text-[#4caf50] shrink-0" />
+                    <CheckIcon className="w-4 h-4 text-[#2f8a36] shrink-0" />
                     <span>Cryptographic Student Passport & Dossier</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CheckIcon className="w-4 h-4 text-[#4caf50] shrink-0" />
+                    <CheckIcon className="w-4 h-4 text-[#2f8a36] shrink-0" />
                     <span>Direct Access to Staff Engineer Defense Panels</span>
                   </div>
                 </div>
@@ -919,7 +870,7 @@ export default function Home() {
                           onClick={() => setEnquiry({ ...enquiry, category: cat })}
                           className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
                             enquiry.category === cat
-                              ? "bg-[#0c3346] text-[#8bd08e] border-[#0c3346] shadow-sm"
+                              ? "bg-[#e8f5e9] text-[#2f8a36] border-[#4caf50]/60 font-semibold shadow-xs"
                               : "bg-[#FAF9F5] text-slate-700 border-slate-200 hover:border-slate-300"
                           }`}
                         >
@@ -943,9 +894,10 @@ export default function Home() {
                   <button
                     type="submit"
                     disabled={enquiryStatus === "loading"}
-                    className="w-full py-3.5 rounded-xl bg-[#10222b] hover:bg-[#2f8a36] disabled:opacity-50 text-white text-xs font-semibold tracking-wide transition-all shadow-sm cursor-pointer"
+                    className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#4caf50] to-[#2f8a36] hover:brightness-110 disabled:opacity-50 text-white text-xs font-semibold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
                   >
-                    {enquiryStatus === "loading" ? "Submitting..." : "Send Enquiry →"}
+                    <span>{enquiryStatus === "loading" ? "Submitting Transmission..." : "Send Enquiry"}</span>
+                    <ArrowRightIcon className="w-4 h-4" />
                   </button>
                 </form>
               )}
