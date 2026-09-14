@@ -15,8 +15,9 @@ interface ParticipantState {
 
 export default function TrainerDashboardPage() {
   const [participants, setParticipants] = useState<ParticipantState[]>([]);
-  const [qrToken, setQrToken] = useState<string>("TKN-" + Math.random().toString(36).substring(2, 10).toUpperCase());
+  const [qrToken, setQrToken] = useState<string>("TKN-ACTIVE-SYNC");
   const [secondsLeft, setSecondsLeft] = useState<number>(30);
+  const [mounted, setMounted] = useState<boolean>(false);
   const [activeModalStudent, setActiveModalStudent] = useState<ParticipantState | null>(null);
   const [exceptionReason, setExceptionReason] = useState("STUDENT_DEVICE_OFFLINE");
   const [customReasonText, setCustomReasonText] = useState("");
@@ -37,6 +38,8 @@ export default function TrainerDashboardPage() {
 
   // Rolling time-sensitive QR token generator (30s interval per PRD Section 10)
   useEffect(() => {
+    setMounted(true);
+    setQrToken("TKN-" + Math.random().toString(36).substring(2, 10).toUpperCase());
     const interval = setInterval(() => {
       setSecondsLeft((prev) => {
         if (prev <= 1) {
@@ -253,7 +256,7 @@ export default function TrainerDashboardPage() {
                 </div>
 
                 <span className="font-mono text-[10px] text-neutral-500 mt-2">
-                  TOKEN: <strong className="text-neutral-900">{qrToken}</strong>
+                  TOKEN: <strong suppressHydrationWarning className="text-neutral-900">{mounted ? qrToken : "TKN-ACTIVE-SYNC"}</strong>
                 </span>
               </div>
 
