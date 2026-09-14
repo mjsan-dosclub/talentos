@@ -3,9 +3,6 @@
 import React, { useState, useEffect } from "react";
 import {
   ScheduledWorkshopSession,
-  getFilteredSchedule,
-  addScheduledSession,
-  updateSessionStatus,
 } from "@/lib/workshop-schedule";
 import WorkshopCalendar from "@/components/WorkshopCalendar";
 import {
@@ -16,20 +13,36 @@ import {
   BuildingIcon,
   SparklesIcon,
   CheckCircleIcon,
-  SearchIcon,
   ExternalLinkIcon,
-  TerminalIcon,
+  TrashIcon,
 } from "@/components/Icons";
 
-export default function WorkshopScheduleTab() {
+interface WorkshopScheduleTabProps {
+  onAuditLog?: (
+    category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
+    subcategory: string,
+    action: "Create" | "Update" | "Perform" | "Archive",
+    sourceText: string
+  ) => void;
+}
+
+export default function WorkshopScheduleTab({ onAuditLog }: WorkshopScheduleTabProps) {
   const [sessions, setSessions] = useState<ScheduledWorkshopSession[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedInstitution, setSelectedInstitution] = useState<string>("ALL");
   const [selectedTrainer, setSelectedTrainer] = useState<string>("ALL");
-  const [viewMode, setViewMode] = useState<"CALENDAR" | "TIMELINE">("CALENDAR");
+  const [viewMode, setViewMode] = useState<"CALENDAR" | "TIMELINE">("TIMELINE");
   const [isAssignModalOpen, setIsAssignModalOpen] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // Multi-selection state
+  const [selectedSessionIds, setSelectedSessionIds] = useState<Set<string>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState<boolean>(false);
+
+  // Edit Modal State
+  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
+  const [editingSession, setEditingSession] = useState<ScheduledWorkshopSession | null>(null);
 
   // New Workshop Assignment Form State
   const [formData, setFormData] = useState({
@@ -85,6 +98,12 @@ export default function WorkshopScheduleTab() {
         setNotification(`Successfully assigned ${formData.workshopCode} (Session ${formData.sessionNumber}) to ${formData.institutionName}!`);
         setIsAssignModalOpen(false);
         refreshSessions();
+        onAuditLog?.(
+          "Experts",
+          "Workshop Schedule",
+          "Create",
+          `Scheduled ${formData.workshopCode} (Session ${formData.sessionNumber}) for ${formData.institutionName} on ${formData.date}`
+        );
         setTimeout(() => setNotification(null), 4000);
       } else {
         alert(data.error || "Failed to schedule workshop");
@@ -106,11 +125,168 @@ export default function WorkshopScheduleTab() {
       const data = await res.json();
       if (data.success) {
         refreshSessions();
+        onAuditLog?.(
+          "Experts",
+          "Workshop Schedule",
+          "Update",
+          `Changed session ${id} status to ${newStatus}`
+        );
       }
     } catch (err) {
       console.error(err);
     }
   };
+
+  // Single Delete
+  const handleDeleteSession = async (id: string, title: string) => {
+    if (!confirm(`Are you sure you want to delete scheduled workshop "${title}"?`)) return;
+
+    try {
+      const res = await fetch(`/api/workshops/schedule?id=${id}`, { method: "DELETE" });
+      const data = await res.json();
+      if (data.success) {
+        setNotification(`Deleted scheduled session "${title}".`);
+        onAuditLog?.(
+          "Experts",
+          "Workshop Schedule",
+          "Archive",
+          `Deleted scheduled session ${id} (${title})`
+        );
+        const next = new Set(selectedSessionIds);
+        next.delete(id);
+        setSelectedSessionIds(next);
+        refreshSessions();
+        setTimeout(() => setNotification(null), 3500);
+      }
+    } catch (err: any) {
+      alert("Delete failed: " + err.message);
+    }
+  };
+
+  // Open Edit Modal
+  const handleOpenEdit = (session: ScheduledWorkshopSession) => {
+    setEditingSession(session);
+    setIsEditModalOpen(true);
+  };
+
+  // Save Edit
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingSession) return;
+
+    try {
+      const res = await fetch("/api/workshops/schedule", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editingSession),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotification(`Updated session "${editingSession.workshopTitle}"!`);
+        setIsEditModalOpen(false);
+        setEditingSession(null);
+        refreshSessions();
+        onAuditLog?.(
+          "Experts",
+          "Workshop Schedule",
+          "Update",
+          `Edited schedule details for ${editingSession.workshopCode} (${editingSession.institutionName})`
+        );
+        setTimeout(() => setNotification(null), 3500);
+      } else {
+        alert(data.error || "Failed to update session");
+      }
+    } catch (err: any) {
+      alert("Error saving session: " + err.message);
+    }
+  };
+
+  // Selection handlers
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      const allIds = new Set(sessions.map((s) => s.id));
+      setSelectedSessionIds(allIds);
+    } else {
+      setSelectedSessionIds(new Set());
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    const next = new Set(selectedSessionIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedSessionIds(next);
+  };
+
+  // Bulk Actions
+  const handleBulkDelete = async () => {
+    if (selectedSessionIds.size === 0) return;
+    if (!confirm(`Delete ${selectedSessionIds.size} scheduled workshop session(s)?`)) return;
+
+    setBulkProcessing(true);
+    try {
+      const ids = Array.from(selectedSessionIds);
+      const res = await fetch("/api/workshops/schedule", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotification(`Successfully deleted ${data.deletedCount} scheduled session(s).`);
+        onAuditLog?.(
+          "Experts",
+          "Workshop Schedule",
+          "Archive",
+          `Bulk deleted ${data.deletedCount} scheduled workshop sessions`
+        );
+        setSelectedSessionIds(new Set());
+        refreshSessions();
+        setTimeout(() => setNotification(null), 3500);
+      }
+    } catch (err: any) {
+      alert("Bulk delete error: " + err.message);
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const handleBulkStatusUpdate = async (newStatus: ScheduledWorkshopSession["status"]) => {
+    if (selectedSessionIds.size === 0) return;
+
+    setBulkProcessing(true);
+    try {
+      const ids = Array.from(selectedSessionIds);
+      const res = await fetch("/api/workshops/schedule", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids, status: newStatus }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setNotification(`Updated ${data.updatedCount} session(s) to status ${newStatus}.`);
+        onAuditLog?.(
+          "Experts",
+          "Workshop Schedule",
+          "Update",
+          `Bulk updated ${data.updatedCount} scheduled sessions to status ${newStatus}`
+        );
+        setSelectedSessionIds(new Set());
+        refreshSessions();
+        setTimeout(() => setNotification(null), 3500);
+      }
+    } catch (err: any) {
+      alert("Bulk status error: " + err.message);
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const isAllSelected =
+    sessions.length > 0 && sessions.every((s) => selectedSessionIds.has(s.id));
 
   return (
     <div className="space-y-6 font-['Poppins',sans-serif]">
@@ -138,25 +314,15 @@ export default function WorkshopScheduleTab() {
             <span>Master Institutional Scheduling Console</span>
           </div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">
-            Multi-College Workshop Itinerary & Calendar
+            Multi-College Workshop Itinerary &amp; Calendar
           </h2>
           <p className="text-xs text-slate-500 mt-1 max-w-2xl">
-            Assign upcoming technical sessions to partner university hubs, coordinate expert trainers across consecutive days, and sync live Google & Apple Calendar entries for students.
+            Assign upcoming technical sessions to partner university hubs, coordinate expert trainers across consecutive days, and sync live Google &amp; Apple Calendar entries for students.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
-            <button
-              onClick={() => setViewMode("CALENDAR")}
-              className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
-                viewMode === "CALENDAR"
-                  ? "bg-white text-slate-900 shadow-xs"
-                  : "text-slate-500 hover:text-slate-900"
-              }`}
-            >
-              Interactive Calendar
-            </button>
             <button
               onClick={() => setViewMode("TIMELINE")}
               className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
@@ -166,6 +332,16 @@ export default function WorkshopScheduleTab() {
               }`}
             >
               Session Master List ({sessions.length})
+            </button>
+            <button
+              onClick={() => setViewMode("CALENDAR")}
+              className={`px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                viewMode === "CALENDAR"
+                  ? "bg-white text-slate-900 shadow-xs"
+                  : "text-slate-500 hover:text-slate-900"
+              }`}
+            >
+              Interactive Calendar
             </button>
           </div>
 
@@ -179,6 +355,49 @@ export default function WorkshopScheduleTab() {
         </div>
       </div>
 
+      {/* Floating Bulk Action Bar */}
+      {selectedSessionIds.size > 0 && (
+        <div className="p-3.5 bg-slate-900 text-white rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-lg border border-slate-800 animate-fadeIn">
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <span className="px-2 py-0.5 rounded-full bg-[#3772FF] text-white text-[11px] font-bold font-mono">
+              {selectedSessionIds.size}
+            </span>
+            <span>Workshop Sessions Selected</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleBulkStatusUpdate("COMPLETED")}
+              disabled={bulkProcessing}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs"
+            >
+              Bulk Mark Completed
+            </button>
+            <button
+              onClick={() => handleBulkStatusUpdate("CANCELLED")}
+              disabled={bulkProcessing}
+              className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition-all"
+            >
+              Bulk Mark Cancelled
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkProcessing}
+              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1"
+            >
+              <TrashIcon className="w-3.5 h-3.5" />
+              <span>Bulk Delete</span>
+            </button>
+            <button
+              onClick={() => setSelectedSessionIds(new Set())}
+              className="px-2.5 py-1.5 text-xs text-slate-400 hover:text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main View Mode Render */}
       {viewMode === "CALENDAR" ? (
         <WorkshopCalendar
@@ -190,7 +409,7 @@ export default function WorkshopScheduleTab() {
       ) : (
         <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
           <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-slate-50/50">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <span className="text-xs font-bold text-slate-700">Filter by College:</span>
               <select
                 value={selectedInstitution}
@@ -216,110 +435,154 @@ export default function WorkshopScheduleTab() {
               </select>
             </div>
 
-            <div className="text-xs text-slate-500 font-mono">
-              Showing {sessions.length} Scheduled Sessions
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={handleSelectAll}
+                  className="rounded border-slate-300 text-[#3772FF] focus:ring-[#3772FF]"
+                />
+                <span>Select All</span>
+              </label>
+              <div className="text-xs text-slate-500 font-mono">
+                Showing {sessions.length} Scheduled Sessions
+              </div>
             </div>
           </div>
 
           <div className="divide-y divide-slate-100">
-            {sessions.map((session) => (
-              <div
-                key={session.id}
-                className="p-5 hover:bg-slate-50/60 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4"
-              >
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-bold text-white shrink-0 ${
-                      session.status === "COMPLETED"
-                        ? "bg-slate-500"
-                        : session.status === "IN_PROGRESS"
-                        ? "bg-amber-500 animate-pulse"
-                        : "bg-[#3772FF]"
-                    }`}
-                  >
-                    <span className="text-[9px] uppercase tracking-wider font-semibold opacity-80">
-                      {new Date(session.date).toLocaleDateString("en-US", { month: "short" })}
-                    </span>
-                    <span className="text-base leading-none">
-                      {session.date.split("-")[2]}
-                    </span>
-                  </div>
+            {sessions.map((session) => {
+              const isSelected = selectedSessionIds.has(session.id);
+              return (
+                <div
+                  key={session.id}
+                  className={`p-5 hover:bg-slate-50/60 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                    isSelected ? "bg-blue-50/30" : ""
+                  }`}
+                >
+                  <div className="flex items-start gap-4">
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => handleToggleSelect(session.id)}
+                      className="mt-3.5 rounded border-slate-300 text-[#3772FF] focus:ring-[#3772FF] cursor-pointer"
+                    />
 
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono text-[10px] font-bold">
-                        {session.workshopCode} &bull; Session {session.sessionNumber}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${
-                          session.status === "COMPLETED"
-                            ? "bg-emerald-100 text-emerald-700"
-                            : session.status === "IN_PROGRESS"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-blue-100 text-blue-700"
-                        }`}
-                      >
-                        {session.status}
-                      </span>
-                    </div>
-
-                    <h4 className="text-sm font-bold text-slate-900 mt-1">
-                      {session.workshopTitle}
-                    </h4>
-
-                    <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-500 mt-1.5 font-normal">
-                      <div className="flex items-center gap-1">
-                        <BuildingIcon className="w-3.5 h-3.5 text-slate-400" />
-                        <span className="font-semibold text-slate-700">{session.institutionName}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <UserIcon className="w-3.5 h-3.5 text-slate-400" />
-                        <span>Trainer: <strong className="text-slate-700">{session.trainerName}</strong></span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <ClockIcon className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{session.startTime} - {session.endTime}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MapPinIcon className="w-3.5 h-3.5 text-slate-400" />
-                        <span>{session.venue}</span>
-                      </div>
-                    </div>
-
-                    <p className="text-xs text-slate-600 mt-2 font-mono bg-slate-50 px-2.5 py-1 rounded border border-slate-100 inline-block">
-                      Focus: {session.focusTopic} &bull; Cohort: {session.cohortSize} students
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
-                  {/* Status update buttons */}
-                  <select
-                    value={session.status}
-                    onChange={(e) => handleStatusChange(session.id, e.target.value as any)}
-                    className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 focus:outline-none"
-                  >
-                    <option value="UPCOMING">Upcoming</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="COMPLETED">Completed</option>
-                    <option value="CANCELLED">Cancelled</option>
-                  </select>
-
-                  {session.calendarLinks && (
-                    <a
-                      href={session.calendarLinks.google}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold inline-flex items-center gap-1"
-                      title="Sync to Google Calendar"
+                    <div
+                      className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-bold text-white shrink-0 ${
+                        session.status === "COMPLETED"
+                          ? "bg-slate-500"
+                          : session.status === "IN_PROGRESS"
+                          ? "bg-amber-500 animate-pulse"
+                          : session.status === "CANCELLED"
+                          ? "bg-rose-500"
+                          : "bg-[#3772FF]"
+                      }`}
                     >
-                      <span>Google Cal</span>
-                      <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
-                    </a>
-                  )}
+                      <span className="text-[9px] uppercase tracking-wider font-semibold opacity-80">
+                        {new Date(session.date).toLocaleDateString("en-US", { month: "short" })}
+                      </span>
+                      <span className="text-base leading-none">
+                        {session.date.split("-")[2]}
+                      </span>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-mono text-[10px] font-bold">
+                          {session.workshopCode} &bull; Session {session.sessionNumber}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${
+                            session.status === "COMPLETED"
+                              ? "bg-emerald-100 text-emerald-700"
+                              : session.status === "IN_PROGRESS"
+                              ? "bg-amber-100 text-amber-800"
+                              : session.status === "CANCELLED"
+                              ? "bg-rose-100 text-rose-700"
+                              : "bg-blue-100 text-blue-700"
+                          }`}
+                        >
+                          {session.status}
+                        </span>
+                      </div>
+
+                      <h4 className="text-sm font-bold text-slate-900 mt-1">
+                        {session.workshopTitle}
+                      </h4>
+
+                      <div className="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-500 mt-1.5 font-normal">
+                        <div className="flex items-center gap-1">
+                          <BuildingIcon className="w-3.5 h-3.5 text-slate-400" />
+                          <span className="font-semibold text-slate-700">{session.institutionName}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <UserIcon className="w-3.5 h-3.5 text-slate-400" />
+                          <span>Trainer: <strong className="text-slate-700">{session.trainerName}</strong></span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <ClockIcon className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{session.startTime} - {session.endTime}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <MapPinIcon className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{session.venue}</span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-600 mt-2 font-mono bg-slate-50 px-2.5 py-1 rounded border border-slate-100 inline-block">
+                        Focus: {session.focusTopic} &bull; Cohort: {session.cohortSize} students
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end lg:self-center flex-wrap">
+                    {/* Status update selector */}
+                    <select
+                      value={session.status}
+                      onChange={(e) => handleStatusChange(session.id, e.target.value as any)}
+                      className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 focus:outline-none"
+                    >
+                      <option value="UPCOMING">Upcoming</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="COMPLETED">Completed</option>
+                      <option value="CANCELLED">Cancelled</option>
+                    </select>
+
+                    {/* Edit Button */}
+                    <button
+                      onClick={() => handleOpenEdit(session)}
+                      className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold"
+                    >
+                      Edit
+                    </button>
+
+                    {/* Delete Button */}
+                    <button
+                      onClick={() => handleDeleteSession(session.id, session.workshopTitle)}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                      title="Delete Session"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+
+                    {session.calendarLinks && (
+                      <a
+                        href={session.calendarLinks.google}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-2.5 py-1.5 rounded-lg border border-slate-200 text-slate-700 hover:bg-slate-100 text-xs font-semibold inline-flex items-center gap-1"
+                        title="Sync to Google Calendar"
+                      >
+                        <span>Google Cal</span>
+                        <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
+                      </a>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}
@@ -554,6 +817,185 @@ export default function WorkshopScheduleTab() {
                 >
                   <SparklesIcon className="w-3.5 h-3.5" />
                   <span>{submitting ? "Assigning..." : "Confirm Workshop Assignment"}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Scheduled Workshop Modal */}
+      {isEditModalOpen && editingSession && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-xs p-4 overflow-y-auto">
+          <div className="bg-white w-full max-w-xl rounded-2xl border border-slate-200 shadow-2xl p-6 relative animate-fadeIn my-8">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#3772FF]/10 text-[#3772FF] flex items-center justify-center">
+                  <CalendarIcon className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900">
+                    Edit Scheduled Session ({editingSession.workshopCode})
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Update session timings, venue, cohort size, or assigned trainer.
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setIsEditModalOpen(false);
+                  setEditingSession(null);
+                }}
+                className="text-slate-400 hover:text-slate-600 text-lg font-bold p-1"
+              >
+                &times;
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} className="mt-4 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Workshop Title
+                </label>
+                <input
+                  type="text"
+                  value={editingSession.workshopTitle}
+                  onChange={(e) => setEditingSession({ ...editingSession, workshopTitle: e.target.value })}
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Partner College / Hub
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSession.institutionName}
+                    onChange={(e) => setEditingSession({ ...editingSession, institutionName: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Assigned Expert Trainer
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSession.trainerName}
+                    onChange={(e) => setEditingSession({ ...editingSession, trainerName: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={editingSession.date}
+                    onChange={(e) => setEditingSession({ ...editingSession, date: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Start Time
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSession.startTime}
+                    onChange={(e) => setEditingSession({ ...editingSession, startTime: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    End Time
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSession.endTime}
+                    onChange={(e) => setEditingSession({ ...editingSession, endTime: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Campus Venue
+                  </label>
+                  <input
+                    type="text"
+                    value={editingSession.venue}
+                    onChange={(e) => setEditingSession({ ...editingSession, venue: e.target.value })}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={editingSession.status}
+                    onChange={(e) => setEditingSession({ ...editingSession, status: e.target.value as any })}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-bold focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                  >
+                    <option value="UPCOMING">Upcoming</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="COMPLETED">Completed</option>
+                    <option value="CANCELLED">Cancelled</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Focus Topic
+                </label>
+                <input
+                  type="text"
+                  value={editingSession.focusTopic}
+                  onChange={(e) => setEditingSession({ ...editingSession, focusTopic: e.target.value })}
+                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsEditModalOpen(false);
+                    setEditingSession(null);
+                  }}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 text-xs font-bold bg-[#3772FF] hover:bg-[#285cdb] text-white rounded-xl transition-all shadow-sm"
+                >
+                  Save Changes
                 </button>
               </div>
             </form>

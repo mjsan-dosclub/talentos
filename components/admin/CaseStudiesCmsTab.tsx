@@ -9,15 +9,27 @@ import {
   UserIcon,
   BuildingIcon,
   ShieldCheckIcon,
+  TrashIcon,
 } from "@/components/Icons";
 
-export default function CaseStudiesCmsTab() {
+interface CaseStudiesCmsTabProps {
+  onAuditLog?: (
+    category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
+    subcategory: string,
+    action: "Create" | "Update" | "Perform" | "Archive",
+    sourceText: string
+  ) => void;
+}
+
+export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps = {}) {
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [filterStatus, setFilterStatus] = useState<"ALL" | "PUBLISHED" | "DRAFT">("ALL");
   const [notification, setNotification] = useState<string | null>(null);
+  const [selectedStudyIds, setSelectedStudyIds] = useState<Set<string>>(new Set());
+  const [bulkProcessing, setBulkProcessing] = useState<boolean>(false);
 
   // Form State
   const initialFormState = {
@@ -119,6 +131,15 @@ export default function CaseStudiesCmsTab() {
       const data = await res.json();
       if (data.success) {
         setNotification(`Deleted case study: "${title}"`);
+        onAuditLog?.(
+          "Students",
+          "Case Studies CMS",
+          "Archive",
+          `Deleted student case study: ${title} (${id})`
+        );
+        const next = new Set(selectedStudyIds);
+        next.delete(id);
+        setSelectedStudyIds(next);
         fetchStudies();
         setTimeout(() => setNotification(null), 3000);
       }
@@ -138,11 +159,92 @@ export default function CaseStudiesCmsTab() {
       const data = await res.json();
       if (data.success) {
         setNotification(`Updated "${study.title}" status to ${newStatus}`);
+        onAuditLog?.(
+          "Students",
+          "Case Studies CMS",
+          "Update",
+          `Toggled status of "${study.title}" to ${newStatus}`
+        );
         fetchStudies();
         setTimeout(() => setNotification(null), 3000);
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  // Selection Handlers
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedStudyIds(new Set(filteredStudies.map((s) => s.id)));
+    } else {
+      setSelectedStudyIds(new Set());
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    const next = new Set(selectedStudyIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedStudyIds(next);
+  };
+
+  // Bulk Actions
+  const handleBulkDelete = async () => {
+    if (selectedStudyIds.size === 0) return;
+    if (!confirm(`Delete ${selectedStudyIds.size} case studies?`)) return;
+
+    setBulkProcessing(true);
+    try {
+      for (const id of Array.from(selectedStudyIds)) {
+        await fetch(`/api/casestudies?id=${id}`, { method: "DELETE" });
+      }
+      setNotification(`Successfully deleted ${selectedStudyIds.size} case studies.`);
+      onAuditLog?.(
+        "Students",
+        "Case Studies CMS",
+        "Archive",
+        `Bulk deleted ${selectedStudyIds.size} student case studies`
+      );
+      setSelectedStudyIds(new Set());
+      fetchStudies();
+      setTimeout(() => setNotification(null), 3500);
+    } catch (err: any) {
+      alert("Bulk delete error: " + err.message);
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
+  const handleBulkStatus = async (status: "PUBLISHED" | "DRAFT") => {
+    if (selectedStudyIds.size === 0) return;
+
+    setBulkProcessing(true);
+    try {
+      for (const id of Array.from(selectedStudyIds)) {
+        await fetch("/api/casestudies", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, status }),
+        });
+      }
+      setNotification(`Updated ${selectedStudyIds.size} case studies to ${status}.`);
+      onAuditLog?.(
+        "Students",
+        "Case Studies CMS",
+        "Update",
+        `Bulk updated ${selectedStudyIds.size} case studies to ${status}`
+      );
+      setSelectedStudyIds(new Set());
+      fetchStudies();
+      setTimeout(() => setNotification(null), 3500);
+    } catch (err: any) {
+      alert("Bulk status error: " + err.message);
+    } finally {
+      setBulkProcessing(false);
     }
   };
 
@@ -200,6 +302,12 @@ export default function CaseStudiesCmsTab() {
       const data = await res.json();
       if (data.success) {
         setNotification(editingId ? "Case study updated successfully!" : "New case study created and published!");
+        onAuditLog?.(
+          "Students",
+          "Case Studies CMS",
+          editingId ? "Update" : "Create",
+          `${editingId ? "Updated" : "Authored"} case study: "${formData.title}" (${formData.status})`
+        );
         setIsModalOpen(false);
         fetchStudies();
         setTimeout(() => setNotification(null), 3000);
@@ -216,6 +324,10 @@ export default function CaseStudiesCmsTab() {
     if (filterStatus === "DRAFT") return cs.status === "DRAFT";
     return true;
   });
+
+  const isAllSelected =
+    filteredStudies.length > 0 &&
+    filteredStudies.every((cs) => selectedStudyIds.has(cs.id));
 
   return (
     <div className="space-y-6 font-['Poppins',sans-serif]">
@@ -250,7 +362,17 @@ export default function CaseStudiesCmsTab() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          <label className="flex items-center gap-1.5 text-xs text-slate-600 font-semibold cursor-pointer">
+            <input
+              type="checkbox"
+              checked={isAllSelected}
+              onChange={handleSelectAll}
+              className="rounded border-slate-300 text-[#3772FF] focus:ring-[#3772FF]"
+            />
+            <span>Select All</span>
+          </label>
+
           <div className="flex bg-slate-100 p-1 rounded-xl border border-slate-200 text-xs">
             <button
               onClick={() => setFilterStatus("ALL")}
@@ -288,6 +410,49 @@ export default function CaseStudiesCmsTab() {
         </div>
       </div>
 
+      {/* Floating Bulk Action Bar */}
+      {selectedStudyIds.size > 0 && (
+        <div className="p-3.5 bg-slate-900 text-white rounded-2xl flex flex-wrap items-center justify-between gap-3 shadow-lg border border-slate-800 animate-fadeIn">
+          <div className="flex items-center gap-2 text-xs font-semibold">
+            <span className="px-2 py-0.5 rounded-full bg-[#3772FF] text-white text-[11px] font-bold font-mono">
+              {selectedStudyIds.size}
+            </span>
+            <span>Case Studies Selected</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleBulkStatus("PUBLISHED")}
+              disabled={bulkProcessing}
+              className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs"
+            >
+              Bulk Publish
+            </button>
+            <button
+              onClick={() => handleBulkStatus("DRAFT")}
+              disabled={bulkProcessing}
+              className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 text-xs font-bold rounded-xl transition-all"
+            >
+              Bulk Move to Draft
+            </button>
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkProcessing}
+              className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl transition-all shadow-xs flex items-center gap-1"
+            >
+              <TrashIcon className="w-3.5 h-3.5" />
+              <span>Bulk Delete</span>
+            </button>
+            <button
+              onClick={() => setSelectedStudyIds(new Set())}
+              className="px-2.5 py-1.5 text-xs text-slate-400 hover:text-white"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Case Studies Grid / Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredStudies.map((study) => (
@@ -316,6 +481,14 @@ export default function CaseStudiesCmsTab() {
                   >
                     {study.status || "PUBLISHED"}
                   </span>
+                </div>
+                <div className="absolute top-3 right-3">
+                  <input
+                    type="checkbox"
+                    checked={selectedStudyIds.has(study.id)}
+                    onChange={() => handleToggleSelect(study.id)}
+                    className="w-4 h-4 rounded border-white/40 bg-white/20 text-[#3772FF] focus:ring-[#3772FF] cursor-pointer"
+                  />
                 </div>
               </div>
 

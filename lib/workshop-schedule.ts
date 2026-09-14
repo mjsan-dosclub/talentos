@@ -312,3 +312,54 @@ export function updateSessionStatus(
   session.status = status;
   return enrichSessionWithCalendar(session);
 }
+
+/**
+ * Update full details of an existing session
+ */
+export function updateScheduledSession(
+  id: string,
+  updates: Partial<ScheduledWorkshopSession>
+): ScheduledWorkshopSession | null {
+  const index = SCHEDULED_SESSIONS_LEDGER.findIndex((s) => s.id === id);
+  if (index === -1) return null;
+  SCHEDULED_SESSIONS_LEDGER[index] = {
+    ...SCHEDULED_SESSIONS_LEDGER[index],
+    ...updates,
+  };
+  return enrichSessionWithCalendar(SCHEDULED_SESSIONS_LEDGER[index]);
+}
+
+/**
+ * Delete a single scheduled session
+ */
+export function deleteScheduledSession(id: string): boolean {
+  const initLen = SCHEDULED_SESSIONS_LEDGER.length;
+  SCHEDULED_SESSIONS_LEDGER = SCHEDULED_SESSIONS_LEDGER.filter((s) => s.id !== id);
+  return SCHEDULED_SESSIONS_LEDGER.length < initLen;
+}
+
+/**
+ * Bulk delete scheduled sessions
+ */
+export function deleteBulkScheduledSessions(ids: string[]): number {
+  const initLen = SCHEDULED_SESSIONS_LEDGER.length;
+  SCHEDULED_SESSIONS_LEDGER = SCHEDULED_SESSIONS_LEDGER.filter((s) => !ids.includes(s.id));
+  return initLen - SCHEDULED_SESSIONS_LEDGER.length;
+}
+
+/**
+ * Bulk update session status
+ */
+export function updateBulkScheduledStatus(
+  ids: string[],
+  status: ScheduledWorkshopSession["status"]
+): number {
+  let count = 0;
+  SCHEDULED_SESSIONS_LEDGER.forEach((s) => {
+    if (ids.includes(s.id)) {
+      s.status = status;
+      count++;
+    }
+  });
+  return count;
+}

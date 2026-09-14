@@ -11,7 +11,7 @@ export interface EnquiryRecord {
   current_role: string;
   referral_source: string;
   message: string;
-  status: "NEW" | "CONTACTED" | "ACCEPTED";
+  status: "NEW" | "CONTACTED" | "ACCEPTED" | "INACTIVE";
   created_at: string;
 }
 
@@ -153,6 +153,109 @@ export async function POST(req: NextRequest) {
     console.error("Enquiry API error:", error);
     return NextResponse.json(
       { error: "Failed to process enquiry. Please try again or connect directly via the membership portal." },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, ids, status } = body;
+
+    const targetIds: string[] = ids ? ids : id ? [id] : [];
+    if (targetIds.length === 0 || !status) {
+      return NextResponse.json(
+        { error: "Enquiry ID(s) and target status are required." },
+        { status: 400 }
+      );
+    }
+
+    let updatedCount = 0;
+    ENQUIRIES_LEDGER = ENQUIRIES_LEDGER.map((enq) => {
+      if (targetIds.includes(enq.id) || targetIds.includes(enq.enquiry_ref)) {
+        updatedCount++;
+        return { ...enq, status: status as EnquiryRecord["status"] };
+      }
+      return enq;
+    });
+
+    // Best-effort update in Supabase
+    try {
+      await supabase
+        .from("aspirant_enquiries")
+        .update({ status })
+        .in("id", targetIds);
+    } catch {
+      // Non-blocking
+    }
+
+    return NextResponse.json({
+      success: true,
+      updatedCount,
+      status,
+      message: `Successfully updated ${updatedCount} enquiry record(s) to ${status}.`,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to update enquiry status" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const queryId = searchParams.get("id");
+
+    let targetIds: string[] = [];
+    if (queryId) {
+      targetIds = [queryId];
+    } else {
+      try {
+        const body = await req.json();
+        if (body.ids && Array.isArray(body.ids)) {
+          targetIds = body.ids;
+        } else if (body.id) {
+          targetIds = [body.id];
+        }
+      } catch {
+        // No json body
+      }
+    }
+
+    if (targetIds.length === 0) {
+      return NextResponse.json(
+        { error: "Enquiry ID(s) required for deletion." },
+        { status: 400 }
+      );
+    }
+
+    const initialLen = ENQUIRIES_LEDGER.length;
+    ENQUIRIES_LEDGER = ENQUIRIES_LEDGER.filter(
+      (enq) => !targetIds.includes(enq.id) && !targetIds.includes(enq.enquiry_ref)
+    );
+    const deletedCount = initialLen - ENQUIRIES_LEDGER.length;
+
+    // Best-effort delete in Supabase
+    try {
+      await supabase
+        .from("aspirant_enquiries")
+        .delete()
+        .in("id", targetIds);
+    } catch {
+      // Non-blocking
+    }
+
+    return NextResponse.json({
+      success: true,
+      deletedCount,
+      message: `Successfully deleted ${deletedCount} enquiry record(s).`,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { error: error?.message || "Failed to delete enquiry record(s)" },
       { status: 500 }
     );
   }

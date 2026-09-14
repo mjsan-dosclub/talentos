@@ -18,6 +18,8 @@ import {
   BellIcon,
   CalendarIcon,
   SparklesIcon,
+  EditIcon,
+  TrashIcon,
 } from "@/components/Icons";
 import PopupsTab from "@/components/admin/PopupsTab";
 import LandingCmsTab from "@/components/admin/LandingCmsTab";
@@ -40,7 +42,7 @@ interface StudentMember {
   department: string;
   batch: string;
   completedWorkshops: number;
-  status: "ACTIVE" | "ON_LEAVE" | "DEFENSE_READY";
+  status: "ACTIVE" | "ON_LEAVE" | "DEFENSE_READY" | "INACTIVE";
 }
 
 interface ExpertMentor {
@@ -50,7 +52,7 @@ interface ExpertMentor {
   organization: string;
   domainSpecialties: string[];
   assignedWorkshops: string[];
-  status: "ACTIVE" | "STANDBY";
+  status: "ACTIVE" | "STANDBY" | "INACTIVE";
   avatar: string;
 }
 
@@ -64,7 +66,7 @@ interface PartnerInstitution {
   lng: number;
   geofenceRadiusMeters: number;
   studentCount: number;
-  status: "ACTIVE" | "ONBOARDING";
+  status: "ACTIVE" | "ONBOARDING" | "INACTIVE";
 }
 
 interface WorkshopItem {
@@ -74,15 +76,15 @@ interface WorkshopItem {
   expertName: string;
   mode: "IN_PERSON" | "HYBRID" | "VIRTUAL";
   testPassThreshold: number;
-  status: "COMPLETED" | "ACTIVE_IN_SESSION" | "SCHEDULED";
+  status: "COMPLETED" | "ACTIVE_IN_SESSION" | "SCHEDULED" | "INACTIVE";
   date: string;
 }
 
 interface AuditLogEntry {
   id: string;
-  category: "Students" | "Experts" | "Attendance" | "Certifications" | "System";
+  category: "Students" | "Experts" | "Attendance" | "Certifications" | "System" | "Curriculum" | "Institutions" | "Enquiries";
   subcategory: string;
-  action: "Create" | "Update" | "Perform" | "Archive";
+  action: "Create" | "Update" | "Perform" | "Archive" | "Delete" | "Bulk Update" | "Bulk Delete";
   modifiedBy: {
     name: string;
     email: string;
@@ -324,6 +326,19 @@ function AdminHubContent() {
   const [workshops, setWorkshops] = useState<WorkshopItem[]>(INITIAL_WORKSHOPS);
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>(INITIAL_AUDIT_LOGS);
 
+  // Multi-Selection State
+  const [selectedStudentIds, setSelectedStudentIds] = useState<Set<string>>(new Set());
+  const [selectedExpertIds, setSelectedExpertIds] = useState<Set<string>>(new Set());
+  const [selectedInstitutionIds, setSelectedInstitutionIds] = useState<Set<string>>(new Set());
+  const [selectedWorkshopCodes, setSelectedWorkshopCodes] = useState<Set<string>>(new Set());
+  const [selectedAuditLogIds, setSelectedAuditLogIds] = useState<Set<string>>(new Set());
+
+  // Editing States for Modals
+  const [editingStudent, setEditingStudent] = useState<StudentMember | null>(null);
+  const [editingExpert, setEditingExpert] = useState<ExpertMentor | null>(null);
+  const [editingInstitution, setEditingInstitution] = useState<PartnerInstitution | null>(null);
+  const [editingWorkshop, setEditingWorkshop] = useState<WorkshopItem | null>(null);
+
   // Search & Filter
   const [searchQuery, setSearchQuery] = useState("");
   const [auditCategoryFilter, setAuditCategoryFilter] = useState("All");
@@ -370,7 +385,34 @@ function AdminHubContent() {
     setTimeout(() => setToast(null), 3500);
   };
 
-  // Handlers
+  // Real-time Audit Logger Helper
+  const logAdminAudit = (
+    category: AuditLogEntry["category"],
+    subcategory: string,
+    action: AuditLogEntry["action"],
+    sourceText: string,
+    sourceUrl?: string
+  ) => {
+    const newLog: AuditLogEntry = {
+      id: `aud-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      category,
+      subcategory,
+      action,
+      modifiedBy: {
+        name: "Platform Administrator (Live)",
+        email: "admin@dosclub.org",
+        avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
+      },
+      dateOfChange: formatConfigDateTime(new Date()),
+      sourceText,
+      sourceUrl: sourceUrl || `/admin?tab=${activeTab}`,
+    };
+    setAuditLogs((prev) => [newLog, ...prev]);
+  };
+
+  // ---------------------------------------------------------------------------
+  // CREATE HANDLERS
+  // ---------------------------------------------------------------------------
   const handleCreateStudent = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudentName.trim() || !newStudentEmail.trim()) return;
@@ -392,6 +434,7 @@ function AdminHubContent() {
     setIsAddStudentOpen(false);
     setNewStudentName("");
     setNewStudentEmail("");
+    logAdminAudit("Students", "Profile Creation", "Create", `Enrolled ${created.fullName} (${created.dosId})`);
     if (sendWelcomeEmailStudent) {
       console.log(`[TalentOS Notification] 2-Step Welcome & Verification Email dispatched to ${created.email}`);
       triggerToast(`Enrolled ${created.fullName} (${created.dosId}) • Welcome & Verification email sent!`);
@@ -421,6 +464,7 @@ function AdminHubContent() {
     setNewExpertEmail("");
     setNewExpertOrg("");
     setNewExpertSpecialty("");
+    logAdminAudit("Experts", "Mentor Registration", "Create", `Registered Expert Mentor ${created.fullName}`);
     if (sendWelcomeEmailExpert) {
       console.log(`[TalentOS Notification] Expert Welcome & Cockpit Credentials dispatched to ${created.email}`);
       triggerToast(`Registered ${created.fullName} • Cockpit pass & calendar sync emailed!`);
@@ -451,6 +495,7 @@ function AdminHubContent() {
     setNewInstCode("");
     setNewInstName("");
     setNewInstCity("");
+    logAdminAudit("Institutions", "Campus Onboarding", "Create", `Added Partner Campus ${created.name} (${created.code})`);
     if (sendWelcomeEmailInstitution) {
       console.log(`[TalentOS Notification] Partner Institution Onboarding Email dispatched for ${created.name}`);
       triggerToast(`Added ${created.name} • Campus coordinator onboarding emailed!`);
@@ -480,7 +525,314 @@ function AdminHubContent() {
     setNewWsCode("");
     setNewWsTitle("");
     setNewWsFocus("");
+    logAdminAudit("Curriculum", "Session Schedule", "Create", `Added Workshop ${created.code}: ${created.title}`);
     triggerToast(`Curriculum updated: Added ${created.code} (${created.title})`);
+  };
+
+  // ---------------------------------------------------------------------------
+  // STUDENTS CRUD & BULK ACTIONS
+  // ---------------------------------------------------------------------------
+  const handleToggleStudentSelect = (id: string) => {
+    setSelectedStudentIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllStudents = (filteredList: StudentMember[]) => {
+    if (selectedStudentIds.size === filteredList.length && filteredList.length > 0) {
+      setSelectedStudentIds(new Set());
+    } else {
+      setSelectedStudentIds(new Set(filteredList.map((s) => s.id)));
+    }
+  };
+
+  const handleBulkUpdateStudentStatus = (status: StudentMember["status"]) => {
+    const count = selectedStudentIds.size;
+    if (count === 0) return;
+    setStudents((prev) =>
+      prev.map((s) => (selectedStudentIds.has(s.id) ? { ...s, status } : s))
+    );
+    logAdminAudit("Students", "Status Management", "Bulk Update", `Bulk updated ${count} student(s) to ${status}`);
+    setSelectedStudentIds(new Set());
+    triggerToast(`Bulk updated ${count} student(s) to ${status}`);
+  };
+
+  const handleBulkDeleteStudents = () => {
+    const count = selectedStudentIds.size;
+    if (count === 0) return;
+    if (!confirm(`Are you sure you want to delete ${count} selected student(s)?`)) return;
+    setStudents((prev) => prev.filter((s) => !selectedStudentIds.has(s.id)));
+    logAdminAudit("Students", "Student Deletion", "Bulk Delete", `Bulk deleted ${count} student record(s)`);
+    setSelectedStudentIds(new Set());
+    triggerToast(`Deleted ${count} student(s)`);
+  };
+
+  const handleSingleDeleteStudent = (id: string, name: string) => {
+    if (!confirm(`Are you sure you want to delete student record for "${name}"?`)) return;
+    setStudents((prev) => prev.filter((s) => s.id !== id));
+    logAdminAudit("Students", "Student Deletion", "Delete", `Deleted student record: ${name}`);
+    triggerToast(`Deleted student: ${name}`);
+  };
+
+  const handleSingleToggleStudentStatus = (id: string, newStatus: StudentMember["status"], name: string) => {
+    setStudents((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, status: newStatus } : s))
+    );
+    logAdminAudit("Students", "Status Update", "Update", `Changed status of ${name} to ${newStatus}`);
+    triggerToast(`${name} is now ${newStatus}`);
+  };
+
+  const handleSaveEditStudent = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingStudent) return;
+    setStudents((prev) => prev.map((s) => (s.id === editingStudent.id ? editingStudent : s)));
+    logAdminAudit("Students", "Profile Update", "Update", `Updated profile for ${editingStudent.fullName} (${editingStudent.dosId})`);
+    triggerToast(`Saved changes for ${editingStudent.fullName}`);
+    setEditingStudent(null);
+  };
+
+  // ---------------------------------------------------------------------------
+  // EXPERTS CRUD & BULK ACTIONS
+  // ---------------------------------------------------------------------------
+  const handleToggleExpertSelect = (id: string) => {
+    setSelectedExpertIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllExperts = () => {
+    if (selectedExpertIds.size === experts.length && experts.length > 0) {
+      setSelectedExpertIds(new Set());
+    } else {
+      setSelectedExpertIds(new Set(experts.map((e) => e.id)));
+    }
+  };
+
+  const handleBulkUpdateExpertStatus = (status: ExpertMentor["status"]) => {
+    const count = selectedExpertIds.size;
+    if (count === 0) return;
+    setExperts((prev) =>
+      prev.map((e) => (selectedExpertIds.has(e.id) ? { ...e, status } : e))
+    );
+    logAdminAudit("Experts", "Status Management", "Bulk Update", `Bulk updated ${count} expert(s) to ${status}`);
+    setSelectedExpertIds(new Set());
+    triggerToast(`Bulk updated ${count} expert(s) to ${status}`);
+  };
+
+  const handleBulkDeleteExperts = () => {
+    const count = selectedExpertIds.size;
+    if (count === 0) return;
+    if (!confirm(`Are you sure you want to delete ${count} selected technical expert(s)?`)) return;
+    setExperts((prev) => prev.filter((e) => !selectedExpertIds.has(e.id)));
+    logAdminAudit("Experts", "Mentor Deletion", "Bulk Delete", `Bulk deleted ${count} expert mentor(s)`);
+    setSelectedExpertIds(new Set());
+    triggerToast(`Deleted ${count} expert(s)`);
+  };
+
+  const handleSingleDeleteExpert = (id: string, name: string) => {
+    if (!confirm(`Delete expert mentor profile for "${name}"?`)) return;
+    setExperts((prev) => prev.filter((e) => e.id !== id));
+    logAdminAudit("Experts", "Mentor Deletion", "Delete", `Deleted expert mentor: ${name}`);
+    triggerToast(`Deleted expert: ${name}`);
+  };
+
+  const handleSingleToggleExpertStatus = (id: string, newStatus: ExpertMentor["status"], name: string) => {
+    setExperts((prev) =>
+      prev.map((e) => (e.id === id ? { ...e, status: newStatus } : e))
+    );
+    logAdminAudit("Experts", "Status Update", "Update", `Changed status of ${name} to ${newStatus}`);
+    triggerToast(`${name} is now ${newStatus}`);
+  };
+
+  const handleSaveEditExpert = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingExpert) return;
+    setExperts((prev) => prev.map((e) => (e.id === editingExpert.id ? editingExpert : e)));
+    logAdminAudit("Experts", "Mentor Update", "Update", `Updated expert profile for ${editingExpert.fullName}`);
+    triggerToast(`Saved changes for ${editingExpert.fullName}`);
+    setEditingExpert(null);
+  };
+
+  // ---------------------------------------------------------------------------
+  // INSTITUTIONS CRUD & BULK ACTIONS
+  // ---------------------------------------------------------------------------
+  const handleToggleInstitutionSelect = (id: string) => {
+    setSelectedInstitutionIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllInstitutions = () => {
+    if (selectedInstitutionIds.size === institutions.length && institutions.length > 0) {
+      setSelectedInstitutionIds(new Set());
+    } else {
+      setSelectedInstitutionIds(new Set(institutions.map((i) => i.id)));
+    }
+  };
+
+  const handleBulkUpdateInstitutionStatus = (status: PartnerInstitution["status"]) => {
+    const count = selectedInstitutionIds.size;
+    if (count === 0) return;
+    setInstitutions((prev) =>
+      prev.map((inst) => (selectedInstitutionIds.has(inst.id) ? { ...inst, status } : inst))
+    );
+    logAdminAudit("Institutions", "Status Management", "Bulk Update", `Bulk updated ${count} institution(s) to ${status}`);
+    setSelectedInstitutionIds(new Set());
+    triggerToast(`Bulk updated ${count} institution(s) to ${status}`);
+  };
+
+  const handleBulkDeleteInstitutions = () => {
+    const count = selectedInstitutionIds.size;
+    if (count === 0) return;
+    if (!confirm(`Are you sure you want to delete ${count} selected campus hub(s)?`)) return;
+    setInstitutions((prev) => prev.filter((inst) => !selectedInstitutionIds.has(inst.id)));
+    logAdminAudit("Institutions", "Campus Deletion", "Bulk Delete", `Bulk deleted ${count} campus hub(s)`);
+    setSelectedInstitutionIds(new Set());
+    triggerToast(`Deleted ${count} campus hub(s)`);
+  };
+
+  const handleSingleDeleteInstitution = (id: string, name: string) => {
+    if (!confirm(`Delete partner campus hub "${name}"?`)) return;
+    setInstitutions((prev) => prev.filter((i) => i.id !== id));
+    logAdminAudit("Institutions", "Campus Deletion", "Delete", `Deleted campus hub: ${name}`);
+    triggerToast(`Deleted campus hub: ${name}`);
+  };
+
+  const handleSingleToggleInstitutionStatus = (id: string, newStatus: PartnerInstitution["status"], name: string) => {
+    setInstitutions((prev) =>
+      prev.map((i) => (i.id === id ? { ...i, status: newStatus } : i))
+    );
+    logAdminAudit("Institutions", "Status Update", "Update", `Changed status of ${name} to ${newStatus}`);
+    triggerToast(`${name} is now ${newStatus}`);
+  };
+
+  const handleSaveEditInstitution = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingInstitution) return;
+    setInstitutions((prev) => prev.map((i) => (i.id === editingInstitution.id ? editingInstitution : i)));
+    logAdminAudit("Institutions", "Campus Update", "Update", `Updated partner campus ${editingInstitution.name} (${editingInstitution.code})`);
+    triggerToast(`Saved changes for ${editingInstitution.name}`);
+    setEditingInstitution(null);
+  };
+
+  // ---------------------------------------------------------------------------
+  // WORKSHOPS CRUD & BULK ACTIONS
+  // ---------------------------------------------------------------------------
+  const handleToggleWorkshopSelect = (code: string) => {
+    setSelectedWorkshopCodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) next.delete(code);
+      else next.add(code);
+      return next;
+    });
+  };
+
+  const handleSelectAllWorkshops = () => {
+    if (selectedWorkshopCodes.size === workshops.length && workshops.length > 0) {
+      setSelectedWorkshopCodes(new Set());
+    } else {
+      setSelectedWorkshopCodes(new Set(workshops.map((w) => w.code)));
+    }
+  };
+
+  const handleBulkUpdateWorkshopStatus = (status: WorkshopItem["status"]) => {
+    const count = selectedWorkshopCodes.size;
+    if (count === 0) return;
+    setWorkshops((prev) =>
+      prev.map((w) => (selectedWorkshopCodes.has(w.code) ? { ...w, status } : w))
+    );
+    logAdminAudit("Curriculum", "Status Management", "Bulk Update", `Bulk updated ${count} workshop(s) to ${status}`);
+    setSelectedWorkshopCodes(new Set());
+    triggerToast(`Bulk updated ${count} workshop(s) to ${status}`);
+  };
+
+  const handleBulkDeleteWorkshops = () => {
+    const count = selectedWorkshopCodes.size;
+    if (count === 0) return;
+    if (!confirm(`Are you sure you want to delete ${count} selected workshop(s)?`)) return;
+    setWorkshops((prev) => prev.filter((w) => !selectedWorkshopCodes.has(w.code)));
+    logAdminAudit("Curriculum", "Session Deletion", "Bulk Delete", `Bulk deleted ${count} curriculum session(s)`);
+    setSelectedWorkshopCodes(new Set());
+    triggerToast(`Deleted ${count} workshop(s)`);
+  };
+
+  const handleSingleDeleteWorkshop = (code: string, title: string) => {
+    if (!confirm(`Delete workshop "${code}: ${title}"?`)) return;
+    setWorkshops((prev) => prev.filter((w) => w.code !== code));
+    logAdminAudit("Curriculum", "Session Deletion", "Delete", `Deleted workshop ${code}: ${title}`);
+    triggerToast(`Deleted workshop ${code}`);
+  };
+
+  const handleSingleToggleWorkshopStatus = (code: string, newStatus: WorkshopItem["status"], title: string) => {
+    setWorkshops((prev) =>
+      prev.map((w) => (w.code === code ? { ...w, status: newStatus } : w))
+    );
+    logAdminAudit("Curriculum", "Status Update", "Update", `Changed status of ${code} to ${newStatus}`);
+    triggerToast(`${code} is now ${newStatus}`);
+  };
+
+  const handleSaveEditWorkshop = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingWorkshop) return;
+    setWorkshops((prev) => prev.map((w) => (w.code === editingWorkshop.code ? editingWorkshop : w)));
+    logAdminAudit("Curriculum", "Session Update", "Update", `Updated workshop details for ${editingWorkshop.code}: ${editingWorkshop.title}`);
+    triggerToast(`Saved changes for ${editingWorkshop.code}`);
+    setEditingWorkshop(null);
+  };
+
+  // ---------------------------------------------------------------------------
+  // AUDIT LOGS BULK ACTIONS
+  // ---------------------------------------------------------------------------
+  const handleToggleAuditLogSelect = (id: string) => {
+    setSelectedAuditLogIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleSelectAllAuditLogs = (filteredList: AuditLogEntry[]) => {
+    if (selectedAuditLogIds.size === filteredList.length && filteredList.length > 0) {
+      setSelectedAuditLogIds(new Set());
+    } else {
+      setSelectedAuditLogIds(new Set(filteredList.map((l) => l.id)));
+    }
+  };
+
+  const handleBulkDeleteAuditLogs = () => {
+    const count = selectedAuditLogIds.size;
+    if (count === 0) return;
+    if (!confirm(`Delete ${count} selected audit log entries?`)) return;
+    setAuditLogs((prev) => prev.filter((l) => !selectedAuditLogIds.has(l.id)));
+    setSelectedAuditLogIds(new Set());
+    triggerToast(`Deleted ${count} audit log(s)`);
+  };
+
+  const handleClearAllAuditLogs = () => {
+    if (!confirm("Are you sure you want to clear ALL audit logs? This action cannot be undone.")) return;
+    setAuditLogs([]);
+    setSelectedAuditLogIds(new Set());
+    triggerToast("All audit logs cleared");
+  };
+
+  const handleSingleDeleteAuditLog = (id: string) => {
+    setAuditLogs((prev) => prev.filter((l) => l.id !== id));
+    setSelectedAuditLogIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    triggerToast("Audit log entry removed");
   };
 
   // Sidebar Menu Groups (HubSpot reference navigation)
@@ -557,68 +909,129 @@ function AdminHubContent() {
           {/* ========================================================================= */}
           {/* TAB 1: MANAGE STUDENTS                                                    */}
           {/* ========================================================================= */}
-          {activeTab === "students" && (
-            <div className="flex flex-col gap-6">
-              {/* Header & Actions */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                    Student Roster Management
-                  </h1>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Manage enrolled student members, inspect longitudinal growth records, and monitor progress across Batch 3.
-                  </p>
+          {activeTab === "students" && (() => {
+            const filteredStudents = students.filter(
+              (s) =>
+                s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                s.dosId.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+            const allSelected = filteredStudents.length > 0 && filteredStudents.every((s) => selectedStudentIds.has(s.id));
+
+            return (
+              <div className="flex flex-col gap-6">
+                {/* Header & Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                      Student Roster Management
+                    </h1>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Manage enrolled student members, inspect longitudinal growth records, and monitor progress across Batch 3.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      onClick={() => setIsAddStudentOpen(true)}
+                      className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>+ Enroll Student</span>
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2.5">
-                  <button
-                    onClick={() => setIsAddStudentOpen(true)}
-                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5"
-                  >
-                    <span>+ Enroll Student</span>
-                  </button>
+                {/* Floating Bulk Action Bar */}
+                {selectedStudentIds.size > 0 && (
+                  <div className="bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg flex flex-wrap items-center justify-between gap-3 border border-slate-700 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-blue-600 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
+                        {selectedStudentIds.size}
+                      </span>
+                      <span className="text-xs font-medium text-slate-200">
+                        student{selectedStudentIds.size > 1 ? "s" : ""} selected
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => handleBulkUpdateStudentStatus("ACTIVE")}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Bulk Activate
+                      </button>
+                      <button
+                        onClick={() => handleBulkUpdateStudentStatus("INACTIVE")}
+                        className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Bulk Inactive
+                      </button>
+                      <button
+                        onClick={handleBulkDeleteStudents}
+                        className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        <span>Bulk Delete</span>
+                      </button>
+                      <button
+                        onClick={() => setSelectedStudentIds(new Set())}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Search & Filter Bar */}
+                <div className="flex flex-col sm:flex-row gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-xs">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by student name, email, or DOS ID..."
+                    className="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800"
+                  />
+                  <select className="border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-700 bg-white">
+                    <option>Batch 3 - 2026 (Active)</option>
+                    <option>All Cohorts</option>
+                  </select>
                 </div>
-              </div>
 
-              {/* Search & Filter Bar */}
-              <div className="flex flex-col sm:flex-row gap-3 bg-white p-3 rounded-lg border border-slate-200 shadow-xs">
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search by student name, email, or DOS ID..."
-                  className="flex-1 border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800"
-                />
-                <select className="border border-slate-300 rounded px-3 py-1.5 text-xs text-slate-700 bg-white">
-                  <option>Batch 3 - 2026 (Active)</option>
-                  <option>All Cohorts</option>
-                </select>
-              </div>
-
-              {/* Students Table */}
-              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left text-xs">
-                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
-                      <tr>
-                        <th className="py-3 px-4">Member Name</th>
-                        <th className="py-3 px-4">DOS ID</th>
-                        <th className="py-3 px-4">Institution / Department</th>
-                        <th className="py-3 px-4 text-center">Workshops Completed</th>
-                        <th className="py-3 px-4 text-center">Lifecycle Status</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100">
-                      {students
-                        .filter(
-                          (s) =>
-                            s.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            s.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            s.dosId.toLowerCase().includes(searchQuery.toLowerCase())
-                        )
-                        .map((student) => (
+                {/* Students Table */}
+                <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                        <tr>
+                          <th className="py-3 px-3 w-10 text-center">
+                            <input
+                              type="checkbox"
+                              checked={allSelected}
+                              onChange={() => handleSelectAllStudents(filteredStudents)}
+                              className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                              aria-label="Select all students"
+                            />
+                          </th>
+                          <th className="py-3 px-4">Member Name</th>
+                          <th className="py-3 px-4">DOS ID</th>
+                          <th className="py-3 px-4">Institution / Department</th>
+                          <th className="py-3 px-4 text-center">Workshops Completed</th>
+                          <th className="py-3 px-4 text-center">Lifecycle Status</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {filteredStudents.map((student) => (
                           <tr key={student.id} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3 px-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedStudentIds.has(student.id)}
+                                onChange={() => handleToggleStudentSelect(student.id)}
+                                className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                                aria-label={`Select ${student.fullName}`}
+                              />
+                            </td>
                             <td className="py-3 px-4">
                               <div className="flex items-center gap-3">
                                 <div className="h-8 w-8 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center font-bold text-slate-700 text-xs">
@@ -649,28 +1062,68 @@ function AdminHubContent() {
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                                   student.status === "DEFENSE_READY"
                                     ? "bg-purple-50 text-purple-700 border border-purple-200"
-                                    : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                    : student.status === "ACTIVE"
+                                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                    : student.status === "ON_LEAVE"
+                                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                    : "bg-slate-100 text-slate-500 border border-slate-300"
                                 }`}
                               >
                                 {student.status}
                               </span>
                             </td>
                             <td className="py-3 px-4 text-right">
-                              <Link
-                                href={`/record/${encodeURIComponent(student.dosId)}`}
-                                className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold transition-colors"
-                              >
-                                View 360 &rarr;
-                              </Link>
+                              <div className="inline-flex items-center gap-2">
+                                <button
+                                  onClick={() => setEditingStudent(student)}
+                                  className="p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                                  title="Edit student"
+                                  aria-label="Edit student"
+                                >
+                                  <EditIcon className="w-3.5 h-3.5" />
+                                </button>
+                                <select
+                                  value={student.status}
+                                  onChange={(e) =>
+                                    handleSingleToggleStudentStatus(
+                                      student.id,
+                                      e.target.value as StudentMember["status"],
+                                      student.fullName
+                                    )
+                                  }
+                                  className="border border-slate-200 rounded px-1.5 py-0.5 text-[11px] text-slate-700 bg-white cursor-pointer"
+                                  title="Change status"
+                                >
+                                  <option value="ACTIVE">ACTIVE</option>
+                                  <option value="DEFENSE_READY">DEFENSE_READY</option>
+                                  <option value="ON_LEAVE">ON_LEAVE</option>
+                                  <option value="INACTIVE">INACTIVE</option>
+                                </select>
+                                <button
+                                  onClick={() => handleSingleDeleteStudent(student.id, student.fullName)}
+                                  className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                                  title="Delete student"
+                                  aria-label="Delete student"
+                                >
+                                  <TrashIcon className="w-3.5 h-3.5" />
+                                </button>
+                                <Link
+                                  href={`/record/${encodeURIComponent(student.dosId)}`}
+                                  className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold transition-colors ml-1"
+                                >
+                                  360&rarr;
+                                </Link>
+                              </div>
                             </td>
                           </tr>
                         ))}
-                    </tbody>
-                  </table>
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* ========================================================================= */}
           {/* TAB 2: MANAGE EXPERTS (Renamed from Trainers)                             */}
@@ -690,20 +1143,87 @@ function AdminHubContent() {
                   </p>
                 </div>
 
-                <button
-                  onClick={() => setIsAddExpertOpen(true)}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5"
-                >
-                  <span>+ Add New Expert</span>
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleSelectAllExperts}
+                    className="px-3 py-1.5 border border-slate-300 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-md transition-colors cursor-pointer"
+                  >
+                    {selectedExpertIds.size === experts.length && experts.length > 0 ? "Deselect All" : "Select All"}
+                  </button>
+                  <button
+                    onClick={() => setIsAddExpertOpen(true)}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>+ Add New Expert</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Floating Bulk Action Bar */}
+              {selectedExpertIds.size > 0 && (
+                <div className="bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg flex flex-wrap items-center justify-between gap-3 border border-slate-700 animate-in fade-in slide-in-from-top-2 duration-150">
+                  <div className="flex items-center gap-2">
+                    <span className="bg-blue-600 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
+                      {selectedExpertIds.size}
+                    </span>
+                    <span className="text-xs font-medium text-slate-200">
+                      expert{selectedExpertIds.size > 1 ? "s" : ""} selected
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => handleBulkUpdateExpertStatus("ACTIVE")}
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                    >
+                      Bulk Activate
+                    </button>
+                    <button
+                      onClick={() => handleBulkUpdateExpertStatus("STANDBY")}
+                      className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                    >
+                      Bulk Standby
+                    </button>
+                    <button
+                      onClick={() => handleBulkUpdateExpertStatus("INACTIVE")}
+                      className="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                    >
+                      Bulk Inactive
+                    </button>
+                    <button
+                      onClick={handleBulkDeleteExperts}
+                      className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
+                    >
+                      <TrashIcon className="w-3.5 h-3.5" />
+                      <span>Bulk Delete</span>
+                    </button>
+                    <button
+                      onClick={() => setSelectedExpertIds(new Set())}
+                      className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded transition-colors cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Experts Grid Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {experts.map((exp) => (
-                  <div key={exp.id} className="bg-white border border-slate-200 rounded-lg p-5 shadow-xs flex flex-col justify-between gap-4">
+                  <div
+                    key={exp.id}
+                    className={`bg-white border rounded-lg p-5 shadow-xs flex flex-col justify-between gap-4 transition-all ${
+                      selectedExpertIds.has(exp.id) ? "border-blue-500 ring-1 ring-blue-500 bg-blue-50/10" : "border-slate-200"
+                    }`}
+                  >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3.5">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedExpertIds.has(exp.id)}
+                          onChange={() => handleToggleExpertSelect(exp.id)}
+                          className="w-4 h-4 rounded text-blue-600 cursor-pointer mt-1"
+                          aria-label={`Select ${exp.fullName}`}
+                        />
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={exp.avatar}
@@ -717,7 +1237,15 @@ function AdminHubContent() {
                         </div>
                       </div>
 
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          exp.status === "ACTIVE"
+                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            : exp.status === "STANDBY"
+                            ? "bg-amber-50 text-amber-800 border border-amber-200"
+                            : "bg-slate-100 text-slate-600 border border-slate-300"
+                        }`}
+                      >
                         {exp.status}
                       </span>
                     </div>
@@ -739,8 +1267,8 @@ function AdminHubContent() {
                       </div>
                     </div>
 
-                    {/* Assigned Workshops */}
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-3 text-xs">
+                    {/* Assigned Workshops & Actions */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 text-xs">
                       <div className="flex items-center gap-1.5 text-slate-600">
                         <span className="font-semibold text-slate-800">Assigned:</span>
                         <span className="font-mono text-xs font-bold text-blue-600">
@@ -748,12 +1276,46 @@ function AdminHubContent() {
                         </span>
                       </div>
 
-                      <Link
-                        href="/trainer"
-                        className="text-xs font-semibold text-slate-800 hover:text-blue-600 transition-colors"
-                      >
-                        Launch Cockpit &rarr;
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setEditingExpert(exp)}
+                          className="p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                          title="Edit expert"
+                          aria-label="Edit expert"
+                        >
+                          <EditIcon className="w-3.5 h-3.5" />
+                        </button>
+                        <select
+                          value={exp.status}
+                          onChange={(e) =>
+                            handleSingleToggleExpertStatus(
+                              exp.id,
+                              e.target.value as ExpertMentor["status"],
+                              exp.fullName
+                            )
+                          }
+                          className="border border-slate-200 rounded px-1.5 py-0.5 text-[11px] text-slate-700 bg-white cursor-pointer"
+                          title="Change status"
+                        >
+                          <option value="ACTIVE">ACTIVE</option>
+                          <option value="STANDBY">STANDBY</option>
+                          <option value="INACTIVE">INACTIVE</option>
+                        </select>
+                        <button
+                          onClick={() => handleSingleDeleteExpert(exp.id, exp.fullName)}
+                          className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                          title="Delete expert"
+                          aria-label="Delete expert"
+                        >
+                          <TrashIcon className="w-3.5 h-3.5" />
+                        </button>
+                        <Link
+                          href="/trainer"
+                          className="text-xs font-semibold text-slate-800 hover:text-blue-600 transition-colors ml-1"
+                        >
+                          Cockpit &rarr;
+                        </Link>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -764,149 +1326,176 @@ function AdminHubContent() {
           {/* ========================================================================= */}
           {/* TAB 3: MANAGE INSTITUTIONS                                                */}
           {/* ========================================================================= */}
-          {activeTab === "institutions" && (
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                    Partner Institutions & Campus Hubs
-                  </h1>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Manage college campuses, configure venue GPS coordinates for geofence verification, and monitor cohort enrollment.
-                  </p>
+          {activeTab === "institutions" && (() => {
+            const allSelected = institutions.length > 0 && institutions.every((i) => selectedInstitutionIds.has(i.id));
+
+            return (
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                      Partner Institutions & Campus Hubs
+                    </h1>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Manage college campuses, configure venue GPS coordinates for geofence verification, and monitor cohort enrollment.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setIsAddInstitutionOpen(true)}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>+ Add Partner Campus</span>
+                  </button>
                 </div>
 
-                <button
-                  onClick={() => setIsAddInstitutionOpen(true)}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5"
-                >
-                  <span>+ Add Partner Campus</span>
-                </button>
-              </div>
+                {/* Floating Bulk Action Bar */}
+                {selectedInstitutionIds.size > 0 && (
+                  <div className="bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg flex flex-wrap items-center justify-between gap-3 border border-slate-700 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-blue-600 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
+                        {selectedInstitutionIds.size}
+                      </span>
+                      <span className="text-xs font-medium text-slate-200">
+                        campus hub{selectedInstitutionIds.size > 1 ? "s" : ""} selected
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => handleBulkUpdateInstitutionStatus("ACTIVE")}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Bulk Activate
+                      </button>
+                      <button
+                        onClick={() => handleBulkUpdateInstitutionStatus("INACTIVE")}
+                        className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Bulk Inactive
+                      </button>
+                      <button
+                        onClick={handleBulkDeleteInstitutions}
+                        className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        <span>Bulk Delete</span>
+                      </button>
+                      <button
+                        onClick={() => setSelectedInstitutionIds(new Set())}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-              {/* Institutions List Table */}
-              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
-                    <tr>
-                      <th className="py-3 px-4">Code</th>
-                      <th className="py-3 px-4">Institution Name</th>
-                      <th className="py-3 px-4">Region / City</th>
-                      <th className="py-3 px-4">GPS Geofence (Radius)</th>
-                      <th className="py-3 px-4 text-center">Enrolled Members</th>
-                      <th className="py-3 px-4 text-right">Hub Portal</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {institutions.map((inst) => (
-                      <tr key={inst.id} className="hover:bg-slate-50/80 transition-colors">
-                        <td className="py-3 px-4 font-mono font-bold text-slate-800">
-                          {inst.code}
-                        </td>
-                        <td className="py-3 px-4">
-                          <span className="font-semibold text-slate-900">{inst.name}</span>
-                        </td>
-                        <td className="py-3 px-4 text-slate-600">
-                          {inst.city}, {inst.state}
-                        </td>
-                        <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
-                          {inst.lat}° N, {inst.lng}° E ({inst.geofenceRadiusMeters}m limit)
-                        </td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
-                            {inst.studentCount} Students
-                          </span>
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <Link
-                            href="/college"
-                            className="text-xs text-blue-600 hover:text-blue-800 font-semibold"
-                          >
-                            Coordinator View &rarr;
-                          </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* ========================================================================= */}
-          {/* TAB 4: MANAGE WORKSHOPS (Curriculum 27)                                    */}
-          {/* ========================================================================= */}
-          {activeTab === "workshops" && (
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                    27-Workshop Curriculum Registry
-                  </h1>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Manage session definitions, scheduled execution dates, test pass requirements, and assigned expert mentors.
-                  </p>
-                </div>
-
-                <button
-                  onClick={() => setIsAddWorkshopOpen(true)}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5"
-                >
-                  <span>+ Schedule Workshop</span>
-                </button>
-              </div>
-
-              {/* Workshops Table */}
-              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Institutions List Table */}
+                <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
                   <table className="w-full text-left text-xs">
                     <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
                       <tr>
+                        <th className="py-3 px-3 w-10 text-center">
+                          <input
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={handleSelectAllInstitutions}
+                            className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                            aria-label="Select all campus hubs"
+                          />
+                        </th>
                         <th className="py-3 px-4">Code</th>
-                        <th className="py-3 px-4">Technical Curriculum Title</th>
-                        <th className="py-3 px-4">Focus Domain</th>
-                        <th className="py-3 px-4">Assigned Expert</th>
+                        <th className="py-3 px-4">Institution Name</th>
+                        <th className="py-3 px-4">Region / City</th>
+                        <th className="py-3 px-4">GPS Geofence (Radius)</th>
+                        <th className="py-3 px-4 text-center">Enrolled Members</th>
                         <th className="py-3 px-4 text-center">Status</th>
-                        <th className="py-3 px-4 text-right">Scheduled Date</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
-                      {workshops.map((ws) => (
-                        <tr key={ws.code} className="hover:bg-slate-50/80 transition-colors">
-                          <td className="py-3 px-4 font-mono font-bold text-slate-800">
-                            {ws.code}
+                      {institutions.map((inst) => (
+                        <tr key={inst.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedInstitutionIds.has(inst.id)}
+                              onChange={() => handleToggleInstitutionSelect(inst.id)}
+                              className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                              aria-label={`Select ${inst.name}`}
+                            />
                           </td>
-                          <td className="py-3 px-4 font-semibold text-slate-900">
-                            {ws.title}
+                          <td className="py-3 px-4 font-mono font-bold text-slate-800">
+                            {inst.code}
                           </td>
                           <td className="py-3 px-4">
-                            <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium">
-                              {ws.focusArea}
-                            </span>
+                            <span className="font-semibold text-slate-900">{inst.name}</span>
                           </td>
-                          <td className="py-3 px-4 text-slate-700 font-medium">
-                            {ws.expertName}
+                          <td className="py-3 px-4 text-slate-600">
+                            {inst.city}, {inst.state}
+                          </td>
+                          <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
+                            {inst.lat}° N, {inst.lng}° E ({inst.geofenceRadiusMeters}m limit)
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded">
+                              {inst.studentCount} Students
+                            </span>
                           </td>
                           <td className="py-3 px-4 text-center">
                             <span
                               className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                ws.status === "ACTIVE_IN_SESSION"
-                                  ? "bg-amber-100 text-amber-900 border border-amber-300 animate-pulse"
-                                  : ws.status === "COMPLETED"
+                                inst.status === "ACTIVE"
                                   ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                  : "bg-slate-100 text-slate-600"
+                                  : inst.status === "ONBOARDING"
+                                  ? "bg-blue-50 text-blue-800 border border-blue-200"
+                                  : "bg-slate-100 text-slate-600 border border-slate-300"
                               }`}
                             >
-                              {ws.status === "ACTIVE_IN_SESSION" ? (
-                                <span className="inline-flex items-center gap-1.5">
-                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping inline-block" />
-                                  <span>LIVE IN SESSION</span>
-                                </span>
-                              ) : ws.status}
+                              {inst.status}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-right font-mono text-[11px] text-slate-500">
-                            {ws.date}
+                          <td className="py-3 px-4 text-right">
+                            <div className="inline-flex items-center gap-2">
+                              <button
+                                onClick={() => setEditingInstitution(inst)}
+                                className="p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                                title="Edit campus hub"
+                                aria-label="Edit campus hub"
+                              >
+                                <EditIcon className="w-3.5 h-3.5" />
+                              </button>
+                              <select
+                                value={inst.status}
+                                onChange={(e) =>
+                                  handleSingleToggleInstitutionStatus(
+                                    inst.id,
+                                    e.target.value as PartnerInstitution["status"],
+                                    inst.name
+                                  )
+                                }
+                                className="border border-slate-200 rounded px-1.5 py-0.5 text-[11px] text-slate-700 bg-white cursor-pointer"
+                                title="Change status"
+                              >
+                                <option value="ACTIVE">ACTIVE</option>
+                                <option value="ONBOARDING">ONBOARDING</option>
+                                <option value="INACTIVE">INACTIVE</option>
+                              </select>
+                              <button
+                                onClick={() => handleSingleDeleteInstitution(inst.id, inst.name)}
+                                className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                                title="Delete campus hub"
+                                aria-label="Delete campus hub"
+                              >
+                                <TrashIcon className="w-3.5 h-3.5" />
+                              </button>
+                              <Link
+                                href="/college"
+                                className="text-xs text-blue-600 hover:text-blue-800 font-semibold ml-1"
+                              >
+                                Portal &rarr;
+                              </Link>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -914,96 +1503,360 @@ function AdminHubContent() {
                   </table>
                 </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
+
+          {/* ========================================================================= */}
+          {/* TAB 4: MANAGE WORKSHOPS (Curriculum 27)                                    */}
+          {/* ========================================================================= */}
+          {/* ========================================================================= */}
+          {/* TAB 4: MANAGE WORKSHOPS (Curriculum 27)                                    */}
+          {/* ========================================================================= */}
+          {activeTab === "workshops" && (() => {
+            const allSelected = workshops.length > 0 && workshops.every((w) => selectedWorkshopCodes.has(w.code));
+
+            return (
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                      27-Workshop Curriculum Registry
+                    </h1>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Manage session definitions, scheduled execution dates, test pass requirements, and assigned expert mentors.
+                    </p>
+                  </div>
+
+                  <button
+                    onClick={() => setIsAddWorkshopOpen(true)}
+                    className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-md transition-colors shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <span>+ Schedule Workshop</span>
+                  </button>
+                </div>
+
+                {/* Floating Bulk Action Bar */}
+                {selectedWorkshopCodes.size > 0 && (
+                  <div className="bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg flex flex-wrap items-center justify-between gap-3 border border-slate-700 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-blue-600 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
+                        {selectedWorkshopCodes.size}
+                      </span>
+                      <span className="text-xs font-medium text-slate-200">
+                        workshop{selectedWorkshopCodes.size > 1 ? "s" : ""} selected
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => handleBulkUpdateWorkshopStatus("ACTIVE_IN_SESSION")}
+                        className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Bulk In-Session
+                      </button>
+                      <button
+                        onClick={() => handleBulkUpdateWorkshopStatus("COMPLETED")}
+                        className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Bulk Completed
+                      </button>
+                      <button
+                        onClick={() => handleBulkUpdateWorkshopStatus("INACTIVE")}
+                        className="px-2.5 py-1 bg-slate-700 hover:bg-slate-600 text-white text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Bulk Inactive
+                      </button>
+                      <button
+                        onClick={handleBulkDeleteWorkshops}
+                        className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        <span>Bulk Delete</span>
+                      </button>
+                      <button
+                        onClick={() => setSelectedWorkshopCodes(new Set())}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Workshops Table */}
+                <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-xs">
+                      <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                        <tr>
+                          <th className="py-3 px-3 w-10 text-center">
+                            <input
+                              type="checkbox"
+                              checked={allSelected}
+                              onChange={handleSelectAllWorkshops}
+                              className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                              aria-label="Select all workshops"
+                            />
+                          </th>
+                          <th className="py-3 px-4">Code</th>
+                          <th className="py-3 px-4">Technical Curriculum Title</th>
+                          <th className="py-3 px-4">Focus Domain</th>
+                          <th className="py-3 px-4">Assigned Expert</th>
+                          <th className="py-3 px-4 text-center">Status</th>
+                          <th className="py-3 px-4 text-center">Scheduled Date</th>
+                          <th className="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {workshops.map((ws) => (
+                          <tr key={ws.code} className="hover:bg-slate-50/80 transition-colors">
+                            <td className="py-3 px-3 text-center">
+                              <input
+                                type="checkbox"
+                                checked={selectedWorkshopCodes.has(ws.code)}
+                                onChange={() => handleToggleWorkshopSelect(ws.code)}
+                                className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                                aria-label={`Select ${ws.code}`}
+                              />
+                            </td>
+                            <td className="py-3 px-4 font-mono font-bold text-slate-800">
+                              {ws.code}
+                            </td>
+                            <td className="py-3 px-4 font-semibold text-slate-900">
+                              {ws.title}
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium">
+                                {ws.focusArea}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-slate-700 font-medium">
+                              {ws.expertName}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                                  ws.status === "ACTIVE_IN_SESSION"
+                                    ? "bg-amber-100 text-amber-900 border border-amber-300 animate-pulse"
+                                    : ws.status === "COMPLETED"
+                                    ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                                    : ws.status === "SCHEDULED"
+                                    ? "bg-blue-50 text-blue-700 border border-blue-200"
+                                    : "bg-slate-100 text-slate-500 border border-slate-300"
+                                }`}
+                              >
+                                {ws.status === "ACTIVE_IN_SESSION" ? (
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping inline-block" />
+                                    <span>LIVE IN SESSION</span>
+                                  </span>
+                                ) : (
+                                  ws.status
+                                )}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono text-[11px] text-slate-500">
+                              {ws.date}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="inline-flex items-center gap-2">
+                                <button
+                                  onClick={() => setEditingWorkshop(ws)}
+                                  className="p-1 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                                  title="Edit workshop"
+                                  aria-label="Edit workshop"
+                                >
+                                  <EditIcon className="w-3.5 h-3.5" />
+                                </button>
+                                <select
+                                  value={ws.status}
+                                  onChange={(e) =>
+                                    handleSingleToggleWorkshopStatus(
+                                      ws.code,
+                                      e.target.value as WorkshopItem["status"],
+                                      ws.title
+                                    )
+                                  }
+                                  className="border border-slate-200 rounded px-1.5 py-0.5 text-[11px] text-slate-700 bg-white cursor-pointer"
+                                  title="Change status"
+                                >
+                                  <option value="SCHEDULED">SCHEDULED</option>
+                                  <option value="ACTIVE_IN_SESSION">IN SESSION</option>
+                                  <option value="COMPLETED">COMPLETED</option>
+                                  <option value="INACTIVE">INACTIVE</option>
+                                </select>
+                                <button
+                                  onClick={() => handleSingleDeleteWorkshop(ws.code, ws.title)}
+                                  className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                                  title="Delete workshop"
+                                  aria-label="Delete workshop"
+                                >
+                                  <TrashIcon className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* ========================================================================= */}
           {/* TAB 5: AUDIT LOGS (HubSpot Reference Style)                                 */}
           {/* ========================================================================= */}
-          {activeTab === "audit" && (
-            <div className="flex flex-col gap-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-                    Audit Logs
-                  </h1>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Get an immutable report showing administrative actions, student check-ins, and cryptographic ledger activities.
-                  </p>
+          {activeTab === "audit" && (() => {
+            const filteredAuditLogs = auditLogs.filter(
+              (log) => auditCategoryFilter === "All" || log.category === auditCategoryFilter
+            );
+            const allSelected =
+              filteredAuditLogs.length > 0 && filteredAuditLogs.every((l) => selectedAuditLogIds.has(l.id));
+
+            return (
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+                  <div>
+                    <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+                      Audit Logs
+                    </h1>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Get an immutable report showing administrative actions, student check-ins, and cryptographic ledger activities.
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleClearAllAuditLogs}
+                      className="px-3.5 py-1.5 border border-red-200 hover:bg-red-50 text-red-700 text-xs font-semibold rounded-md transition-colors cursor-pointer shadow-2xs"
+                    >
+                      Clear All Logs
+                    </button>
+                    <button
+                      onClick={() => triggerToast("Audit log CSV report exported successfully.")}
+                      className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-md transition-colors shadow-2xs cursor-pointer"
+                    >
+                      Export Report
+                    </button>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => triggerToast("Audit log CSV report exported successfully.")}
-                    className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-md transition-colors shadow-2xs"
-                  >
-                    Export Report
-                  </button>
-                </div>
-              </div>
+                {/* Floating Bulk Action Bar */}
+                {selectedAuditLogIds.size > 0 && (
+                  <div className="bg-slate-900 text-white px-4 py-3 rounded-lg shadow-lg flex flex-wrap items-center justify-between gap-3 border border-slate-700 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="flex items-center gap-2">
+                      <span className="bg-blue-600 text-white font-mono text-xs font-bold px-2 py-0.5 rounded">
+                        {selectedAuditLogIds.size}
+                      </span>
+                      <span className="text-xs font-medium text-slate-200">
+                        audit log{selectedAuditLogIds.size > 1 ? "s" : ""} selected
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={handleBulkDeleteAuditLogs}
+                        className="px-2.5 py-1 bg-red-600 hover:bg-red-500 text-white text-xs font-medium rounded transition-colors flex items-center gap-1 cursor-pointer"
+                      >
+                        <TrashIcon className="w-3.5 h-3.5" />
+                        <span>Delete Selected</span>
+                      </button>
+                      <button
+                        onClick={() => setSelectedAuditLogIds(new Set())}
+                        className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium rounded transition-colors cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-              {/* Filters (Modeled on HubSpot image media_1789356488472.png) */}
-              <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center gap-4 text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">Category:</span>
-                  <select
-                    value={auditCategoryFilter}
-                    onChange={(e) => setAuditCategoryFilter(e.target.value)}
-                    className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 bg-white"
-                  >
-                    <option value="All">All Categories</option>
-                    <option value="Attendance">Attendance</option>
-                    <option value="Experts">Experts</option>
-                    <option value="Students">Students</option>
-                    <option value="Certifications">Certifications</option>
-                  </select>
+                {/* Filters (Modeled on HubSpot image media_1789356488472.png) */}
+                <div className="bg-white p-3.5 rounded-lg border border-slate-200 shadow-xs flex flex-wrap items-center gap-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-medium">Category:</span>
+                    <select
+                      value={auditCategoryFilter}
+                      onChange={(e) => setAuditCategoryFilter(e.target.value)}
+                      className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 bg-white"
+                    >
+                      <option value="All">All Categories</option>
+                      <option value="Attendance">Attendance</option>
+                      <option value="Students">Students</option>
+                      <option value="Experts">Experts</option>
+                      <option value="Institutions">Institutions</option>
+                      <option value="Curriculum">Curriculum</option>
+                      <option value="Enquiries">Enquiries</option>
+                      <option value="Certifications">Certifications</option>
+                      <option value="System">System</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-slate-500 font-medium">Action:</span>
+                    <select className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 bg-white">
+                      <option>All Actions</option>
+                      <option>Create</option>
+                      <option>Update</option>
+                      <option>Delete</option>
+                      <option>Bulk Update</option>
+                      <option>Bulk Delete</option>
+                      <option>Perform</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">Action:</span>
-                  <select className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 bg-white">
-                    <option>All Actions</option>
-                    <option>Create</option>
-                    <option>Update</option>
-                    <option>Perform</option>
-                  </select>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">Modified by:</span>
-                  <select className="border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 bg-white">
-                    <option>Anyone</option>
-                    <option>Karthikeyan P.</option>
-                    <option>Priya Sundaram</option>
-                    <option>Dr. K. Ramanathan</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Audit Table */}
-              <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
-                <table className="w-full text-left text-xs">
-                  <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
-                    <tr>
-                      <th className="py-3 px-4">Category</th>
-                      <th className="py-3 px-4">Subcategory</th>
-                      <th className="py-3 px-4">Action</th>
-                      <th className="py-3 px-4">Modified By</th>
-                      <th className="py-3 px-4">Date of Change</th>
-                      <th className="py-3 px-4 text-right">Source Link</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100">
-                    {auditLogs
-                      .filter((log) => auditCategoryFilter === "All" || log.category === auditCategoryFilter)
-                      .map((log) => (
+                {/* Audit Table */}
+                <div className="bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
+                      <tr>
+                        <th className="py-3 px-3 w-10 text-center">
+                          <input
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={() => handleSelectAllAuditLogs(filteredAuditLogs)}
+                            className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                            aria-label="Select all logs"
+                          />
+                        </th>
+                        <th className="py-3 px-4">Category</th>
+                        <th className="py-3 px-4">Subcategory</th>
+                        <th className="py-3 px-4">Action</th>
+                        <th className="py-3 px-4">Modified By</th>
+                        <th className="py-3 px-4">Date of Change</th>
+                        <th className="py-3 px-4">Source Detail</th>
+                        <th className="py-3 px-4 text-right">Delete</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {filteredAuditLogs.map((log) => (
                         <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                          <td className="py-3 px-3 text-center">
+                            <input
+                              type="checkbox"
+                              checked={selectedAuditLogIds.has(log.id)}
+                              onChange={() => handleToggleAuditLogSelect(log.id)}
+                              className="w-4 h-4 rounded text-blue-600 cursor-pointer"
+                              aria-label={`Select audit log ${log.id}`}
+                            />
+                          </td>
                           <td className="py-3 px-4">
                             <span className="font-semibold text-slate-800">{log.category}</span>
                           </td>
                           <td className="py-3 px-4 text-slate-600">{log.subcategory}</td>
                           <td className="py-3 px-4">
-                            <span className="font-medium text-slate-800">{log.action}</span>
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                                log.action.includes("Delete")
+                                  ? "bg-red-50 text-red-700 border border-red-200"
+                                  : log.action.includes("Create")
+                                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                  : "bg-blue-50 text-blue-700 border border-blue-200"
+                              }`}
+                            >
+                              {log.action}
+                            </span>
                           </td>
                           <td className="py-3 px-4">
                             <div className="flex items-center gap-2.5">
@@ -1022,7 +1875,7 @@ function AdminHubContent() {
                           <td className="py-3 px-4 font-mono text-[11px] text-slate-600">
                             {log.dateOfChange}
                           </td>
-                          <td className="py-3 px-4 text-right">
+                          <td className="py-3 px-4">
                             {log.sourceUrl ? (
                               <Link
                                 href={log.sourceUrl}
@@ -1032,16 +1885,27 @@ function AdminHubContent() {
                                 <span className="text-[10px]">↗</span>
                               </Link>
                             ) : (
-                              <span className="text-slate-400">{log.sourceText}</span>
+                              <span className="text-slate-600">{log.sourceText}</span>
                             )}
+                          </td>
+                          <td className="py-3 px-4 text-right">
+                            <button
+                              onClick={() => handleSingleDeleteAuditLog(log.id)}
+                              className="p-1 text-slate-400 hover:text-red-600 transition-colors cursor-pointer"
+                              title="Delete log"
+                              aria-label="Delete log"
+                            >
+                              <TrashIcon className="w-3.5 h-3.5" />
+                            </button>
                           </td>
                         </tr>
                       ))}
-                  </tbody>
-                </table>
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* ========================================================================= */}
           {/* TAB 6: FLASH NEWS & WELCOME POPUPS                                       */}
@@ -1061,7 +1925,7 @@ function AdminHubContent() {
           {/* TAB 8: ADMISSIONS ENQUIRIES                                               */}
           {/* ========================================================================= */}
           {activeTab === "enquiries" && (
-            <EnquiriesTab onToast={triggerToast} />
+            <EnquiriesTab onToast={triggerToast} onAuditLog={logAdminAudit} />
           )}
 
           {/* ========================================================================= */}
@@ -1082,14 +1946,14 @@ function AdminHubContent() {
           {/* TAB 11: MULTI-COLLEGE WORKSHOP SCHEDULE & CALENDAR                        */}
           {/* ========================================================================= */}
           {activeTab === "schedule" && (
-            <WorkshopScheduleTab />
+            <WorkshopScheduleTab onAuditLog={logAdminAudit} />
           )}
 
           {/* ========================================================================= */}
           {/* TAB 12: CASE STUDIES BLOG CMS                                             */}
           {/* ========================================================================= */}
           {activeTab === "casestudies" && (
-            <CaseStudiesCmsTab />
+            <CaseStudiesCmsTab onAuditLog={logAdminAudit} />
           )}
         </main>
 
@@ -1468,15 +2332,514 @@ function AdminHubContent() {
                 <button
                   type="button"
                   onClick={() => setIsAddWorkshopOpen(false)}
-                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50"
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50 cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded cursor-pointer"
                 >
                   Add to Curriculum
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 5: EDIT STUDENT                                                     */}
+      {/* ========================================================================= */}
+      {editingStudent && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Edit Student Member</h2>
+                <p className="text-[11px] font-mono text-slate-500">{editingStudent.dosId}</p>
+              </div>
+              <button
+                onClick={() => setEditingStudent(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditStudent} className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Full Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={editingStudent.fullName}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, fullName: e.target.value })}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Institutional Email:</label>
+                <input
+                  type="email"
+                  required
+                  value={editingStudent.email}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, email: e.target.value })}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Campus Institution Hub:</label>
+                <select
+                  value={editingStudent.institution}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, institution: e.target.value })}
+                  className="border border-slate-300 rounded p-2 bg-white"
+                >
+                  {institutions.map((inst) => (
+                    <option key={inst.id} value={inst.name}>
+                      {inst.name} ({inst.code})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Department / Major:</label>
+                <input
+                  type="text"
+                  value={editingStudent.department}
+                  onChange={(e) => setEditingStudent({ ...editingStudent, department: e.target.value })}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Workshops (Max 27):</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={27}
+                    value={editingStudent.completedWorkshops}
+                    onChange={(e) =>
+                      setEditingStudent({ ...editingStudent, completedWorkshops: Number(e.target.value) })
+                    }
+                    className="border border-slate-300 rounded p-2 font-mono"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Lifecycle Status:</label>
+                  <select
+                    value={editingStudent.status}
+                    onChange={(e) =>
+                      setEditingStudent({
+                        ...editingStudent,
+                        status: e.target.value as StudentMember["status"],
+                      })
+                    }
+                    className="border border-slate-300 rounded p-2 bg-white"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="DEFENSE_READY">DEFENSE_READY</option>
+                    <option value="ON_LEAVE">ON_LEAVE</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingStudent(null)}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 6: EDIT EXPERT                                                      */}
+      {/* ========================================================================= */}
+      {editingExpert && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Edit Technical Expert</h2>
+                <p className="text-[11px] font-mono text-slate-500">{editingExpert.id}</p>
+              </div>
+              <button
+                onClick={() => setEditingExpert(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditExpert} className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Full Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={editingExpert.fullName}
+                  onChange={(e) => setEditingExpert({ ...editingExpert, fullName: e.target.value })}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Email Address:</label>
+                <input
+                  type="email"
+                  required
+                  value={editingExpert.email}
+                  onChange={(e) => setEditingExpert({ ...editingExpert, email: e.target.value })}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Organization / Company:</label>
+                <input
+                  type="text"
+                  value={editingExpert.organization}
+                  onChange={(e) => setEditingExpert({ ...editingExpert, organization: e.target.value })}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Domain Specialties (Comma-separated):</label>
+                <input
+                  type="text"
+                  value={editingExpert.domainSpecialties.join(", ")}
+                  onChange={(e) =>
+                    setEditingExpert({
+                      ...editingExpert,
+                      domainSpecialties: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
+                    })
+                  }
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Assigned Workshops (Comma-separated):</label>
+                <input
+                  type="text"
+                  value={editingExpert.assignedWorkshops.join(", ")}
+                  onChange={(e) =>
+                    setEditingExpert({
+                      ...editingExpert,
+                      assignedWorkshops: e.target.value.split(",").map((s) => s.trim().toUpperCase()).filter(Boolean),
+                    })
+                  }
+                  className="border border-slate-300 rounded p-2 font-mono uppercase"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Status:</label>
+                <select
+                  value={editingExpert.status}
+                  onChange={(e) =>
+                    setEditingExpert({
+                      ...editingExpert,
+                      status: e.target.value as ExpertMentor["status"],
+                    })
+                  }
+                  className="border border-slate-300 rounded p-2 bg-white"
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="STANDBY">STANDBY</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingExpert(null)}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 7: EDIT INSTITUTION                                                 */}
+      {/* ========================================================================= */}
+      {editingInstitution && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Edit Partner Campus Hub</h2>
+                <p className="text-[11px] font-mono text-slate-500">{editingInstitution.code}</p>
+              </div>
+              <button
+                onClick={() => setEditingInstitution(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditInstitution} className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Institution Code:</label>
+                <input
+                  type="text"
+                  required
+                  value={editingInstitution.code}
+                  onChange={(e) => setEditingInstitution({ ...editingInstitution, code: e.target.value.toUpperCase() })}
+                  className="border border-slate-300 rounded p-2 uppercase font-mono"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Campus Name:</label>
+                <input
+                  type="text"
+                  required
+                  value={editingInstitution.name}
+                  onChange={(e) => setEditingInstitution({ ...editingInstitution, name: e.target.value })}
+                  className="border border-slate-300 rounded p-2"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">City / District:</label>
+                  <input
+                    type="text"
+                    value={editingInstitution.city}
+                    onChange={(e) => setEditingInstitution({ ...editingInstitution, city: e.target.value })}
+                    className="border border-slate-300 rounded p-2"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">State:</label>
+                  <input
+                    type="text"
+                    value={editingInstitution.state}
+                    onChange={(e) => setEditingInstitution({ ...editingInstitution, state: e.target.value })}
+                    className="border border-slate-300 rounded p-2"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Geofence (Meters):</label>
+                  <input
+                    type="number"
+                    value={editingInstitution.geofenceRadiusMeters}
+                    onChange={(e) =>
+                      setEditingInstitution({ ...editingInstitution, geofenceRadiusMeters: Number(e.target.value) })
+                    }
+                    className="border border-slate-300 rounded p-2 font-mono"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Student Count:</label>
+                  <input
+                    type="number"
+                    value={editingInstitution.studentCount}
+                    onChange={(e) =>
+                      setEditingInstitution({ ...editingInstitution, studentCount: Number(e.target.value) })
+                    }
+                    className="border border-slate-300 rounded p-2 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Status:</label>
+                <select
+                  value={editingInstitution.status}
+                  onChange={(e) =>
+                    setEditingInstitution({
+                      ...editingInstitution,
+                      status: e.target.value as PartnerInstitution["status"],
+                    })
+                  }
+                  className="border border-slate-300 rounded p-2 bg-white"
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="ONBOARDING">ONBOARDING</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                </select>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingInstitution(null)}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* MODAL 8: EDIT WORKSHOP                                                    */}
+      {/* ========================================================================= */}
+      {editingWorkshop && (
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <div>
+                <h2 className="text-base font-bold text-slate-900">Edit Curriculum Workshop</h2>
+                <p className="text-[11px] font-mono text-slate-500">{editingWorkshop.code}</p>
+              </div>
+              <button
+                onClick={() => setEditingWorkshop(null)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <XIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEditWorkshop} className="flex flex-col gap-4 text-xs">
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Workshop Title:</label>
+                <input
+                  type="text"
+                  required
+                  value={editingWorkshop.title}
+                  onChange={(e) => setEditingWorkshop({ ...editingWorkshop, title: e.target.value })}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Focus Domain:</label>
+                <input
+                  type="text"
+                  value={editingWorkshop.focusArea}
+                  onChange={(e) => setEditingWorkshop({ ...editingWorkshop, focusArea: e.target.value })}
+                  className="border border-slate-300 rounded p-2 focus:outline-none focus:border-slate-800"
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Assigned Expert Mentor:</label>
+                <select
+                  value={editingWorkshop.expertName}
+                  onChange={(e) => setEditingWorkshop({ ...editingWorkshop, expertName: e.target.value })}
+                  className="border border-slate-300 rounded p-2 bg-white"
+                >
+                  {experts.map((exp) => (
+                    <option key={exp.id} value={exp.fullName}>
+                      {exp.fullName} ({exp.organization})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Mode:</label>
+                  <select
+                    value={editingWorkshop.mode}
+                    onChange={(e) =>
+                      setEditingWorkshop({
+                        ...editingWorkshop,
+                        mode: e.target.value as WorkshopItem["mode"],
+                      })
+                    }
+                    className="border border-slate-300 rounded p-2 bg-white"
+                  >
+                    <option value="IN_PERSON">IN_PERSON</option>
+                    <option value="HYBRID">HYBRID</option>
+                    <option value="VIRTUAL">VIRTUAL</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Status:</label>
+                  <select
+                    value={editingWorkshop.status}
+                    onChange={(e) =>
+                      setEditingWorkshop({
+                        ...editingWorkshop,
+                        status: e.target.value as WorkshopItem["status"],
+                      })
+                    }
+                    className="border border-slate-300 rounded p-2 bg-white"
+                  >
+                    <option value="SCHEDULED">SCHEDULED</option>
+                    <option value="ACTIVE_IN_SESSION">LIVE IN SESSION</option>
+                    <option value="COMPLETED">COMPLETED</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Execution / Scheduled Date:</label>
+                <input
+                  type="date"
+                  value={editingWorkshop.date}
+                  onChange={(e) => setEditingWorkshop({ ...editingWorkshop, date: e.target.value })}
+                  className="border border-slate-300 rounded p-2 font-mono"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditingWorkshop(null)}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded text-slate-700 font-medium hover:bg-slate-50 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded cursor-pointer"
+                >
+                  Save Changes
                 </button>
               </div>
             </form>

@@ -3,6 +3,10 @@ import {
   getFilteredSchedule,
   addScheduledSession,
   updateSessionStatus,
+  updateScheduledSession,
+  deleteScheduledSession,
+  deleteBulkScheduledSessions,
+  updateBulkScheduledStatus,
   ScheduledWorkshopSession,
 } from "@/lib/workshop-schedule";
 
@@ -18,8 +22,6 @@ export async function GET(req: NextRequest) {
       trainerName: trainer,
       role,
     });
-
-    const todayStr = new Date().toISOString().split("T")[0];
 
     // Identify next upcoming session
     const upcomingSessions = sessions.filter(
@@ -106,16 +108,31 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, status } = body;
+    const { id, ids, status, ...updates } = body;
 
-    if (!id || !status) {
+    // Bulk status update
+    if (ids && Array.isArray(ids) && status) {
+      const updatedCount = updateBulkScheduledStatus(ids, status);
+      return NextResponse.json({
+        success: true,
+        updatedCount,
+        message: `Updated status to ${status} for ${updatedCount} scheduled sessions.`,
+      });
+    }
+
+    if (!id) {
       return NextResponse.json(
-        { success: false, error: "id and status are required" },
+        { success: false, error: "Session id is required" },
         { status: 400 }
       );
     }
 
-    const updated = updateSessionStatus(id, status);
+    // Full or partial updates
+    const updated = updateScheduledSession(id, {
+      ...(status ? { status } : {}),
+      ...updates,
+    });
+
     if (!updated) {
       return NextResponse.json(
         { success: false, error: "Scheduled session not found" },
@@ -127,6 +144,48 @@ export async function PATCH(req: NextRequest) {
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error?.message || "Failed to update session" },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const queryId = searchParams.get("id");
+
+    let idsToDelete: string[] = [];
+    if (queryId) {
+      idsToDelete = [queryId];
+    } else {
+      try {
+        const body = await req.json();
+        if (body.ids && Array.isArray(body.ids)) {
+          idsToDelete = body.ids;
+        } else if (body.id) {
+          idsToDelete = [body.id];
+        }
+      } catch {
+        // query only
+      }
+    }
+
+    if (idsToDelete.length === 0) {
+      return NextResponse.json(
+        { success: false, error: "Session id(s) required for deletion" },
+        { status: 400 }
+      );
+    }
+
+    const deletedCount = deleteBulkScheduledSessions(idsToDelete);
+    return NextResponse.json({
+      success: true,
+      deletedCount,
+      message: `Deleted ${deletedCount} scheduled workshop session(s).`,
+    });
+  } catch (error: any) {
+    return NextResponse.json(
+      { success: false, error: error?.message || "Failed to delete scheduled session(s)" },
       { status: 500 }
     );
   }
