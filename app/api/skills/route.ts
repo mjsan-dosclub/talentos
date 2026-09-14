@@ -6,9 +6,26 @@ export async function GET(request: Request) {
   const studentId = searchParams.get("student_id");
 
   try {
-    let query = supabaseAdmin.from("student_technology_inventory").select("*");
+    let resolvedId = studentId;
     if (studentId) {
-      query = query.eq("student_id", studentId);
+      const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(studentId);
+      if (!isUuid) {
+        const { data: stu } = await supabaseAdmin
+          .from("students")
+          .select("id")
+          .or(`dos_id.eq.${studentId},email.eq.${studentId}`)
+          .maybeSingle();
+        if (stu?.id) {
+          resolvedId = stu.id;
+        } else {
+          return NextResponse.json({ skills: [] });
+        }
+      }
+    }
+
+    let query = supabaseAdmin.from("student_technology_inventory").select("*");
+    if (resolvedId) {
+      query = query.eq("student_id", resolvedId);
     }
 
     const { data, error } = await query.order("evidence_count", { ascending: false });
