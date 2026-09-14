@@ -287,5 +287,62 @@ body {
   transform: translateX(2px);
 }
 
+/* Restrained Floating Keyframes */
+@keyframes floatSlow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
 
+@keyframes floatDelayed {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(7px);
+  }
+}
 
+@keyframes floatSubtle {
+  0%, 100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.01);
+  }
+}
+
+/* Floating Utility Classes */
+.animate-float-slow {
+  animation: floatSlow 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floatDelayed 7s ease-in-out 1.5s infinite;
+}
+
+.animate-float-subtle {
+  animation: floatSubtle 5s ease-in-out 0.8s infinite;
+}
+
+/* Strict mobile disable for infinite animations */
+@media (max-width: 767px) {
+  .animate-float-slow,
+  .animate-float-delayed,
+  .animate-float-subtle {
+    animation: none !important;
+  }
+}
+
+/* Accessible reduced motion safeguard */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
