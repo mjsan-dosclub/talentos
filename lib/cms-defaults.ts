@@ -87,22 +87,23 @@ export interface LandingCmsData {
 
 export const DEFAULT_LANDING_CMS: LandingCmsData = {
   hero: {
-    eyebrow: "DOS Club TalentOS",
-    title: "Your Passport to the AI World.",
-    highlight: "A journey that makes your capability visible.",
-    subtitle: "Not another course. Not another certificate.",
+    eyebrow: "DOS CLUB // COLLECTIVE SYSTEMS COMMONS",
+    title: "Where engineers build systems together.",
+    highlight: "Not competition. Collective capability.",
+    subtitle: "A world-class engineering ecosystem for open-source builders.",
     description:
-      "There is a world behind this door. An ecosystem where Indian engineering students build, break, and master 27 real-world systems, graduating with authentic evidence that speaks before their résumé does.",
-    studentPhoto: "/images/students/student-2.jpg",
-    studentPhotoCaption: "Aditya K. • CEG Campus",
+      "There is a world behind this door. An open-source ecosystem where Indian engineering minds master 27 real-world systems through peer architecture defense, collaborative codebases, and shared rigor. Graduating with authentic evidence that speaks before their résumé does.",
+    studentPhoto: "/images/students/student-workshop-build.jpg",
+    studentPhotoCaption: "Collaborative Systems Pod • CEG Campus Hub",
     collabPhoto: "/images/students/student-4.jpg",
-    collabPhotoCaption: "Zero Grace Defense",
+    collabPhotoCaption: "Peer Systems Defense Session",
     ctaPrimaryText: "Become a Member",
     ctaPrimaryUrl: "https://membership.descienceosclub.com/",
     ctaSecondaryText: "Enquire",
     ctaSecondaryUrl: "#enquire",
-    subAttribution: "Anna University Hub • IIT Madras Research Park • Singapore",
+    subAttribution: "Anna University Hub • IIT Madras Research Park • Singapore Partner Labs",
   },
+
   invisibleEngine: {
     eyebrow: "/ 01 - The Invisible Engine",
     title: "Behind every opportunity is evidence.",

@@ -54,8 +54,8 @@ export default function AppHeader() {
               }}
             />
             <div className="flex flex-col">
-              <span className="font-semibold text-sm tracking-tight text-white group-hover:text-emerald-400 transition-colors flex items-center gap-2">
-                {config.branding.siteTitle || "DOS Club TalentOS"}
+              <span className="font-gellix font-semibold text-sm tracking-tight text-white group-hover:text-emerald-400 transition-colors flex items-center gap-2">
+                {config.branding.siteTitle || "TalentOS by DeScience Open Source Club"}
                 <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                   {user ? user.role.replace("_", " ") : "B3 LEDGER"}
                 </span>
