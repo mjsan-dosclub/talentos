@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import SessionBar from "@/components/SessionBar";
+import AppHeader from "@/components/AppHeader";
 
 // 9 APPROVED LIFECYCLE STATES FROM PROJECT_RULES.md
 type ApprovedState =
@@ -96,30 +96,9 @@ export default function DeliverableSubmitPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
-      {/* Header */}
-      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2.5 font-mono text-xs text-neutral-600 hover:text-neutral-900 transition-colors"
-          >
-            <span className="text-neutral-400">&larr;</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
-            <span className="tracking-wider uppercase font-medium">DOS CLUB // TALENT_OS</span>
-          </Link>
-
-          <div className="flex items-center gap-4">
-            <Link
-              href={`/record/${encodeURIComponent(memberId)}`}
-              className="font-mono text-xs text-neutral-600 hover:text-neutral-900"
-            >
-              My Record
-            </Link>
-            <SessionBar />
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-100 selection:text-emerald-900 flex flex-col justify-between">
+      {/* 1. Global AppHeader (NO top-bar navigation) */}
+      <AppHeader />
 
       {/* Main Content */}
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 flex flex-col gap-10">
@@ -436,9 +415,16 @@ export default function DeliverableSubmitPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-200 bg-white py-8 px-4 sm:px-6">
-        <div className="max-w-5xl mx-auto text-center font-mono text-[11px] text-neutral-500 tracking-wider">
-          DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1
+      <footer className="border-t border-slate-200 bg-white py-6 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/dos-club-logo.png" alt="DOS Club" className="h-5 w-5 rounded-full" />
+            <span className="font-semibold text-slate-700">DeScience Open Source Club</span>
+            <span className="text-slate-300">•</span>
+            <span>TalentOS Deliverable Auditing System</span>
+          </div>
+          <span className="text-slate-400">Hermetic Testing & Git Placed Verification</span>
         </div>
       </footer>
     </div>

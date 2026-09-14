@@ -58,7 +58,7 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
     siteTitle: "DOS Club TalentOS",
     tagline: "Student Growth. Learning Evidence. Talent Intelligence.",
     organizationName: "DeScience Open Source Club",
-    logoUrl: "/brand/dos-logo.svg",
+    logoUrl: "/dos-club-logo.png",
     headColor: "#0f172a",
     fontFamily: "Inter, sans-serif",
     monoFontFamily: "JetBrains Mono, monospace",

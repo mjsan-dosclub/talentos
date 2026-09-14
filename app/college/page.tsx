@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
+import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 
 interface CollegeStudent {
@@ -166,13 +167,50 @@ export default function CollegeCoordinatorPage() {
     return matchesSearch && matchesDept;
   });
 
-  const pendingExceptionsCount = absences.filter((a) => a.provisionalStatus === "ABSENT_UNCONFIRMED").length;
+  const pendingExceptionsCount = absences.filter(
+    (a) => a.provisionalStatus === "ABSENT_UNCONFIRMED"
+  ).length;
+
+  const sidebarGroups: SidebarGroup[] = [
+    {
+      title: "Campus Operations",
+      items: [
+        { id: "students", label: "Campus Students", icon: "👥", count: students.length },
+        { id: "workshops", label: "27-Workshop Matrix", icon: "📊", count: 27 },
+        { id: "exceptions", label: "Absence Exceptions", icon: "⚖️", count: pendingExceptionsCount },
+      ],
+    },
+    {
+      title: "Governance & Reports",
+      items: [
+        { id: "export_csv", label: "Export Roster (CSV)", icon: "📥" },
+        { id: "defense", label: "Capstone Defense Sign-Off", icon: "🎓" },
+      ],
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col justify-between">
+      {/* 1. Global AppHeader (NO top-bar navigation) */}
       <AppHeader />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-6">
+      {/* 2. Main Workspace Layout with Left Sidebar */}
+      <div className="flex-1 flex flex-col md:flex-row w-full max-w-7xl mx-auto">
+        <SidebarNav
+          groups={sidebarGroups}
+          activeId={activeTab}
+          onSelect={(id) => {
+            if (id === "export_csv") {
+              triggerToast("EXPORT // Student attendance roster downloaded (CSV)");
+            } else if (id === "defense") {
+              triggerToast("DEFENSE // Capstone defense verification records loaded");
+            } else {
+              setActiveTab(id as any);
+            }
+          }}
+        />
+
+        <main className="flex-1 p-6 sm:p-8 flex flex-col gap-6 max-w-5xl">
         {/* Toast Alert */}
         {toast && (
           <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium rounded-lg shadow-sm flex items-center justify-between">
@@ -526,9 +564,19 @@ export default function CollegeCoordinatorPage() {
           </div>
         )}
       </main>
+    </div>
 
-      <footer className="border-t border-slate-200 bg-white py-6 px-4 text-center text-xs text-slate-500 font-medium">
-        DESCIENCE OPEN SOURCE CLUB • ANNA UNIVERSITY CAMPUS HUB • TALENT_OS ENTERPRISE
+      <footer className="border-t border-slate-200 bg-white py-6 px-4">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="flex items-center gap-2">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/dos-club-logo.png" alt="DOS Club" className="h-5 w-5 rounded-full" />
+            <span className="font-semibold text-slate-700">DeScience Open Source Club</span>
+            <span className="text-slate-300">•</span>
+            <span>Anna University Campus Hub</span>
+          </div>
+          <span className="text-slate-400">Longitudinal Student Development & Attendance Matrix</span>
+        </div>
       </footer>
     </div>
   );

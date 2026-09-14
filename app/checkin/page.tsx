@@ -164,26 +164,22 @@ function CheckInContent() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-100 selection:text-emerald-900 flex flex-col justify-between">
       {/* Top Header */}
-      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
+      <header className="bg-[#0f172a] text-white border-b border-slate-800 sticky top-0 z-40">
         <div className="max-w-md mx-auto px-4 h-14 flex items-center justify-between">
           <Link
             href={`/record/${encodeURIComponent(dosId)}`}
-            className="inline-flex items-center gap-2 font-mono text-xs text-neutral-600 hover:text-neutral-900"
+            className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors"
           >
-            <span className="text-neutral-400">&larr;</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-600" />
-            <span className="tracking-wider uppercase font-semibold">TALENT_OS // MOBILE</span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/dos-club-logo.png" alt="DOS Club" className="h-7 w-7 rounded-full object-cover ring-2 ring-emerald-500/40" />
+            <span className="font-semibold text-xs tracking-tight text-white">
+              TalentOS Mobile Check-In
+            </span>
           </Link>
 
-          <div className="flex items-center gap-3">
-            <Link
-              href="/trainer"
-              className="font-mono text-[11px] text-neutral-500 hover:text-neutral-900 border border-neutral-300 px-2 py-0.5 rounded"
-            >
-              Trainer Screen
-            </Link>
+          <div className="flex items-center gap-2">
             <SessionBar />
           </div>
         </div>
@@ -193,91 +189,76 @@ function CheckInContent() {
       <main className="flex-1 max-w-md w-full mx-auto p-4 py-6 flex flex-col gap-5 justify-center">
         {receipt ? (
           /* Check-In Success Receipt */
-          <div className="border border-emerald-300 bg-white p-6 shadow-md flex flex-col gap-4 animate-in fade-in duration-200">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono text-[10px] font-bold uppercase tracking-wider self-start">
-              ✓ ATTENDANCE AUDITED & RECORDED
+          <div className="border border-emerald-300 bg-white p-6 rounded-2xl shadow-sm flex flex-col gap-4 animate-in fade-in duration-200">
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold uppercase tracking-wider self-start">
+              ✓ Attendance Verified & Recorded
             </div>
 
             <div className="flex flex-col gap-1">
-              <h1 className="text-xl font-bold text-neutral-950">
+              <h1 className="text-xl font-bold text-slate-900">
                 Check-In Confirmed
               </h1>
-              <p className="font-mono text-xs text-neutral-600">
-                MEMBER: <strong className="text-neutral-900">{dosId}</strong>
+              <p className="text-xs text-slate-500">
+                Student ID: <strong className="text-slate-900 font-mono">{dosId}</strong>
               </p>
             </div>
 
-            <div className="flex flex-col gap-2 p-3.5 bg-neutral-50 border border-neutral-200 font-mono text-xs">
+            <div className="flex flex-col gap-2 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs">
               <div className="flex justify-between">
-                <span className="text-neutral-400">SESSION:</span>
-                <span className="text-neutral-900 font-semibold">{VENUE.workshopCode}</span>
+                <span className="text-slate-500">Session:</span>
+                <span className="text-slate-900 font-semibold">{VENUE.workshopCode}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-neutral-400">LIFECYCLE STATE:</span>
+                <span className="text-slate-500">Lifecycle State:</span>
                 <span className="text-emerald-700 font-bold">{receipt.status}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-neutral-400">GEOFENCE AUDIT:</span>
-                <span className="text-emerald-700 font-medium">
-                  VERIFIED ({receipt.distance}m / {VENUE.radiusMeters}m limit)
-                </span>
+                <span className="text-slate-500">Geofence Distance:</span>
+                <span className="text-slate-900 font-mono">{receipt.distance}m (limit: {VENUE.radiusMeters}m)</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-400">TIMESTAMP:</span>
-                <span className="text-neutral-900 font-bold font-mono">
-                  {formatConfigTime(receipt.timestamp)}
-                </span>
+              <div className="flex justify-between pt-1 border-t border-slate-200">
+                <span className="text-slate-500">Timestamp:</span>
+                <span className="text-slate-700 font-mono text-[11px]">{receipt.timestamp}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-400">LOCAL DATE:</span>
-                <span className="text-neutral-700 font-mono">
-                  {formatConfigDate(receipt.timestamp)}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-1 font-mono text-[10px] text-neutral-500 pt-2 border-t border-neutral-100">
-              <span>SHA-256 AUDIT DIGEST:</span>
-              <span className="break-all text-neutral-700">{receipt.digest}</span>
             </div>
 
             <div className="flex flex-col gap-2 pt-2">
               <Link
                 href={`/record/${encodeURIComponent(dosId)}`}
-                className="w-full py-3 bg-neutral-900 text-white font-mono text-xs uppercase tracking-wider font-semibold text-center hover:bg-neutral-800 transition-colors shadow-2xs"
+                className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg text-center transition-colors shadow-xs"
               >
-                Inspect Student 360 Record &rarr;
+                Inspect Student 360 Dossier &rarr;
               </Link>
               <button
                 type="button"
                 onClick={() => setReceipt(null)}
-                className="w-full py-2.5 border border-neutral-300 text-neutral-700 font-mono text-xs uppercase hover:bg-neutral-50"
+                className="w-full py-2.5 border border-slate-300 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors"
               >
-                New Check-In
+                Scan for Another Student
               </button>
             </div>
           </div>
         ) : (
           /* Check-In Submission Form */
-          <div className="border border-neutral-200 bg-white p-6 shadow-2xs flex flex-col gap-6">
-            <div className="flex flex-col gap-1.5 border-b border-neutral-200 pb-4">
-              <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-sky-50 text-sky-800 border border-sky-200 font-mono text-[10px] font-bold uppercase tracking-wider self-start">
-                <span className="h-1.5 w-1.5 rounded-full bg-sky-600 animate-pulse" />
-                ACTIVE WORKSHOP IN SESSION
+          <div className="border border-slate-200 bg-white p-6 rounded-2xl shadow-sm flex flex-col gap-5">
+            <div className="flex flex-col gap-1.5 border-b border-slate-100 pb-4">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-bold uppercase tracking-wider self-start">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                Active Workshop Session
               </div>
-              <h1 className="text-lg font-bold text-neutral-950">
+              <h1 className="text-lg font-bold text-slate-900">
                 {VENUE.workshopCode}: {VENUE.workshopTitle}
               </h1>
-              <p className="font-mono text-xs text-neutral-500">
-                VENUE: {VENUE.name} (Radius: {VENUE.radiusMeters}m)
+              <p className="text-xs text-slate-500">
+                Venue: {VENUE.name} • Perimeter: {VENUE.radiusMeters}m
               </p>
             </div>
 
-            <form onSubmit={handleCheckIn} className="flex flex-col gap-5">
+            <form onSubmit={handleCheckIn} className="flex flex-col gap-4">
               {/* Student DOS ID */}
               <div className="flex flex-col gap-1.5">
-                <label className="font-mono text-xs uppercase font-medium text-neutral-700">
-                  Student Member DOS ID:
+                <label className="text-xs font-semibold text-slate-700">
+                  Student Member ID:
                 </label>
                 <input
                   type="text"
@@ -285,16 +266,16 @@ function CheckInContent() {
                   value={dosId}
                   onChange={(e) => setDosId(e.target.value.toUpperCase())}
                   placeholder="DOS-B3-001"
-                  className="border border-neutral-300 p-2.5 font-mono text-xs uppercase focus:outline-none focus:border-neutral-900"
+                  className="border border-slate-300 rounded-lg p-2.5 font-mono text-xs uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               {/* Geofence Status Radar */}
-              <div className="border border-neutral-200 p-3.5 bg-neutral-50/70 flex flex-col gap-2 font-mono text-xs">
+              <div className="border border-slate-200 p-3.5 bg-slate-50 rounded-xl flex flex-col gap-2 text-xs">
                 <div className="flex justify-between items-center">
-                  <span className="text-neutral-500 uppercase text-[10px]">GEOFENCE RADAR:</span>
+                  <span className="text-slate-500 uppercase text-[10px] font-bold tracking-wider">Geofence Status:</span>
                   <span
-                    className={`px-2 py-0.5 rounded border text-[10px] uppercase font-bold ${
+                    className={`px-2 py-0.5 rounded-full text-[10px] uppercase font-bold border ${
                       geoStatus === "IN_BOUNDS"
                         ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                         : geoStatus === "OUT_OF_BOUNDS"
@@ -303,17 +284,17 @@ function CheckInContent() {
                     }`}
                   >
                     {geoStatus === "IN_BOUNDS"
-                      ? "✓ IN_BOUNDS"
+                      ? "✓ Inside Campus Geofence"
                       : geoStatus === "OUT_OF_BOUNDS"
-                      ? "OUT OF BOUNDS"
-                      : "GPS RADAR ACTIVE"}
+                      ? "Outside Geofence"
+                      : "Acquiring GPS..."}
                   </span>
                 </div>
 
-                <div className="flex justify-between text-[11px] text-neutral-600">
-                  <span>DISTANCE TO VENUE:</span>
-                  <span className="font-semibold text-neutral-900">
-                    {distance !== null ? `${distance} meters` : "Detecting..."}
+                <div className="flex justify-between text-slate-600">
+                  <span>Distance to Hub:</span>
+                  <span className="font-semibold text-slate-900 font-mono">
+                    {distance !== null ? `${distance} meters` : "Acquiring..."}
                   </span>
                 </div>
 
@@ -321,7 +302,7 @@ function CheckInContent() {
                   <button
                     type="button"
                     onClick={simulateCampusLocation}
-                    className="mt-1 py-1.5 px-2 bg-white border border-neutral-300 text-neutral-700 hover:bg-neutral-100 text-[11px] font-semibold uppercase text-center"
+                    className="mt-1 py-1.5 px-2 bg-white border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-semibold rounded-md text-center transition-colors cursor-pointer"
                   >
                     📍 Simulate Campus Beacon (In-Bounds)
                   </button>
@@ -330,51 +311,44 @@ function CheckInContent() {
 
               {/* Session Token Input */}
               <div className="flex flex-col gap-1.5">
-                <div className="flex justify-between items-center font-mono text-xs">
-                  <label className="uppercase font-medium text-neutral-700">
-                    Rotating Session Token:
-                  </label>
-                  <Link
-                    href="/trainer"
-                    target="_blank"
-                    className="text-neutral-500 hover:text-neutral-900 underline text-[10px]"
-                  >
-                    View on Trainer Screen ↗
-                  </Link>
-                </div>
+                <label className="text-xs font-semibold text-slate-700">
+                  Rotating QR Token:
+                </label>
                 <input
                   type="text"
                   required
                   value={tokenInput}
                   onChange={(e) => setTokenInput(e.target.value.toUpperCase())}
                   placeholder="TKN-XXXXXXXX"
-                  className="border border-neutral-300 p-3 font-mono text-sm tracking-widest uppercase focus:outline-none focus:border-neutral-900"
+                  className="border border-slate-300 rounded-lg p-3 font-mono text-sm tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
-                <span className="font-mono text-[10px] text-neutral-400">
+                <span className="text-[11px] text-slate-400">
                   Enter the 8-character token displayed on the classroom screen.
                 </span>
               </div>
 
               {errorMessage && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-800 font-mono text-xs font-semibold">
-                  {errorMessage}
+                <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-lg text-xs font-medium">
+                  ⚠️ {errorMessage}
                 </div>
               )}
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full py-3.5 bg-neutral-900 text-white font-mono text-xs uppercase tracking-wider font-bold hover:bg-neutral-800 transition-colors shadow-2xs disabled:opacity-50"
+                className="w-full py-3 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-xs disabled:opacity-50 cursor-pointer"
               >
-                {isSubmitting ? "AUDITING LOCATION & TOKEN..." : "CONFIRM CHECK-IN (AUDITED)"}
+                {isSubmitting ? "Verifying Attendance..." : "Confirm Mobile Check-In"}
               </button>
             </form>
           </div>
         )}
 
         {/* PWA Notice */}
-        <div className="text-center font-mono text-[10px] text-neutral-400">
-          PWA READY • ZERO-GRACE GEOFENCE AUDIT • TALENT_OS V1
+        <div className="text-center text-[11px] text-slate-400 flex items-center justify-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/dos-club-logo.png" alt="DOS Club" className="h-4 w-4 rounded-full" />
+          <span>TalentOS PWA • Zero-Grace Attendance Verification</span>
         </div>
       </main>
     </div>

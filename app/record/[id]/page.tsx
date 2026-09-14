@@ -14,8 +14,8 @@ import type {
   ExternalAssessment,
   SkillMaturity,
 } from "@/lib/supabase";
-import { formatConfigDate, formatConfigDateTime } from "@/lib/datetime";
-import SessionBar from "@/components/SessionBar";
+import AppHeader from "@/components/AppHeader";
+import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
 
 // STRICT INVARIANT STATES FROM PROJECT_RULES.md
 type ApprovedState =
@@ -588,62 +588,48 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
     }
   };
 
+  const sidebarGroups: SidebarGroup[] = [
+    {
+      title: "Student Dossier",
+      items: [
+        { id: "journey", label: "27-Workshop Journey", icon: "🗺️", count: completedCount },
+        { id: "skills", label: "Skills Inventory", icon: "🛠️", count: skills.length },
+        { id: "certifications", label: "Certifications", icon: "📜", count: certifications.length },
+        { id: "assessments", label: "Assessments & Honors", icon: "🏆", count: assessments.length },
+      ],
+    },
+    {
+      title: "Student Actions",
+      items: [
+        { id: "mobile_checkin", label: "Mobile Check-In", icon: "📱" },
+        { id: "submit_deliverable", label: "Submit Deliverable", icon: "📤" },
+      ],
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
-      {/* 1. Top Header */}
-      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2.5 font-mono text-xs text-neutral-600 hover:text-neutral-900 transition-colors"
-          >
-            <span className="text-neutral-400">&larr;</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
-            <span className="tracking-wider uppercase font-medium">DOS CLUB // TALENT_OS</span>
-          </Link>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-100 selection:text-emerald-900 flex flex-col justify-between">
+      {/* 1. Global AppHeader (NO top-bar navigation) */}
+      <AppHeader />
 
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link
-              href={`/checkin?dos_id=${encodeURIComponent(identifier)}`}
-              className="font-mono text-xs text-emerald-800 border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded transition-colors font-semibold flex items-center gap-1.5"
-            >
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
-              Mobile Check-In
-            </Link>
-            <Link
-              href="/submit"
-              className="font-mono text-xs text-neutral-900 border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 px-2.5 py-1 rounded transition-colors font-medium"
-            >
-              Submit Deliverable
-            </Link>
-            <Link
-              href="/trainer"
-              className="font-mono text-xs text-neutral-600 hover:text-neutral-900 hidden sm:inline-block"
-            >
-              Trainer Portal
-            </Link>
-            <Link
-              href="/college"
-              className="font-mono text-xs text-neutral-600 hover:text-neutral-900 hidden md:inline-block"
-            >
-              College Portal
-            </Link>
-            <Link
-              href="/admin"
-              className="font-mono text-xs text-neutral-600 hover:text-neutral-900"
-            >
-              Admin Console
-            </Link>
-            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden lg:inline-block">
-              MEMBER: {identifier}
-            </span>
-            <SessionBar />
-          </div>
-        </div>
-      </header>
+      {/* 2. Main Workspace Layout with Left Sidebar */}
+      <div className="flex-1 flex flex-col md:flex-row w-full max-w-7xl mx-auto">
+        <SidebarNav
+          groups={sidebarGroups}
+          activeId={activeTab}
+          onSelect={(id) => {
+            if (id === "mobile_checkin") {
+              window.location.href = `/checkin?dos_id=${encodeURIComponent(identifier)}`;
+            } else if (id === "submit_deliverable") {
+              window.location.href = "/submit";
+            } else {
+              setActiveTab(id as any);
+            }
+          }}
+        />
 
-      {/* 2. Main Student 360 Profile Dossier */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 flex flex-col gap-8">
+        {/* Main Content */}
+        <main className="flex-1 p-6 sm:p-8 flex flex-col gap-8 max-w-5xl">
         {/* Student 360 Header Dossier */}
         <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-200 pb-8">
           <div className="flex flex-col gap-2.5">
@@ -1134,6 +1120,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
           </button>
         </section>
       </main>
+    </div>
 
       {/* ===================================================================== */}
       {/* DRAWER: WORKSHOP DELIVERABLE & AUDIT DOSSIER */}
@@ -1607,22 +1594,16 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
       )}
 
       {/* 4. Footer */}
-      <footer className="border-t border-neutral-200 bg-white py-8 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 font-mono text-[11px] sm:text-xs text-neutral-500 tracking-wider">
-          <div>DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1</div>
-          <div className="flex items-center gap-4">
-            <Link href="/trainer" className="hover:text-neutral-900 transition-colors">
-              Trainer Portal
-            </Link>
-            <span className="text-neutral-300">•</span>
-            <Link href="/college" className="hover:text-neutral-900 transition-colors">
-              College Portal
-            </Link>
-            <span className="text-neutral-300">•</span>
-            <Link href="/admin" className="hover:text-neutral-900 transition-colors">
-              Admin Console
-            </Link>
+      <footer className="border-t border-slate-200 bg-white py-6 px-4 sm:px-6">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500">
+          <div className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/dos-club-logo.png" alt="DOS Club" className="h-5 w-5 rounded-full" />
+            <span className="font-semibold text-slate-700">DeScience Open Source Club</span>
+            <span className="text-slate-300">•</span>
+            <span>TalentOS Student 360 & Learning Evidence Ledger</span>
           </div>
+          <span className="text-slate-400">Anna University Campus Partner & Global Network</span>
         </div>
       </footer>
     </div>

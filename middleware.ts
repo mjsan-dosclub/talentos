@@ -14,12 +14,13 @@ const PUBLIC_PATHS = [
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // 1. Allow Next.js internals, static assets, and API routes
+  // 1. Allow Next.js internals, static assets, images, and API routes
   if (
     pathname.startsWith("/_next") ||
     pathname.startsWith("/api") ||
     pathname.startsWith("/brand") ||
     pathname.startsWith("/ledger") || // Public certificate verification ledger
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|webmanifest)$/) ||
     PUBLIC_PATHS.includes(pathname)
   ) {
     return NextResponse.next();

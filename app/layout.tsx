@@ -15,8 +15,12 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "DOS Club TalentOS — Batch 3 Engineering Record",
-  description: "Longitudinal talent intelligence and evidence ledger documenting 27-workshop technical execution across Tamil Nadu and global partners.",
+  title: "DOS Club TalentOS — Student Growth & Talent Intelligence",
+  description: "Operating platform for DeScience Open Source Club documenting 27-workshop technical execution across Tamil Nadu and global partners.",
+  icons: {
+    icon: "/dos-club-logo.png",
+    apple: "/dos-club-logo.png",
+  },
 };
 
 export default function RootLayout({

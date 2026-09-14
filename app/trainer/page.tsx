@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { getStudents, Student } from "@/lib/db";
 import { formatConfigTime } from "@/lib/datetime";
-import SessionBar from "@/components/SessionBar";
+import AppHeader from "@/components/AppHeader";
+import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
 
 interface ParticipantState {
   student: Student;
@@ -24,6 +25,8 @@ export default function TrainerDashboardPage() {
   const [exceptionReason, setExceptionReason] = useState("STUDENT_DEVICE_OFFLINE");
   const [customReasonText, setCustomReasonText] = useState("");
   const [notification, setNotification] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("session");
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Load students for today's session
   useEffect(() => {
@@ -33,13 +36,18 @@ export default function TrainerDashboardPage() {
         student: s,
         status: idx === 0 ? "CHECKED_IN" : idx === 1 ? "COMPLETED" : "NOT_STARTED",
         source: idx === 0 || idx === 1 ? "QR_SCAN" : "TRAINER_MANUAL",
-        checkInTime: idx === 0 ? formatConfigTime(now) : idx === 1 ? formatConfigTime(new Date(now.getTime() - 15 * 60000)) : undefined,
+        checkInTime:
+          idx === 0
+            ? formatConfigTime(now)
+            : idx === 1
+            ? formatConfigTime(new Date(now.getTime() - 15 * 60000))
+            : undefined,
       }));
       setParticipants(initial);
     });
   }, []);
 
-  // Rolling time-sensitive QR token generator (30s interval per PRD Section 10)
+  // Rolling time-sensitive QR token generator (30s interval)
   useEffect(() => {
     setMounted(true);
     setQrToken("TKN-" + Math.random().toString(36).substring(2, 10).toUpperCase());
@@ -55,7 +63,7 @@ export default function TrainerDashboardPage() {
     return () => clearInterval(interval);
   }, []);
 
-  // Standout Recognition Tagger (PRD Section 5 & 17)
+  // Standout Recognition Tagger
   const toggleStandout = (dosId: string) => {
     setParticipants((prev) =>
       prev.map((p) => {
@@ -63,10 +71,10 @@ export default function TrainerDashboardPage() {
           const next = !p.isStandout;
           setNotification(
             next
-              ? `RECOGNITION // Standout engineering tagged for ${p.student.full_name}`
-              : `RECOGNITION // Tag cleared for ${p.student.full_name}`
+              ? `Standout engineering recognition awarded to ${p.student.full_name}`
+              : `Recognition tag cleared for ${p.student.full_name}`
           );
-          setTimeout(() => setNotification(null), 3000);
+          setTimeout(() => setNotification(null), 3500);
           return { ...p, isStandout: next };
         }
         return p;
@@ -74,7 +82,7 @@ export default function TrainerDashboardPage() {
     );
   };
 
-  // Manual Exception Resolution (PRD Section 12)
+  // Manual Exception Resolution
   const handleResolveException = (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeModalStudent) return;
@@ -97,7 +105,7 @@ export default function TrainerDashboardPage() {
       })
     );
 
-    setNotification(`AUDIT // Manual attendance logged for ${activeModalStudent.student.dos_id}: ${reason}`);
+    setNotification(`Manual attendance recorded for ${activeModalStudent.student.full_name}: ${reason}`);
     setTimeout(() => setNotification(null), 4000);
     setActiveModalStudent(null);
     setCustomReasonText("");
@@ -106,299 +114,355 @@ export default function TrainerDashboardPage() {
   // Metrics
   const checkedInCount = participants.filter((p) => p.status === "CHECKED_IN" || p.status === "COMPLETED").length;
   const pendingCount = participants.filter((p) => p.status === "NOT_STARTED").length;
+  const standoutCount = participants.filter((p) => p.isStandout).length;
+
+  const filteredParticipants = participants.filter((p) => {
+    if (activeTab === "standouts" && !p.isStandout) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    return (
+      p.student.full_name.toLowerCase().includes(q) ||
+      p.student.dos_id.toLowerCase().includes(q) ||
+      (p.student.department || "").toLowerCase().includes(q)
+    );
+  });
+
+  const sidebarGroups: SidebarGroup[] = [
+    {
+      title: "Live Operations",
+      items: [
+        { id: "session", label: "Workshop Cockpit", icon: "⚡" },
+        { id: "roster", label: "Student Roster", icon: "👥", count: participants.length },
+        { id: "standouts", label: "Standout Recognitions", icon: "⭐", count: standoutCount },
+      ],
+    },
+    {
+      title: "Tools & Resources",
+      items: [
+        { id: "curriculum", label: "27-Session Curriculum", icon: "📚" },
+        { id: "checkin_tool", label: "Mobile Scanner Utility", icon: "📱" },
+      ],
+    },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#FBFBFB] text-neutral-900 font-sans selection:bg-neutral-200 selection:text-neutral-900 flex flex-col justify-between">
-      {/* Header */}
-      <header className="border-b border-neutral-200/90 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-2.5 font-mono text-xs text-neutral-600 hover:text-neutral-900 transition-colors"
-          >
-            <span className="text-neutral-400">&larr;</span>
-            <span className="h-2 w-2 rounded-full bg-emerald-600 shrink-0" />
-            <span className="tracking-wider uppercase font-medium">DOS CLUB // TALENT_OS</span>
-          </Link>
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-100 selection:text-emerald-900 flex flex-col">
+      {/* 1. Global AppHeader (Unified branding, no top bar navigation links) */}
+      <AppHeader />
 
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-[11px] text-neutral-700 border border-neutral-300 bg-neutral-100 px-2.5 py-1 rounded hidden sm:inline-block">
-              ROLE: TRAINER • SESSION: LIVE
-            </span>
-            <SessionBar />
-          </div>
-        </div>
-      </header>
+      {/* 2. Main Workspace Layout with HubSpot-style Left Sidebar */}
+      <div className="flex-1 flex flex-col md:flex-row w-full max-w-7xl mx-auto">
+        {/* Left Sidebar Sub-Navigation */}
+        <SidebarNav
+          groups={sidebarGroups}
+          activeId={activeTab}
+          onSelect={(id) => {
+            if (id === "checkin_tool") {
+              window.open("/checkin", "_blank");
+            } else {
+              setActiveTab(id);
+            }
+          }}
+        />
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-14 flex flex-col gap-8">
-        {/* Title */}
-        <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-neutral-200 pb-6">
-          <div className="flex flex-col gap-2">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-neutral-200 bg-neutral-100 font-mono text-[10px] sm:text-xs text-neutral-700 tracking-widest uppercase self-start font-medium">
-              TRAINER OPERATIONS PORTAL // SECTION 5 & 10
+        {/* Right Content Area */}
+        <main className="flex-1 p-6 sm:p-8 flex flex-col gap-6 max-w-5xl">
+          {/* Notification Toast */}
+          {notification && (
+            <div className="p-4 bg-slate-900 text-white rounded-xl text-xs font-medium flex items-center justify-between shadow-md border border-slate-800 animate-in fade-in slide-in-from-top-2">
+              <div className="flex items-center gap-2.5">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span>{notification}</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNotification(null)}
+                className="text-slate-400 hover:text-white text-xs cursor-pointer"
+              >
+                ✕
+              </button>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-semibold tracking-tight text-neutral-950">
-              Today&apos;s Workshop Session
-            </h1>
-            <p className="font-mono text-xs text-neutral-600">
-              Ultra-lightweight trainer workflow: display live attendance QR, observe participants, and resolve exceptions.
-            </p>
-          </div>
+          )}
 
-          {/* Quick Metrics */}
-          <div className="grid grid-cols-2 gap-3 border border-neutral-200 bg-white p-3 font-mono text-xs shadow-2xs">
-            <div className="flex flex-col">
-              <span className="text-neutral-500 text-[10px]">CHECKED IN</span>
-              <span className="text-base font-semibold text-emerald-700">
-                {checkedInCount} / {participants.length}
+          {/* Section Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-xl border border-slate-200 shadow-xs">
+            <div>
+              <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-semibold mb-1">
+                Technical Expert Lead Cockpit
+              </div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
+                WS-14: Resilient Microservices & Circuit Breakers
+              </h1>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Anna University Campus Hub • Batch 3 Cohort Alpha • Session 14 of 27
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
+                Session Active (Physical)
               </span>
             </div>
-            <div className="flex flex-col border-l border-neutral-200 pl-3">
-              <span className="text-neutral-500 text-[10px]">PENDING</span>
-              <span className="text-base font-semibold text-neutral-600">{pendingCount}</span>
-            </div>
           </div>
-        </section>
 
-        {/* Notification Banner */}
-        {notification && (
-          <div className="p-3 border border-neutral-300 bg-neutral-900 text-white font-mono text-xs tracking-wider flex items-center gap-2 shadow-xs">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 shrink-0" />
-            <span>{notification}</span>
-          </div>
-        )}
-
-        {/* 2-Column Layout: Left = Workshop + Rolling QR; Right = Participant Roster */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column (1 Col) */}
-          <div className="flex flex-col gap-6">
-            {/* Active Session Info */}
-            <div className="border border-neutral-200 bg-white p-6 shadow-2xs flex flex-col gap-4">
-              <div className="flex justify-between items-start">
-                <span className="font-mono text-xs font-semibold px-2 py-0.5 bg-neutral-100 border border-neutral-200 text-neutral-800 rounded-2xs">
-                  WS-14 (SESSION 14 OF 27)
-                </span>
-                <span className="inline-flex items-center gap-1.5 font-mono text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-300 font-semibold">
-                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
-                  LIVE
-                </span>
-              </div>
-
+          {/* Metrics Overview Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-semibold text-neutral-950">
-                  Resilient Microservices & Circuit Breakers
-                </h2>
-                <p className="font-mono text-xs text-neutral-600 mt-1">
-                  Token bucket algorithms, distributed jitter, and half-open state degradation.
-                </p>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                  Checked In (Present)
+                </span>
+                <span className="text-2xl font-bold text-emerald-700 mt-1 block">
+                  {checkedInCount} / {participants.length}
+                </span>
+                <span className="text-[11px] text-slate-400 mt-0.5 block">
+                  {Math.round((checkedInCount / (participants.length || 1)) * 100)}% present rate
+                </span>
               </div>
-
-              <div className="pt-3 border-t border-neutral-200 font-mono text-xs space-y-1.5 text-neutral-600">
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">VENUE:</span>
-                  <span className="text-neutral-900">Anna University Campus</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">MODE:</span>
-                  <span className="text-neutral-900">OFFLINE (PHYSICAL)</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-neutral-500">BATCH:</span>
-                  <span className="text-neutral-900">Batch 3 (Group Alpha)</span>
-                </div>
+              <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
+                ✓
               </div>
             </div>
 
-            {/* Rolling QR Code Display (PRD Section 10) */}
-            <div className="border border-neutral-200 bg-white p-6 shadow-2xs flex flex-col items-center gap-4 text-center">
-              <div className="flex justify-between items-center w-full font-mono text-xs">
-                <span className="uppercase tracking-wider text-neutral-600 font-semibold text-[11px]">
-                  DYNAMIC ATTENDANCE QR
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                  Pending Check-In
                 </span>
-                <span className="text-neutral-900 bg-neutral-100 border border-neutral-300 px-2 py-0.5 rounded-2xs font-mono text-[11px] font-semibold">
-                  ROLLS IN {String(secondsLeft).padStart(2, "0")}s
+                <span className="text-2xl font-bold text-amber-700 mt-1 block">
+                  {pendingCount}
+                </span>
+                <span className="text-[11px] text-slate-400 mt-0.5 block">
+                  Awaiting QR scan or manual log
+                </span>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
+                ⏳
+              </div>
+            </div>
+
+            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider block">
+                  Standouts Recognized
+                </span>
+                <span className="text-2xl font-bold text-purple-700 mt-1 block">
+                  {standoutCount}
+                </span>
+                <span className="text-[11px] text-slate-400 mt-0.5 block">
+                  Tagged for leadership dossier
+                </span>
+              </div>
+              <div className="h-10 w-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold">
+                ⭐
+              </div>
+            </div>
+          </div>
+
+          {/* 2-Column Live Session View */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column: Dynamic QR Attendance Code */}
+            <div className="bg-white rounded-xl border border-slate-200 shadow-xs p-6 flex flex-col items-center text-center gap-4">
+              <div className="flex justify-between items-center w-full">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Dynamic Attendance QR
+                </span>
+                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
+                  Rolls in {String(secondsLeft).padStart(2, "0")}s
                 </span>
               </div>
 
-              {/* High-Contrast Dynamic QR Visualization */}
-              <div className="p-4 bg-white border-2 border-neutral-900 rounded shadow-xs flex flex-col items-center justify-center relative">
-                <div className="w-48 h-48 bg-neutral-950 p-2 flex flex-col justify-between">
-                  {/* Visual QR Pattern representation */}
+              {/* High-Contrast QR visualization */}
+              <div className="p-4 bg-slate-900 rounded-2xl shadow-inner flex flex-col items-center justify-center border-4 border-slate-100">
+                <div className="w-48 h-48 bg-slate-950 p-2.5 rounded-lg flex flex-col justify-between">
                   <div className="flex justify-between">
-                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center">
-                      <div className="w-6 h-6 bg-neutral-950" />
+                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center rounded-sm">
+                      <div className="w-6 h-6 bg-slate-950" />
                     </div>
-                    <div className="w-8 h-8 bg-white" />
-                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center">
-                      <div className="w-6 h-6 bg-neutral-950" />
+                    <div className="w-8 h-8 bg-white/20 rounded-sm" />
+                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center rounded-sm">
+                      <div className="w-6 h-6 bg-slate-950" />
                     </div>
                   </div>
                   <div className="grid grid-cols-6 gap-1.5 p-2">
                     {Array.from({ length: 18 }).map((_, i) => (
                       <div
                         key={i}
-                        className={`h-2.5 rounded-2xs ${
-                          (i + secondsLeft) % 2 === 0 ? "bg-white" : "bg-neutral-800"
+                        className={`h-2.5 rounded-xs transition-colors ${
+                          (i + secondsLeft) % 2 === 0 ? "bg-white" : "bg-slate-800"
                         }`}
                       />
                     ))}
                   </div>
                   <div className="flex justify-between">
-                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center">
-                      <div className="w-6 h-6 bg-neutral-950" />
+                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center rounded-sm">
+                      <div className="w-6 h-6 bg-slate-950" />
                     </div>
-                    <div className="w-6 h-6 bg-white" />
-                    <div className="w-8 h-8 bg-white" />
+                    <div className="w-6 h-6 bg-white/20 rounded-sm" />
+                    <div className="w-8 h-8 bg-white rounded-sm" />
                   </div>
                 </div>
-
-                <span className="font-mono text-[10px] text-neutral-500 mt-2">
-                  TOKEN: <strong suppressHydrationWarning className="text-neutral-900">{mounted ? qrToken : "TKN-ACTIVE-SYNC"}</strong>
-                </span>
+                <div className="font-mono text-[11px] text-slate-300 mt-2.5 font-bold tracking-wider">
+                  TOKEN: <span suppressHydrationWarning>{mounted ? qrToken : "TKN-ACTIVE-SYNC"}</span>
+                </div>
               </div>
 
-              <p className="font-mono text-[11px] text-neutral-500 leading-normal">
-                Students scan via TalentOS mobile PWA. Token rotates every 30s to prevent link forwarding.
+              <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
+                Students scan using the mobile PWA inside the geofence perimeter. Token refreshes every 30s to eliminate unauthorized forwarding.
               </p>
 
               <Link
                 href="/checkin"
                 target="_blank"
-                className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 font-mono text-xs uppercase tracking-wider font-semibold text-center rounded-xs transition-colors block"
+                className="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold text-xs rounded-lg transition-colors flex items-center justify-center gap-2 border border-slate-200"
               >
-                📱 Open Student Mobile Check-In Scanner ↗
+                <span>Open Student Mobile Check-In Scanner</span>
+                <span>↗</span>
               </Link>
             </div>
-          </div>
 
-          {/* Right Column: Participant Roster (2 Cols) */}
-          <div className="lg:col-span-2 flex flex-col gap-4">
-            <div className="flex justify-between items-center">
-              <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-700 font-semibold">
-                PARTICIPANT ROSTER // BATCH 3 (GROUP ALPHA)
-              </h2>
-              <span className="font-mono text-xs text-neutral-500">
-                CAPACITY: {participants.length} / 40
-              </span>
-            </div>
+            {/* Right Column: Participant Roster */}
+            <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-xs flex flex-col">
+              <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row justify-between sm:items-center gap-3">
+                <div>
+                  <h2 className="text-sm font-bold text-slate-900">
+                    {activeTab === "standouts" ? "Standout Recognitions" : "Today's Participant Roster"}
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Batch 3 Cohort Alpha • {participants.length} total enrolled
+                  </p>
+                </div>
 
-            <div className="border border-neutral-200 bg-white divide-y divide-neutral-200 shadow-2xs">
-              {participants.map((p) => (
-                <div
-                  key={p.student.dos_id}
-                  className="p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hover:bg-neutral-50/50 transition-colors"
-                >
-                  {/* Left: Info */}
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-xs font-semibold text-neutral-950">
-                        {p.student.full_name}
-                      </span>
-                      <span className="font-mono text-[10px] text-neutral-500 border border-neutral-200 px-1.5 py-0.5 rounded-2xs bg-neutral-50">
-                        {p.student.dos_id}
-                      </span>
-                      {p.isStandout && (
-                        <span className="font-mono text-[10px] bg-amber-50 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded-2xs font-semibold">
-                          ⭐ STANDOUT PARTICIPANT
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search student or ID..."
+                    className="w-full sm:w-52 pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
+                    🔍
+                  </span>
+                </div>
+              </div>
+
+              <div className="divide-y divide-slate-100 max-h-[500px] overflow-y-auto">
+                {filteredParticipants.map((p) => (
+                  <div
+                    key={p.student.dos_id}
+                    className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hover:bg-slate-50/70 transition-colors"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/record/${encodeURIComponent(p.student.dos_id)}`}
+                          className="font-semibold text-xs text-slate-900 hover:text-emerald-700 transition-colors"
+                        >
+                          {p.student.full_name}
+                        </Link>
+                        <span className="font-mono text-[10px] text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                          {p.student.dos_id}
                         </span>
-                      )}
+                        {p.isStandout && (
+                          <span className="text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full">
+                            ⭐ Standout Lead
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {p.student.department || p.student.course}
+                        {p.checkInTime && ` • Checked in at ${p.checkInTime}`}
+                        {p.exceptionReason && (
+                          <span className="text-amber-700 ml-1 font-medium">
+                            [Manual: {p.exceptionReason}]
+                          </span>
+                        )}
+                      </div>
                     </div>
-                    <div className="font-mono text-[11px] text-neutral-500">
-                      {p.student.department || p.student.course}
-                      {p.checkInTime && ` • Checked in at ${p.checkInTime}`}
-                      {p.exceptionReason && (
-                        <span className="text-amber-700 ml-1 font-medium">
-                          [MANUAL EXCEPTION: {p.exceptionReason}]
-                        </span>
-                      )}
-                    </div>
-                  </div>
 
-                  {/* Right: Actions */}
-                  <div className="flex items-center gap-2 font-mono text-xs self-end sm:self-center">
-                    {/* Status Badge */}
-                    <span
-                      className={`px-2 py-0.5 text-[10px] font-semibold border rounded-2xs ${
-                        p.status === "CHECKED_IN" || p.status === "COMPLETED"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : "bg-neutral-100 text-neutral-600 border-neutral-300"
-                      }`}
-                    >
-                      {p.status}
-                    </span>
+                    <div className="flex items-center gap-2 self-end sm:self-center">
+                      <span
+                        className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border ${
+                          p.status === "CHECKED_IN" || p.status === "COMPLETED"
+                            ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                            : "bg-slate-100 text-slate-600 border-slate-200"
+                        }`}
+                      >
+                        {p.status.replace("_", " ")}
+                      </span>
 
-                    {/* Standout Toggle */}
-                    <button
-                      type="button"
-                      onClick={() => toggleStandout(p.student.dos_id)}
-                      className={`px-2 py-1 text-[11px] border rounded-2xs transition-colors ${
-                        p.isStandout
-                          ? "bg-amber-100 text-amber-900 border-amber-300 font-semibold"
-                          : "bg-white text-neutral-600 border-neutral-300 hover:bg-neutral-100"
-                      }`}
-                      title="Recognize standout engineering in this session"
-                    >
-                      ⭐ {p.isStandout ? "RECOGNIZED" : "STANDOUT"}
-                    </button>
-
-                    {/* Manual Exception Button */}
-                    {p.status === "NOT_STARTED" && (
                       <button
                         type="button"
-                        onClick={() => setActiveModalStudent(p)}
-                        className="px-2.5 py-1 text-[11px] border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 rounded-2xs transition-colors"
+                        onClick={() => toggleStandout(p.student.dos_id)}
+                        className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer ${
+                          p.isStandout
+                            ? "bg-purple-100 text-purple-900 border-purple-300 font-semibold"
+                            : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
+                        }`}
+                        title="Award standout engineering recognition"
                       >
-                        MANUAL CHECK-IN &rarr;
+                        ⭐ {p.isStandout ? "Recognized" : "Standout"}
                       </button>
-                    )}
+
+                      {p.status === "NOT_STARTED" && (
+                        <button
+                          type="button"
+                          onClick={() => setActiveModalStudent(p)}
+                          className="px-2.5 py-1 text-xs border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 rounded-lg transition-colors font-medium cursor-pointer"
+                        >
+                          Manual Check-In
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      </div>
 
-      {/* Manual Exception Modal (PRD Section 12: Every manual action requires a reason) */}
+      {/* Manual Exception Modal */}
       {activeModalStudent && (
-        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white border border-neutral-300 p-6 sm:p-8 max-w-md w-full shadow-lg flex flex-col gap-5">
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-7 max-w-md w-full shadow-xl flex flex-col gap-5">
             <div>
-              <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-500 block">
-                AUDIT LOG REQUIREMENT // SECTION 12 & 29
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
+                Audit Trail Requirement • Section 12
               </span>
-              <h3 className="text-lg font-semibold text-neutral-950 mt-1">
-                Manual Attendance Exception
+              <h3 className="text-lg font-bold text-slate-900 mt-1">
+                Record Manual Check-In Exception
               </h3>
-              <p className="font-mono text-xs text-neutral-600 mt-1">
-                Resolving check-in for <strong>{activeModalStudent.student.full_name}</strong> ({activeModalStudent.student.dos_id}).
+              <p className="text-xs text-slate-500 mt-1">
+                Recording attendance exception for <strong>{activeModalStudent.student.full_name}</strong> ({activeModalStudent.student.dos_id}).
               </p>
             </div>
 
-            <form onSubmit={handleResolveException} className="flex flex-col gap-4 font-mono text-xs">
+            <form onSubmit={handleResolveException} className="flex flex-col gap-4 text-xs">
               <div className="flex flex-col gap-1.5">
-                <label htmlFor="reasonSelect" className="text-neutral-700 font-medium text-[11px]">
-                  SELECT EXCEPTION REASON
+                <label htmlFor="reasonSelect" className="font-semibold text-slate-700">
+                  Select Verified Rationale
                 </label>
                 <select
                   id="reasonSelect"
                   value={exceptionReason}
                   onChange={(e) => setExceptionReason(e.target.value)}
-                  className="border border-neutral-300 bg-white p-2.5 text-xs text-neutral-900 rounded-xs focus:outline-none"
+                  className="border border-slate-300 bg-white p-2.5 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
-                  <option value="STUDENT_DEVICE_OFFLINE">Student device battery dead / unavailable</option>
-                  <option value="QR_CAMERA_MALFUNCTION">Device camera malfunction / scan failure</option>
-                  <option value="CONNECTIVITY_OUTAGE">Campus network / cellular connectivity issue</option>
-                  <option value="STUDENT_REGISTRATION_ISSUE">Late batch roster addition / registration issue</option>
+                  <option value="STUDENT_DEVICE_OFFLINE">Student device battery depleted / offline</option>
+                  <option value="QR_CAMERA_MALFUNCTION">Camera scan optical malfunction</option>
+                  <option value="CONNECTIVITY_OUTAGE">Campus wireless connectivity disruption</option>
+                  <option value="STUDENT_REGISTRATION_ISSUE">Late batch roster synchronization</option>
                   <option value="OTHER">Other operational exception (specify below)</option>
                 </select>
               </div>
 
               {exceptionReason === "OTHER" && (
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="customReason" className="text-neutral-700 font-medium text-[11px]">
-                    DOCUMENT REASON FOR AUDIT LOG
+                  <label htmlFor="customReason" className="font-semibold text-slate-700">
+                    Document Explanation
                   </label>
                   <input
                     id="customReason"
@@ -406,42 +470,35 @@ export default function TrainerDashboardPage() {
                     required
                     value={customReasonText}
                     onChange={(e) => setCustomReasonText(e.target.value)}
-                    placeholder="Enter operational rationale..."
-                    className="border border-neutral-300 bg-white p-2.5 text-xs text-neutral-900 rounded-xs focus:outline-none"
+                    placeholder="Enter verifiable reason..."
+                    className="border border-slate-300 bg-white p-2.5 rounded-lg text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
               )}
 
-              <p className="text-[10px] text-neutral-500 leading-normal">
-                Notice: Manual attendance updates are logged permanently into the immutable audit trail with trainer credentials.
+              <p className="text-[11px] text-slate-400 leading-normal">
+                Notice: All manual overrides are permanently timestamped and logged with Expert credentials into the immutable audit ledger.
               </p>
 
-              <div className="flex gap-2 pt-2">
+              <div className="flex gap-2.5 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-neutral-900 text-white hover:bg-neutral-800 font-mono text-xs uppercase tracking-wider font-semibold rounded-xs transition-colors"
+                  className="flex-1 py-2.5 bg-slate-900 text-white hover:bg-slate-800 font-semibold rounded-lg transition-colors shadow-xs cursor-pointer"
                 >
-                  CONFIRM EXCEPTION
+                  Confirm Check-In
                 </button>
                 <button
                   type="button"
                   onClick={() => setActiveModalStudent(null)}
-                  className="py-2.5 px-4 border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 font-mono text-xs uppercase tracking-wider rounded-xs transition-colors"
+                  className="py-2.5 px-4 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 rounded-lg transition-colors font-medium cursor-pointer"
                 >
-                  CANCEL
+                  Cancel
                 </button>
               </div>
             </form>
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <footer className="border-t border-neutral-200 bg-white py-8 px-4 sm:px-6">
-        <div className="max-w-6xl mx-auto text-center font-mono text-[11px] text-neutral-500 tracking-wider">
-          DESCIENCE OPEN SOURCE CLUB • SINGAPORE // CHENNAI • TALENT_OS V1
-        </div>
-      </footer>
     </div>
   );
 }
