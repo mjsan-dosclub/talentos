@@ -133,11 +133,53 @@ body {
   perspective: 1000px;
 }
 
+@keyframes float-smooth {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes float-smooth-slow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes float-smooth-delay {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.animate-float {
+  animation: float-smooth 5s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float-smooth-slow 7s ease-in-out 1s infinite;
+}
+
+.animate-float-delay {
+  animation: float-smooth-delay 6s ease-in-out 2s infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-tilt-float,
   .animate-tilt-float-delayed,
   .animate-shimmer-sweep,
-  .animate-pulse-soft {
+  .animate-pulse-soft,
+  .animate-float,
+  .animate-float-slow,
+  .animate-float-delay {
     animation: none !important;
   }
 }
@@ -165,6 +207,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
   gap: 0.75rem;
   padding: 0.875rem 1.75rem;
   background-color: #FF592C;
@@ -188,6 +231,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
   gap: 0.75rem;
   padding: 0.875rem 1.75rem;
   background-color: transparent;

@@ -22,6 +22,7 @@ import {
   SendIcon,
 } from "@/components/Icons";
 import WelcomePopupModal from "@/components/WelcomePopupModal";
+import BackToTopButton from "@/components/BackToTopButton";
 import { DEFAULT_LANDING_CMS, LandingCmsData } from "@/lib/cms-defaults";
 
 export default function Home() {
@@ -172,12 +173,12 @@ export default function Home() {
       <WelcomePopupModal />
 
       {/* =========================================================================
-          UI8 HEADER
+          UI8 HEADER — STRICT SINGLE LINE, BALANCED & ALIGNED
           ========================================================================= */}
       <header className="sticky top-0 z-40 bg-[#FCFCFD]/95 backdrop-blur-md border-b border-[#E6E8EC]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-6">
           {/* Logo & Brand Name */}
-          <Link href="/" className="flex items-center gap-3 group">
+          <Link href="/" className="flex items-center gap-3 shrink-0 group">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/dos-club-logo.png"
@@ -185,40 +186,40 @@ export default function Home() {
               className="w-9 h-9 object-contain group-hover:scale-105 transition-transform"
             />
             <div className="flex flex-col">
-              <span className="font-gellix font-bold text-base text-[#23262F] tracking-tight group-hover:text-[#FF592C] transition-colors">
+              <span className="font-gellix font-bold text-lg text-[#23262F] tracking-tight leading-tight group-hover:text-[#FF592C] transition-colors whitespace-nowrap">
                 TalentOS
               </span>
-              <span className="font-gellix text-[11px] text-[#777E90] -mt-0.5">
+              <span className="font-gellix text-[11px] font-medium text-[#777E90] -mt-0.5 whitespace-nowrap">
                 by DeScience Open Source Club
               </span>
             </div>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-[#777E90]">
-            <a href="#how-it-works" className="hover:text-[#23262F] transition-colors">
+          {/* Navigation Links — Strict Single Line */}
+          <nav className="hidden lg:flex items-center gap-8 text-sm font-semibold text-[#777E90] whitespace-nowrap">
+            <a href="#how-it-works" className="hover:text-[#23262F] transition-colors py-1">
               How It Works
             </a>
-            <a href="#evidence" className="hover:text-[#23262F] transition-colors">
+            <a href="#evidence" className="hover:text-[#23262F] transition-colors py-1">
               The Evidence
             </a>
-            <a href="#lounge" className="hover:text-[#23262F] transition-colors">
+            <a href="#lounge" className="hover:text-[#23262F] transition-colors py-1">
               Lounge Access
             </a>
-            <a href="#roster" className="hover:text-[#23262F] transition-colors">
+            <a href="#roster" className="hover:text-[#23262F] transition-colors py-1">
               Student Roster
             </a>
-            <a href="#enquire" className="hover:text-[#23262F] transition-colors">
+            <a href="#enquire" className="hover:text-[#23262F] transition-colors py-1">
               Admissions
             </a>
           </nav>
 
-          {/* Header Action CTAs */}
-          <div className="flex items-center gap-3">
+          {/* Header Action CTAs — Strict Single Line */}
+          <div className="flex items-center gap-3 shrink-0 whitespace-nowrap">
             {user ? (
               <Link
                 href={getDashboardLink()}
-                className="ui8-btn-stroke text-xs sm:text-sm py-2 px-4.5 font-bold flex items-center gap-1.5"
+                className="h-10 px-4.5 rounded-full border border-[#E6E8EC] hover:border-[#23262F] bg-white text-xs sm:text-sm font-bold text-[#23262F] flex items-center gap-2 transition-all whitespace-nowrap shadow-2xs hover:shadow-sm"
                 title={`Go to ${user.role.replace("_", " ")} Dashboard`}
               >
                 <span>Dashboard</span>
@@ -235,7 +236,7 @@ export default function Home() {
             ) : (
               <Link
                 href="/login"
-                className="ui8-btn-stroke text-xs sm:text-sm py-2 px-4.5 font-semibold text-[#23262F] hover:text-[#FF592C] transition-colors"
+                className="h-10 px-5 rounded-full border border-[#E6E8EC] hover:border-[#23262F] bg-white text-xs sm:text-sm font-semibold text-[#23262F] hover:text-[#FF592C] flex items-center justify-center transition-all whitespace-nowrap shadow-2xs hover:shadow-sm"
                 title="Member & Admin Portal Sign In"
               >
                 Portal Sign In
@@ -246,7 +247,7 @@ export default function Home() {
               href="https://membership.descienceosclub.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="ui8-btn-primary text-xs sm:text-sm py-2.5 px-5 sm:px-6"
+              className="h-10 px-5 sm:px-6 rounded-full bg-[#FF592C] hover:bg-[#E04F26] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm transition-all whitespace-nowrap"
             >
               <span>Become a Member</span>
               <ArrowRightIcon className="w-3.5 h-3.5" />
@@ -256,122 +257,149 @@ export default function Home() {
       </header>
 
       {/* =========================================================================
-          SECTION 1: UI8 HERO (.main)
+          SECTION 1: UI8 2-COLUMN HERO (.main) WITH FLOATING GLASS CARDS
           ========================================================================= */}
-      <section className="relative pt-16 pb-20 sm:pt-24 sm:pb-32 overflow-hidden">
+      <section className="relative pt-12 pb-20 sm:pt-20 sm:pb-28 overflow-hidden bg-gradient-to-b from-[#FCFCFD] via-white to-[#FCFCFD]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto text-center space-y-6">
-            {/* Stage Eyebrow */}
-            <div>
-              <span className="ui8-stage">
-                Train Smarter. Master Systems.
-              </span>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+            {/* Left Column: Eyebrow, H1, Subtitle, Single-Line CTAs, Social Proof */}
+            <div className="lg:col-span-6 space-y-6 sm:space-y-7">
+              {/* Eyebrow Pill */}
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#E6E8EC] shadow-2xs text-[#23262F] text-xs font-bold tracking-wide">
+                <span className="w-2 h-2 rounded-full bg-[#45B26B] animate-pulse" />
+                <span className="uppercase text-[#23262F] font-semibold">Train Smarter. Master Systems.</span>
+              </div>
 
-            {/* H1 Main Title */}
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#23262F] leading-[1.08]">
-              The Engineering Passport to the AI-Native World.
-            </h1>
+              {/* H1 Main Title */}
+              <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-bold tracking-tight text-[#23262F] leading-[1.12]">
+                The Engineering Passport to the AI-Native World.
+              </h1>
 
-            {/* Subtitle */}
-            <p className="text-lg sm:text-xl text-[#777E90] max-w-2xl mx-auto leading-relaxed font-normal">
-              Where student builders master 27 production systems through peer architecture defense, collaborative codebases, and open-source rigor. Not competition. Collective capability.
-            </p>
+              {/* Subtitle */}
+              <p className="text-base sm:text-lg text-[#777E90] max-w-xl leading-relaxed font-normal">
+                Where student builders master 27 production systems through peer architecture defense, collaborative codebases, and open-source rigor. Not competition. Collective capability.
+              </p>
 
-            {/* Buttons */}
-            <div className="pt-2 flex flex-wrap items-center justify-center gap-4">
-              <a
-                href="https://membership.descienceosclub.com/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ui8-btn-primary text-base py-4 px-8"
-              >
-                <span>Become a Member</span>
-                <ArrowRightIcon className="w-4 h-4" />
-              </a>
-              <a
-                href="#enquire"
-                className="ui8-btn-stroke text-base py-4 px-8"
-              >
-                <span>Enquire for Batch 3</span>
-              </a>
-            </div>
+              {/* Buttons: Strictly Single Line, No Wrapping */}
+              <div className="pt-2 flex flex-wrap items-center gap-4">
+                <a
+                  href="https://membership.descienceosclub.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-12 px-7 rounded-full bg-[#FF592C] hover:bg-[#E04F26] text-white text-sm sm:text-base font-semibold flex items-center justify-center gap-2.5 shadow-sm hover:shadow-md transition-all whitespace-nowrap"
+                >
+                  <span>Become a Member</span>
+                  <ArrowRightIcon className="w-4 h-4" />
+                </a>
+                <a
+                  href="#enquire"
+                  className="h-12 px-7 rounded-full border-2 border-[#E6E8EC] hover:border-[#23262F] bg-white text-sm sm:text-base font-semibold text-[#23262F] flex items-center justify-center transition-all whitespace-nowrap hover:bg-[#F4F5F6]"
+                >
+                  <span>Enquire for Batch 3</span>
+                </a>
+              </div>
 
-            {/* Scroll Indicator */}
-            <div className="pt-8 flex justify-center">
-              <a
-                href="#how-it-works"
-                aria-label="Scroll to how it works"
-                className="w-14 h-14 rounded-full border-2 border-[#E6E8EC] hover:border-[#23262F] flex items-center justify-center text-[#777E90] hover:text-[#23262F] transition-colors relative overflow-hidden group"
-              >
-                <div className="animate-arrows-down flex flex-col items-center">
-                  <svg className="w-4 h-4" viewBox="0 0 16 16" fill="currentColor">
-                    <path d="M12.833 10.39c.428.464.399 1.187-.065 1.615l-4 3.692c-.438.404-1.113.404-1.55 0l-4-3.692c-.464-.428-.493-1.151-.065-1.615s1.151-.493 1.615-.065l2.082 1.922V1.143C6.85.512 7.362 0 7.993 0s1.143.512 1.143 1.143v11.104l2.082-1.922c.464-.428 1.187-.399 1.615.065z" />
-                  </svg>
+              {/* Verified Student Social Proof Stack */}
+              <div className="pt-4 flex items-center gap-4 border-t border-[#E6E8EC]/80 max-w-md">
+                <div className="flex -space-x-2.5 overflow-hidden">
+                  <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover" src="/images/students/student-1.jpg" alt="Student 1" />
+                  <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover" src="/images/students/student-2.jpg" alt="Student 2" />
+                  <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover" src="/images/students/student-3.jpg" alt="Student 3" />
+                  <img className="inline-block h-10 w-10 rounded-full ring-2 ring-white object-cover" src="/images/students/student-4.jpg" alt="Student 4" />
                 </div>
-              </a>
-            </div>
-          </div>
-
-          {/* Hero Gallery Grid (Authentic Student Collaboration) */}
-          <div className="mt-16 grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
-            {/* Primary Large Workshop Card */}
-            <div className="md:col-span-7 relative group rounded-3xl overflow-hidden border border-[#E6E8EC] shadow-md bg-white">
-              <div className="aspect-16/10 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cms.hero.studentPhoto || "/images/students/student-workshop-build.jpg"}
-                  alt="Engineering Collaboration Workshop"
-                  className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700"
-                />
-              </div>
-              {/* Floating Pill Badges */}
-              <div className="absolute top-5 left-5 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md text-[#23262F] text-xs font-bold uppercase tracking-wider border border-[#E6E8EC] shadow-sm flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#45B26B] animate-pulse" />
-                <span>27 Systems in Production</span>
-              </div>
-              <div className="p-5 bg-white border-t border-[#E6E8EC] flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#777E90]">
-                    Collaborative Systems Pod
-                  </div>
-                  <div className="text-sm font-semibold text-[#23262F]">
-                    Distributed Consensus & Live Lock Audits
+                <div className="text-xs">
+                  <div className="font-bold text-[#23262F]">42 Systems Builders</div>
+                  <div className="text-[#777E90] flex items-center gap-1.5 mt-0.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#45B26B]" />
+                    <span>In Active Peer Architecture Defense</span>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded bg-[#45B26B] text-white text-[11px] font-bold uppercase tracking-wider">
-                  VERIFIED POD
-                </span>
               </div>
             </div>
 
-            {/* Secondary Defense Card */}
-            <div className="md:col-span-5 relative group rounded-3xl overflow-hidden border border-[#E6E8EC] shadow-md bg-white">
-              <div className="aspect-16/10 md:aspect-4/3 overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={cms.hero.collabPhoto || "/images/students/student-4.jpg"}
-                  alt="Technical Evaluation Session"
-                  className="w-full h-full object-cover group-hover:scale-103 transition-transform duration-700"
-                />
-              </div>
-              {/* Floating Pill Badge */}
-              <div className="absolute top-5 left-5 px-3 py-1.5 rounded-full bg-white/95 backdrop-blur-md text-[#23262F] text-xs font-bold uppercase tracking-wider border border-[#E6E8EC] shadow-sm flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-[#9757D7]" />
-                <span>Zero-Grace Peer Defense</span>
-              </div>
-              <div className="p-5 bg-white border-t border-[#E6E8EC] flex items-center justify-between">
-                <div>
-                  <div className="text-xs font-bold uppercase tracking-wider text-[#777E90]">
-                    Mutual Architecture Defense
+            {/* Right Column: Hero Portrait Image with 3 Elevated Floating Glassmorphism Cards */}
+            <div className="lg:col-span-6 relative flex justify-center lg:justify-end pt-4 lg:pt-0">
+              <div className="relative w-full max-w-[480px] lg:max-w-[500px]">
+                {/* Subtle Ambient Radial Glow */}
+                <div className="absolute -inset-4 bg-gradient-to-tr from-[#FF592C]/15 via-[#3772FF]/10 to-[#9757D7]/15 rounded-[40px] blur-2xl -z-10 opacity-70 pointer-events-none" />
+
+                {/* Main Portrait Frame matching user's reference image */}
+                <div className="relative rounded-[32px] overflow-hidden border border-[#E6E8EC] shadow-[0_20px_50px_rgba(0,0,0,0.08)] bg-white aspect-[4/5] sm:aspect-[4/4.8]">
+                  <img
+                    src="/images/hero-portrait-clean.jpg"
+                    alt="Systems Engineer collaborating on laptop with headset"
+                    className="w-full h-full object-cover object-center scale-101 hover:scale-103 transition-transform duration-700"
+                  />
+                </div>
+
+                {/* Floating Glassmorphic Card 1: Top Right (Zero-Grace Cohort) */}
+                <div className="absolute -top-4 -right-2 sm:-right-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 border border-[#E6E8EC] shadow-[0_12px_32px_rgba(0,0,0,0.1)] animate-float z-20 max-w-[210px] sm:max-w-[230px]">
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <div className="w-8 h-8 rounded-xl bg-[#9757D7]/15 text-[#9757D7] flex items-center justify-center shrink-0">
+                      <ShieldCheckIcon className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <div className="text-[10px] font-bold uppercase tracking-wider text-[#9757D7]">Defense Pod</div>
+                      <div className="text-xs font-bold text-[#23262F]">Zero-Grace Cohort</div>
+                    </div>
                   </div>
-                  <div className="text-sm font-semibold text-[#23262F]">
-                    Live Failure Injections & Code Review
+                  <div className="flex items-baseline justify-between pt-1 border-t border-[#F4F5F6]">
+                    <span className="text-[11px] text-[#777E90]">Curriculum:</span>
+                    <span className="text-xs font-bold text-[#23262F]">27 / 27 Systems</span>
                   </div>
                 </div>
-                <span className="px-2.5 py-1 rounded bg-[#9757D7] text-white text-[11px] font-bold uppercase tracking-wider">
-                  BATCH 3
-                </span>
+
+                {/* Floating Glassmorphic Card 2: Bottom Right (Verified Milestones + SVG Sparkline) */}
+                <div className="absolute -bottom-6 -right-2 sm:-right-6 bg-white/95 backdrop-blur-md rounded-2xl p-4 sm:p-5 border border-[#E6E8EC] shadow-[0_16px_36px_rgba(0,0,0,0.12)] animate-float-slow z-20 min-w-[200px] sm:min-w-[220px]">
+                  <div className="flex items-center justify-between gap-2 mb-1">
+                    <span className="text-[11px] font-medium text-[#777E90]">Verified Milestones</span>
+                    <span className="text-[10px] font-bold text-[#45B26B] bg-[#45B26B]/10 px-1.5 py-0.5 rounded-full">+18.4%</span>
+                  </div>
+                  <div className="text-2xl font-bold text-[#23262F] tracking-tight">1,134</div>
+                  {/* SVG Sparkline Curve matching reference image */}
+                  <div className="mt-2 h-10 w-full">
+                    <svg viewBox="0 0 160 40" className="w-full h-full overflow-visible" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="heroSparklineGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="0%" stopColor="#FF592C" stopOpacity="0.25" />
+                          <stop offset="100%" stopColor="#FF592C" stopOpacity="0.0" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d="M0,32 C25,28 40,35 65,20 C90,8 115,22 135,12 C145,7 155,9 160,5 L160,40 L0,40 Z"
+                        fill="url(#heroSparklineGrad)"
+                      />
+                      <path
+                        d="M0,32 C25,28 40,35 65,20 C90,8 115,22 135,12 C145,7 155,9 160,5"
+                        fill="none"
+                        stroke="#FF592C"
+                        strokeWidth="2.5"
+                        strokeLinecap="round"
+                      />
+                      <circle cx="160" cy="5" r="3.5" fill="#FF592C" className="animate-ping" />
+                      <circle cx="160" cy="5" r="3" fill="#FF592C" />
+                    </svg>
+                  </div>
+                </div>
+
+                {/* Floating Glassmorphic Card 3: Middle/Bottom Left (Live Check-in Pill) */}
+                <div className="absolute top-1/2 -left-3 sm:-left-8 -translate-y-1/2 bg-white/95 backdrop-blur-md rounded-2xl p-3 sm:p-3.5 border border-[#E6E8EC] shadow-[0_12px_32px_rgba(0,0,0,0.1)] animate-float-delay z-20 flex items-center gap-3">
+                  <div className="relative">
+                    <img
+                      src="/images/students/student-1.jpg"
+                      alt="Active Builder"
+                      className="w-10 h-10 rounded-full object-cover border border-[#E6E8EC]"
+                    />
+                    <span className="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-[#45B26B] ring-2 ring-white" />
+                  </div>
+                  <div className="pr-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-[#23262F]">Siddharth R.</span>
+                      <span className="text-[10px] font-bold text-[#45B26B] uppercase">LOCKED</span>
+                    </div>
+                    <div className="text-[11px] text-[#777E90]">Verified LSM-Tree Storage</div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -1420,6 +1448,9 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* Floating Smooth Back To Top Action Button */}
+      <BackToTopButton />
     </div>
   );
 }
