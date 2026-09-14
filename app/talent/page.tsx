@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
+import { ClipboardListIcon } from "@/components/Icons";
 
 export default function TalentPage() {
   return (
@@ -13,7 +14,7 @@ export default function TalentPage() {
       <main className="flex-1 max-w-2xl w-full mx-auto px-4 py-16 sm:py-24 flex flex-col justify-center gap-8">
         <div className="border border-slate-200 bg-white p-8 sm:p-10 rounded-2xl shadow-sm flex flex-col gap-6">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-200 bg-amber-50 text-xs font-semibold text-amber-800 self-start">
-            <span>📋</span>
+            <ClipboardListIcon className="w-3.5 h-3.5 text-amber-700 shrink-0" />
             <span>V1 Release Scope Specification</span>
           </div>
 

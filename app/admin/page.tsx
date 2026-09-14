@@ -5,6 +5,15 @@ import Link from "next/link";
 import { useSearchParams, useRouter } from "next/navigation";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
+import {
+  UsersIcon,
+  AcademicCapIcon,
+  BuildingIcon,
+  BoltIcon,
+  ClipboardListIcon,
+  SettingsIcon,
+  XIcon,
+} from "@/components/Icons";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 import { formatConfigDateTime } from "@/lib/datetime";
 
@@ -365,7 +374,7 @@ function AdminHubContent() {
     setIsAddStudentOpen(false);
     setNewStudentName("");
     setNewStudentEmail("");
-    triggerToast(`SUCCESS // Enrolled ${created.fullName} (${created.dosId})`);
+    triggerToast(`Enrolled ${created.fullName} (${created.dosId})`);
   };
 
   const handleCreateExpert = (e: React.FormEvent) => {
@@ -389,7 +398,7 @@ function AdminHubContent() {
     setNewExpertEmail("");
     setNewExpertOrg("");
     setNewExpertSpecialty("");
-    triggerToast(`SUCCESS // Registered Expert Mentor: ${created.fullName}`);
+    triggerToast(`Registered Expert Mentor: ${created.fullName}`);
   };
 
   const handleCreateInstitution = (e: React.FormEvent) => {
@@ -414,7 +423,7 @@ function AdminHubContent() {
     setNewInstCode("");
     setNewInstName("");
     setNewInstCity("");
-    triggerToast(`SUCCESS // Onboarded Campus Hub: ${created.name}`);
+    triggerToast(`Onboarded Campus Hub: ${created.name}`);
   };
 
   const handleCreateWorkshop = (e: React.FormEvent) => {
@@ -438,7 +447,7 @@ function AdminHubContent() {
     setNewWsCode("");
     setNewWsTitle("");
     setNewWsFocus("");
-    triggerToast(`SUCCESS // Curriculum Updated: Added ${created.code}`);
+    triggerToast(`Curriculum updated: Added ${created.code} (${created.title})`);
   };
 
   // Sidebar Menu Groups (HubSpot reference navigation)
@@ -446,22 +455,22 @@ function AdminHubContent() {
     {
       title: "Data Management",
       items: [
-        { id: "students", label: "Students", icon: "👥", count: students.length },
-        { id: "experts", label: "Experts", icon: "🎓", count: experts.length, badge: "NEW" },
-        { id: "institutions", label: "Institutions", icon: "🏛️", count: institutions.length },
+        { id: "students", label: "Students", icon: <UsersIcon className="w-4 h-4" />, count: students.length },
+        { id: "experts", label: "Experts", icon: <AcademicCapIcon className="w-4 h-4" />, count: experts.length, badge: "NEW" },
+        { id: "institutions", label: "Institutions", icon: <BuildingIcon className="w-4 h-4" />, count: institutions.length },
       ],
     },
     {
       title: "Curriculum & Execution",
       items: [
-        { id: "workshops", label: "Workshops (27)", icon: "⚡", count: workshops.length },
+        { id: "workshops", label: "Workshops (27)", icon: <BoltIcon className="w-4 h-4" />, count: workshops.length },
       ],
     },
     {
       title: "Governance & Tools",
       items: [
-        { id: "audit", label: "Audit Logs", icon: "📋", count: auditLogs.length },
-        { id: "settings", label: "Settings", icon: "⚙️" },
+        { id: "audit", label: "Audit Logs", icon: <ClipboardListIcon className="w-4 h-4" />, count: auditLogs.length },
+        { id: "settings", label: "Settings", icon: <SettingsIcon className="w-4 h-4" /> },
       ],
     },
   ];
@@ -489,8 +498,12 @@ function AdminHubContent() {
           {toast && (
             <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium rounded-lg shadow-sm flex items-center justify-between">
               <span>{toast}</span>
-              <button onClick={() => setToast(null)} className="text-emerald-700 font-bold hover:text-emerald-950">
-                ✕
+              <button
+                onClick={() => setToast(null)}
+                className="text-emerald-700 hover:text-emerald-950 p-1 cursor-pointer"
+                aria-label="Dismiss"
+              >
+                <XIcon className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -838,7 +851,12 @@ function AdminHubContent() {
                                   : "bg-slate-100 text-slate-600"
                               }`}
                             >
-                              {ws.status === "ACTIVE_IN_SESSION" ? "● LIVE IN SESSION" : ws.status}
+                              {ws.status === "ACTIVE_IN_SESSION" ? (
+                                <span className="inline-flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping inline-block" />
+                                  <span>LIVE IN SESSION</span>
+                                </span>
+                              ) : ws.status}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-right font-mono text-[11px] text-slate-500">
@@ -870,7 +888,7 @@ function AdminHubContent() {
 
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => triggerToast("EXPORT // Audit log CSV exported successfully.")}
+                    onClick={() => triggerToast("Audit log CSV report exported successfully.")}
                     className="px-3.5 py-1.5 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-md transition-colors shadow-2xs"
                   >
                     Export Report
@@ -989,8 +1007,12 @@ function AdminHubContent() {
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-base font-bold text-slate-900">Enroll New Student Member</h2>
-              <button onClick={() => setIsAddStudentOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button
+                onClick={() => setIsAddStudentOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <XIcon className="w-4 h-4" />
               </button>
             </div>
 
@@ -1072,8 +1094,12 @@ function AdminHubContent() {
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-base font-bold text-slate-900">Add Technical Expert Mentor</h2>
-              <button onClick={() => setIsAddExpertOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button
+                onClick={() => setIsAddExpertOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <XIcon className="w-4 h-4" />
               </button>
             </div>
 
@@ -1152,8 +1178,12 @@ function AdminHubContent() {
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-base font-bold text-slate-900">Add Partner Institution</h2>
-              <button onClick={() => setIsAddInstitutionOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button
+                onClick={() => setIsAddInstitutionOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <XIcon className="w-4 h-4" />
               </button>
             </div>
 
@@ -1231,8 +1261,12 @@ function AdminHubContent() {
           <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl border border-slate-200 flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h2 className="text-base font-bold text-slate-900">Schedule Curriculum Workshop</h2>
-              <button onClick={() => setIsAddWorkshopOpen(false)} className="text-slate-400 hover:text-slate-600 font-bold">
-                ✕
+              <button
+                onClick={() => setIsAddWorkshopOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                aria-label="Close"
+              >
+                <XIcon className="w-4 h-4" />
               </button>
             </div>
 

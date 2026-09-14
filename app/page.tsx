@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getClientSession, TalentosUser } from "@/lib/session";
+import { SearchIcon, AlertTriangleIcon } from "@/components/Icons";
 
 export default function Home() {
   const router = useRouter();
@@ -112,8 +113,8 @@ export default function Home() {
             </h2>
             <form onSubmit={handleVerify} className="flex flex-col sm:flex-row gap-2">
               <div className="relative flex-1">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm select-none">
-                  🔍
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 select-none">
+                  <SearchIcon className="w-4 h-4" />
                 </span>
                 <input
                   type="text"
@@ -142,8 +143,9 @@ export default function Home() {
             </div>
 
             {feedback && (
-              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-md font-medium">
-                ⚠️ {feedback}
+              <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 p-2.5 rounded-md font-medium flex items-center gap-1.5">
+                <AlertTriangleIcon className="w-4 h-4 text-amber-600 shrink-0" />
+                <span>{feedback}</span>
               </p>
             )}
           </div>

@@ -4,6 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
+import {
+  UsersIcon,
+  ChartBarIcon,
+  ScaleIcon,
+  DownloadIcon,
+  AcademicCapIcon,
+  XIcon,
+  CheckIcon,
+} from "@/components/Icons";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 
 interface CollegeStudent {
@@ -155,7 +164,7 @@ export default function CollegeCoordinatorPage() {
       })
     );
 
-    triggerToast(`CONFIRMED // ${dosId} marked as ${status} for ${sessionCode} (${note})`);
+    triggerToast(`${dosId} marked as ${status.replace("_", " ")} for ${sessionCode} (${note})`);
   };
 
   const filteredStudents = students.filter((s) => {
@@ -175,16 +184,16 @@ export default function CollegeCoordinatorPage() {
     {
       title: "Campus Operations",
       items: [
-        { id: "students", label: "Campus Students", icon: "👥", count: students.length },
-        { id: "workshops", label: "27-Workshop Matrix", icon: "📊", count: 27 },
-        { id: "exceptions", label: "Absence Exceptions", icon: "⚖️", count: pendingExceptionsCount },
+        { id: "students", label: "Campus Students", icon: <UsersIcon className="w-4 h-4" />, count: students.length },
+        { id: "workshops", label: "27-Workshop Matrix", icon: <ChartBarIcon className="w-4 h-4" />, count: 27 },
+        { id: "exceptions", label: "Absence Exceptions", icon: <ScaleIcon className="w-4 h-4" />, count: pendingExceptionsCount },
       ],
     },
     {
       title: "Governance & Reports",
       items: [
-        { id: "export_csv", label: "Export Roster (CSV)", icon: "📥" },
-        { id: "defense", label: "Capstone Defense Sign-Off", icon: "🎓" },
+        { id: "export_csv", label: "Export Roster (CSV)", icon: <DownloadIcon className="w-4 h-4" /> },
+        { id: "defense", label: "Capstone Defense Sign-Off", icon: <AcademicCapIcon className="w-4 h-4" /> },
       ],
     },
   ];
@@ -201,9 +210,9 @@ export default function CollegeCoordinatorPage() {
           activeId={activeTab}
           onSelect={(id) => {
             if (id === "export_csv") {
-              triggerToast("EXPORT // Student attendance roster downloaded (CSV)");
+              triggerToast("Student attendance roster downloaded as CSV.");
             } else if (id === "defense") {
-              triggerToast("DEFENSE // Capstone defense verification records loaded");
+              triggerToast("Capstone defense verification records loaded.");
             } else {
               setActiveTab(id as any);
             }
@@ -215,8 +224,12 @@ export default function CollegeCoordinatorPage() {
         {toast && (
           <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium rounded-lg shadow-sm flex items-center justify-between">
             <span>{toast}</span>
-            <button onClick={() => setToast(null)} className="text-emerald-700 font-bold hover:text-emerald-950">
-              ✕
+            <button
+              onClick={() => setToast(null)}
+              className="text-emerald-700 hover:text-emerald-950 p-1 cursor-pointer"
+              aria-label="Dismiss"
+            >
+              <XIcon className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
@@ -240,7 +253,7 @@ export default function CollegeCoordinatorPage() {
 
           <div className="flex items-center gap-3">
             <button
-              onClick={() => triggerToast("EXPORT // Student attendance roster downloaded (CSV)")}
+              onClick={() => triggerToast("Student attendance roster downloaded as CSV.")}
               className="px-4 py-2 border border-slate-300 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg transition-colors shadow-2xs"
             >
               Export Campus Roster (CSV)
@@ -286,9 +299,9 @@ export default function CollegeCoordinatorPage() {
         {/* Tabs */}
         <div className="flex border-b border-slate-200 gap-4 text-xs font-semibold">
           {[
-            { id: "students", label: `Campus Students Roster (${students.length})`, icon: "👥" },
-            { id: "workshops", label: "Multi-Workshop Attendance (27 Sessions)", icon: "📊" },
-            { id: "exceptions", label: `Absence Exceptions (${pendingExceptionsCount})`, icon: "⚖️" },
+            { id: "students", label: `Campus Students Roster (${students.length})`, icon: <UsersIcon className="w-4 h-4" /> },
+            { id: "workshops", label: "Multi-Workshop Attendance (27 Sessions)", icon: <ChartBarIcon className="w-4 h-4" /> },
+            { id: "exceptions", label: `Absence Exceptions (${pendingExceptionsCount})`, icon: <ScaleIcon className="w-4 h-4" /> },
           ].map((t) => (
             <button
               key={t.id}
@@ -299,7 +312,7 @@ export default function CollegeCoordinatorPage() {
                   : "border-transparent text-slate-500 hover:text-slate-800"
               }`}
             >
-              <span>{t.icon}</span>
+              <span className="text-slate-400 shrink-0">{t.icon}</span>
               <span>{t.label}</span>
             </button>
           ))}
@@ -457,7 +470,12 @@ export default function CollegeCoordinatorPage() {
                               : "bg-slate-100 text-slate-500"
                           }`}
                         >
-                          {isLive ? "● LIVE IN SESSION" : isCompleted ? "COMPLETED" : "UPCOMING"}
+                          {isLive ? (
+                            <span className="inline-flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping inline-block" />
+                              <span>LIVE IN SESSION</span>
+                            </span>
+                          ) : isCompleted ? "COMPLETED" : "UPCOMING"}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right text-slate-500 font-medium">
@@ -551,8 +569,9 @@ export default function CollegeCoordinatorPage() {
                             </button>
                           </div>
                         ) : (
-                          <span className="text-[11px] text-slate-500 font-mono">
-                            ✓ {caseItem.confirmationNote || "Resolved"}
+                          <span className="text-[11px] text-slate-500 font-mono inline-flex items-center gap-1">
+                            <CheckIcon className="w-3 h-3 text-emerald-600 shrink-0" />
+                            <span>{caseItem.confirmationNote || "Resolved"}</span>
                           </span>
                         )}
                       </td>

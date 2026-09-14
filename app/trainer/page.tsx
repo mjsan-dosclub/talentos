@@ -6,6 +6,17 @@ import { getStudents, Student } from "@/lib/db";
 import { formatConfigTime } from "@/lib/datetime";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
+import {
+  BoltIcon,
+  UsersIcon,
+  StarIcon,
+  BookOpenIcon,
+  SmartphoneIcon,
+  XIcon,
+  CheckIcon,
+  ClockIcon,
+  SearchIcon,
+} from "@/components/Icons";
 
 interface ParticipantState {
   student: Student;
@@ -131,16 +142,16 @@ export default function TrainerDashboardPage() {
     {
       title: "Live Operations",
       items: [
-        { id: "session", label: "Workshop Cockpit", icon: "⚡" },
-        { id: "roster", label: "Student Roster", icon: "👥", count: participants.length },
-        { id: "standouts", label: "Standout Recognitions", icon: "⭐", count: standoutCount },
+        { id: "session", label: "Workshop Cockpit", icon: <BoltIcon className="w-4 h-4" /> },
+        { id: "roster", label: "Student Roster", icon: <UsersIcon className="w-4 h-4" />, count: participants.length },
+        { id: "standouts", label: "Standout Recognitions", icon: <StarIcon className="w-4 h-4" />, count: standoutCount },
       ],
     },
     {
       title: "Tools & Resources",
       items: [
-        { id: "curriculum", label: "27-Session Curriculum", icon: "📚" },
-        { id: "checkin_tool", label: "Mobile Scanner Utility", icon: "📱" },
+        { id: "curriculum", label: "27-Session Curriculum", icon: <BookOpenIcon className="w-4 h-4" /> },
+        { id: "checkin_tool", label: "Mobile Scanner Utility", icon: <SmartphoneIcon className="w-4 h-4" /> },
       ],
     },
   ];
@@ -177,9 +188,10 @@ export default function TrainerDashboardPage() {
               <button
                 type="button"
                 onClick={() => setNotification(null)}
-                className="text-slate-400 hover:text-white text-xs cursor-pointer"
+                className="text-slate-400 hover:text-white p-1 cursor-pointer"
+                aria-label="Dismiss"
               >
-                ✕
+                <XIcon className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -220,8 +232,8 @@ export default function TrainerDashboardPage() {
                   {Math.round((checkedInCount / (participants.length || 1)) * 100)}% present rate
                 </span>
               </div>
-              <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg font-bold">
-                ✓
+              <div className="h-10 w-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <CheckIcon className="w-5 h-5" />
               </div>
             </div>
 
@@ -237,8 +249,8 @@ export default function TrainerDashboardPage() {
                   Awaiting QR scan or manual log
                 </span>
               </div>
-              <div className="h-10 w-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-lg font-bold">
-                ⏳
+              <div className="h-10 w-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                <ClockIcon className="w-5 h-5" />
               </div>
             </div>
 
@@ -254,8 +266,8 @@ export default function TrainerDashboardPage() {
                   Tagged for leadership dossier
                 </span>
               </div>
-              <div className="h-10 w-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center text-lg font-bold">
-                ⭐
+              <div className="h-10 w-10 rounded-full bg-purple-50 text-purple-600 flex items-center justify-center">
+                <StarIcon className="w-5 h-5 fill-purple-600" />
               </div>
             </div>
           </div>
@@ -342,8 +354,8 @@ export default function TrainerDashboardPage() {
                     placeholder="Search student or ID..."
                     className="w-full sm:w-52 pl-8 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-xs">
-                    🔍
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400">
+                    <SearchIcon className="w-3.5 h-3.5" />
                   </span>
                 </div>
               </div>
@@ -366,8 +378,9 @@ export default function TrainerDashboardPage() {
                           {p.student.dos_id}
                         </span>
                         {p.isStandout && (
-                          <span className="text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full">
-                            ⭐ Standout Lead
+                          <span className="text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                            <StarIcon className="w-3 h-3 fill-purple-600" />
+                            <span>Standout Lead</span>
                           </span>
                         )}
                       </div>
@@ -396,14 +409,15 @@ export default function TrainerDashboardPage() {
                       <button
                         type="button"
                         onClick={() => toggleStandout(p.student.dos_id)}
-                        className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer ${
+                        className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer inline-flex items-center gap-1.5 ${
                           p.isStandout
                             ? "bg-purple-100 text-purple-900 border-purple-300 font-semibold"
                             : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
                         }`}
                         title="Award standout engineering recognition"
                       >
-                        ⭐ {p.isStandout ? "Recognized" : "Standout"}
+                        <StarIcon className={`w-3.5 h-3.5 ${p.isStandout ? "fill-purple-700 text-purple-700" : "text-slate-400"}`} />
+                        <span>{p.isStandout ? "Recognized" : "Standout"}</span>
                       </button>
 
                       {p.status === "NOT_STARTED" && (

@@ -11,6 +11,15 @@ import {
   TalentosUser,
   UserRole,
 } from "@/lib/session";
+import {
+  UserIcon,
+  BoltIcon,
+  BuildingIcon,
+  ShieldCheckIcon,
+  MailIcon,
+  LockIcon,
+  AlertTriangleIcon,
+} from "@/components/Icons";
 
 function LoginContent() {
   const router = useRouter();
@@ -27,23 +36,23 @@ function LoginContent() {
   useEffect(() => {
     if (errorCode) {
       if (errorCode === "ERR_ACCESS_DENIED_ADMIN_ONLY") {
-        setStatusMessage("ACCESS RESTRICTED // SUPER_ADMIN CLEARANCE REQUIRED");
+        setStatusMessage("Super Admin clearance required. Please sign in with an administrator account.");
       } else if (errorCode === "ERR_ACCESS_DENIED_TRAINER_ONLY") {
-        setStatusMessage("ACCESS RESTRICTED // TRAINER / FACULTY CLEARANCE REQUIRED");
+        setStatusMessage("Technical Expert clearance required. Please sign in with a trainer account.");
       } else if (errorCode === "ERR_ACCESS_DENIED_COLLEGE_ONLY") {
-        setStatusMessage("ACCESS RESTRICTED // COLLEGE_ADMIN CLEARANCE REQUIRED");
+        setStatusMessage("College Coordinator clearance required. Please sign in with a coordinator account.");
       } else {
-        setStatusMessage("SESSION REQUIRED // PLEASE SIGN IN TO CONTINUE");
+        setStatusMessage("Please sign in to access your portal.");
       }
     } else if (redirectUrl) {
-      setStatusMessage(`SESSION REQUIRED // ACCESS TO ${redirectUrl.toUpperCase()} REQUIRES AUTHENTICATION`);
+      setStatusMessage(`Please sign in to access ${redirectUrl}.`);
     }
   }, [errorCode, redirectUrl]);
 
   // Fast-Auth 1-Click Login for development testing & Acceptance Matrix
   const handleFastLogin = async (demoKey: keyof typeof DEMO_ACCOUNTS) => {
     setIsAuthenticating(true);
-    setStatusMessage("INITIALIZING SECURE SESSION...");
+    setStatusMessage("Signing in...");
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -58,7 +67,7 @@ function LoginContent() {
         const destination = redirectUrl || data.redirect;
         window.location.href = destination;
       } else {
-        setStatusMessage("FAST_AUTH_ERROR // Could not issue session token");
+        setStatusMessage("Could not sign in with demo credentials. Please try again.");
         setIsAuthenticating(false);
       }
     } catch (err: any) {
@@ -83,17 +92,17 @@ function LoginContent() {
     setStatusMessage(null);
 
     if (!email.trim() || !email.includes("@")) {
-      setStatusMessage("ERR_INVALID_EMAIL // ENTER VALID REGISTERED INSTITUTIONAL EMAIL");
+      setStatusMessage("Please enter a valid registered institutional email address.");
       return;
     }
 
     if (!password.trim()) {
-      setStatusMessage("ERR_MISSING_PASSWORD // ENTER ACCOUNT PASSWORD");
+      setStatusMessage("Please enter your account password.");
       return;
     }
 
     setIsAuthenticating(true);
-    setStatusMessage("AUTHENTICATING // CHECKING CREDENTIALS...");
+    setStatusMessage("Checking credentials...");
 
     try {
       const res = await fetch("/api/auth/login", {
@@ -108,7 +117,7 @@ function LoginContent() {
         const destination = redirectUrl || data.redirect;
         window.location.href = destination;
       } else {
-        setStatusMessage("ERR_AUTH_FAILED // INVALID CREDENTIALS");
+        setStatusMessage("Invalid email or password. Please verify your credentials.");
         setIsAuthenticating(false);
       }
     } catch (err: any) {
@@ -185,7 +194,10 @@ function LoginContent() {
               className="p-3 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all rounded-lg flex flex-col disabled:opacity-50 cursor-pointer shadow-xs group"
             >
               <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700">👤 Student: Arun</span>
+                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
+                  <UserIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Student: Arun</span>
+                </span>
                 <span className="text-[10px] font-semibold text-emerald-700">Enter &rarr;</span>
               </div>
               <span className="text-[11px] text-slate-500 truncate mt-0.5">arun@student.dosclub.org</span>
@@ -199,7 +211,10 @@ function LoginContent() {
               className="p-3 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all rounded-lg flex flex-col disabled:opacity-50 cursor-pointer shadow-xs group"
             >
               <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700">⚡ Technical Expert</span>
+                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
+                  <BoltIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Technical Expert</span>
+                </span>
                 <span className="text-[10px] font-semibold text-emerald-700">Enter &rarr;</span>
               </div>
               <span className="text-[11px] text-slate-500 truncate mt-0.5">faculty@dosclub.org</span>
@@ -213,7 +228,10 @@ function LoginContent() {
               className="p-3 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all rounded-lg flex flex-col disabled:opacity-50 cursor-pointer shadow-xs group"
             >
               <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700">🏛️ College Coordinator</span>
+                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
+                  <BuildingIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>College Coordinator</span>
+                </span>
                 <span className="text-[10px] font-semibold text-emerald-700">Enter &rarr;</span>
               </div>
               <span className="text-[11px] text-slate-500 truncate mt-0.5">coordinator@annauniv.edu</span>
@@ -227,7 +245,10 @@ function LoginContent() {
               className="p-3 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all rounded-lg flex flex-col disabled:opacity-50 cursor-pointer shadow-xs group"
             >
               <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700">🛡️ Super Admin</span>
+                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
+                  <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  <span>Super Admin</span>
+                </span>
                 <span className="text-[10px] font-semibold text-emerald-700">Enter &rarr;</span>
               </div>
               <span className="text-[11px] text-slate-500 truncate mt-0.5">admin@dosclub.org</span>
@@ -305,7 +326,9 @@ function LoginContent() {
                 Institutional Email Address
               </label>
               <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-slate-400 select-none text-sm">✉</span>
+                <span className="absolute left-3.5 text-slate-400 select-none">
+                  <MailIcon className="w-3.5 h-3.5" />
+                </span>
                 <input
                   id="email"
                   type="email"
@@ -336,7 +359,9 @@ function LoginContent() {
                 Account Password
               </label>
               <div className="relative flex items-center">
-                <span className="absolute left-3.5 text-slate-400 select-none text-sm">🔒</span>
+                <span className="absolute left-3.5 text-slate-400 select-none">
+                  <LockIcon className="w-3.5 h-3.5" />
+                </span>
                 <input
                   id="password"
                   type="password"
@@ -352,7 +377,7 @@ function LoginContent() {
 
             {statusMessage && (
               <div className="p-3 border border-amber-200 bg-amber-50 rounded-lg text-amber-800 text-xs flex items-center gap-2">
-                <span>⚠️</span>
+                <AlertTriangleIcon className="w-4 h-4 text-amber-600 shrink-0" />
                 <span>{statusMessage}</span>
               </div>
             )}

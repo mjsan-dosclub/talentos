@@ -3,6 +3,15 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import AppHeader from "@/components/AppHeader";
+import {
+  GlobeIcon,
+  ColorPaletteIcon,
+  SearchIcon,
+  MailIcon,
+  MessageSquareIcon,
+  SendIcon,
+  XIcon,
+} from "@/components/Icons";
 import { SystemConfig, DEFAULT_SYSTEM_CONFIG } from "@/lib/config";
 
 const TIMEZONE_PRESETS = [
@@ -155,16 +164,16 @@ export default function SystemSettingsPage() {
     {
       group: "Account Defaults",
       items: [
-        { id: "general", label: "General & Timezone", icon: "🌐" },
-        { id: "branding", label: "Branding, Logo & Favicon", icon: "🎨" },
-        { id: "seo", label: "SEO & Social Metadata", icon: "🔍" },
+        { id: "general", label: "General & Timezone", icon: <GlobeIcon className="w-4 h-4" /> },
+        { id: "branding", label: "Branding, Logo & Favicon", icon: <ColorPaletteIcon className="w-4 h-4" /> },
+        { id: "seo", label: "SEO & Social Metadata", icon: <SearchIcon className="w-4 h-4" /> },
       ],
     },
     {
       group: "Communications & Gateways",
       items: [
-        { id: "email", label: "Email (SMTP Gateway)", icon: "📧" },
-        { id: "messaging", label: "WhatsApp & Telegram", icon: "💬" },
+        { id: "email", label: "Email (SMTP Gateway)", icon: <MailIcon className="w-4 h-4" /> },
+        { id: "messaging", label: "WhatsApp & Telegram", icon: <MessageSquareIcon className="w-4 h-4" /> },
       ],
     },
   ];
@@ -211,7 +220,7 @@ export default function SystemSettingsPage() {
                             : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
                         }`}
                       >
-                        <span className="text-sm">{item.icon}</span>
+                        <span className="text-slate-400 shrink-0">{item.icon}</span>
                         <span>{item.label}</span>
                       </button>
                     );
@@ -227,8 +236,12 @@ export default function SystemSettingsPage() {
           {toast && (
             <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium rounded-lg shadow-sm flex items-center justify-between">
               <span>{toast}</span>
-              <button onClick={() => setToast(null)} className="text-emerald-700 font-bold hover:text-emerald-950">
-                ✕
+              <button
+                onClick={() => setToast(null)}
+                className="text-emerald-700 hover:text-emerald-950 p-1 cursor-pointer"
+                aria-label="Dismiss"
+              >
+                <XIcon className="w-3.5 h-3.5" />
               </button>
             </div>
           )}
@@ -251,7 +264,10 @@ export default function SystemSettingsPage() {
                   <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 min-w-[220px]">
                     <div className="flex justify-between text-[10px] uppercase font-bold text-emerald-800">
                       <span>Synchronized Clock:</span>
-                      <span className="animate-pulse">● LIVE</span>
+                      <span className="inline-flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse inline-block" />
+                        <span>LIVE</span>
+                      </span>
                     </div>
                     <div className="text-sm font-bold text-emerald-950 mt-1 font-mono">
                       {previewTime || "08:30:00 AM IST"}
@@ -633,7 +649,10 @@ export default function SystemSettingsPage() {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <div className="border border-slate-200 rounded-xl p-4 flex flex-col gap-3 bg-slate-50/50">
-                    <span className="font-bold text-slate-900">💬 WhatsApp Business API</span>
+                    <span className="font-bold text-slate-900 flex items-center gap-2">
+                      <MessageSquareIcon className="w-4 h-4 text-emerald-600" />
+                      <span>WhatsApp Business API</span>
+                    </span>
                     <div className="flex flex-col gap-1">
                       <label className="text-slate-600">Sender Phone Number:</label>
                       <input
@@ -651,7 +670,10 @@ export default function SystemSettingsPage() {
                   </div>
 
                   <div className="border border-slate-200 rounded-xl p-4 flex flex-col gap-3 bg-slate-50/50">
-                    <span className="font-bold text-slate-900">✈️ Telegram Broadcast Bot</span>
+                    <span className="font-bold text-slate-900 flex items-center gap-2">
+                      <SendIcon className="w-4 h-4 text-sky-600" />
+                      <span>Telegram Broadcast Bot</span>
+                    </span>
                     <div className="flex flex-col gap-1">
                       <label className="text-slate-600">Alerts Channel / Chat:</label>
                       <input

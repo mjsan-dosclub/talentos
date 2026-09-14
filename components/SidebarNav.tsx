@@ -6,7 +6,7 @@ import { useSearchParams } from "next/navigation";
 export interface SidebarItem {
   id: string;
   label: string;
-  icon: string;
+  icon?: React.ReactNode;
   count?: number;
   badge?: string;
 }
@@ -45,7 +45,7 @@ export default function SidebarNav({ groups, activeId, onSelect, baseHref }: Sid
                     }`}
                   >
                     <div className="flex items-center gap-2.5">
-                      <span className="text-base">{item.icon}</span>
+                      {item.icon && <span className="text-slate-400 group-hover:text-slate-700 shrink-0">{item.icon}</span>}
                       <span>{item.label}</span>
                     </div>
 
