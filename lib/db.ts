@@ -346,6 +346,32 @@ export async function getStudentByIdOrEmail(query: string): Promise<{ student: S
     };
   }
 
+  // Access Pass Ledger lookup
+  try {
+    const { getAccessPassByCode } = await import("./passes");
+    const pass = getAccessPassByCode(clean);
+    if (pass) {
+      return {
+        student: {
+          id: pass.id,
+          dos_id: pass.pass_code,
+          group_id: SEED_GROUP_ID,
+          full_name: pass.candidate_name,
+          email: pass.candidate_email,
+          phone: "+91 98400 00000",
+          course: pass.clearance_level,
+          department: pass.institution,
+          year_of_study: 3,
+          is_archived: pass.status === "REVOKED",
+          created_at: pass.issued_at,
+        },
+        isLiveDb: false,
+      };
+    }
+  } catch (err) {
+    console.warn("Pass lookup failed:", err);
+  }
+
   return { student: null, isLiveDb: false };
 }
 

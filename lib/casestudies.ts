@@ -17,12 +17,13 @@ export interface CaseStudy {
   slug: string;
   title: string;
   subtitle: string;
-  category: "Distributed Systems" | "AI & Runtimes" | "Storage & Compaction" | "Security & Protocols";
+  category: string;
   badge: string;
+  tag?: string;
   summary: string;
   fullStory: string[];
   systemAudited: string;
-  defenseStatus: "VERIFIED" | "PASSED_WITH_DISTINCTION";
+  defenseStatus: string;
   metrics: CaseStudyMetric[];
   student: CaseStudyStudent;
   publishedAt: string;
@@ -44,15 +45,16 @@ export const INITIAL_CASE_STUDIES: CaseStudy[] = [
   {
     id: "cs-001",
     slug: "siddharth-raft-consensus-engine",
-    title: "How Siddharth Built a 10,000 RPS Distributed Raft Consensus Engine in Rust",
-    subtitle: "Zero-grace peer defense under live chaos failure injections and split-brain network partitions.",
+    title: "The 36-Hour Hackathon & Singapore Immersion",
+    subtitle: "How longitudinal telemetry filtered 200+ builders to select the top squad for international cross-border deployment.",
     category: "Distributed Systems",
-    badge: "SYSTEMS POD ALPHA",
-    summary: "Deconstructed the Raft consensus algorithm from academic specification to production Rust code. Implemented log compaction, leader election heartbeats, and persistent WAL. Defended live before the batch under simulated node crashes.",
+    badge: "GLOBAL IMMERSION",
+    tag: "GLOBAL IMMERSION",
+    summary: "How longitudinal telemetry filtered 200+ builders to select the top squad for international cross-border deployment.",
     fullStory: [
       "In distributed consensus, theoretical correctness on paper often fails when network latency spikes or a follower node drops packets. Siddharth set out to build a fully compliant Raft implementation in pure Rust, eschewing off-the-shelf crates to master the protocol down to the byte stream.",
       "During the live Zero-Grace Peer Defense, the evaluation lead injected an abrupt leader partition followed by a 40% packet loss simulation across node cluster RPCs. Siddharth's state machine maintained linearizable reads and elected a new leader in under 14ms without a single uncommitted log entry being lost.",
-      "The final benchmark validated continuous throughput of 10,240 write operations per second with persistent disk flush, establishing a new gold standard for Systems Pod Alpha."
+      "The final benchmark validated continuous throughput of 10,240 write operations per second with persistent disk flush, establishing a new gold standard for Systems Pod Alpha and securing his clearance for the Singapore cross-border immersion squad."
     ],
     systemAudited: "SYS-04: Distributed Consensus State Machine",
     defenseStatus: "PASSED_WITH_DISTINCTION",
@@ -67,27 +69,29 @@ export const INITIAL_CASE_STUDIES: CaseStudy[] = [
       role: "Systems Pod Alpha • Kernel Auditor",
       college: "CEG Chennai",
       track: "Systems Engineering",
-      avatar: "/images/students/student-1.jpg"
+      avatar: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80"
     },
     publishedAt: "Sep 12, 2026",
     readTime: "5 min read",
-    coverImage: "/images/students/student-workshop-build.jpg",
-    tags: ["Rust", "Raft", "Distributed Systems", "Chaos Engineering"],
+    coverImage: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+    tags: ["Rust", "Raft", "Distributed Systems", "Global Immersion"],
     commitHash: "b3-raft-98a2f",
-    featured: true
+    featured: true,
+    status: "PUBLISHED"
   },
   {
     id: "cs-002",
     slug: "ananya-paged-kv-cache-runtime",
-    title: "Engineered a Paged KV-Cache AI Serving Engine with 4.2x Throughput Scaling",
-    subtitle: "Eliminating GPU memory fragmentation for concurrent multi-turn LLM inference streams.",
+    title: "From Campus Theory to High-Velocity Production",
+    subtitle: "How an auditable repository ledger replaced the conventional resume for overseas SME engineering teams.",
     category: "AI & Runtimes",
-    badge: "AI ARCHITECTURE POD",
-    summary: "Addressed severe KV-cache memory bloat during multi-turn LLM inference by engineering virtual memory paging across GPU memory blocks and host RAM. Successfully verified against continuous stress benchmarks.",
+    badge: "PRODUCTION DEPLOYMENT",
+    tag: "PRODUCTION DEPLOYMENT",
+    summary: "How an auditable repository ledger replaced the conventional resume for overseas SME engineering teams.",
     fullStory: [
       "Serving high-concurrency LLM inference suffers from massive memory fragmentation when request lengths vary dynamically. Ananya tackled this fundamental compute bottleneck by implementing Paged KV-Cache architecture in C++ with direct CUDA runtime hooks.",
       "Rather than allocating contiguous memory blocks for entire context windows, the runtime allocates small virtual memory pages on-demand. This eliminated 86% of stranded GPU memory and quadrupled the maximum concurrent request capacity on a single GPU node.",
-      "In the live peer defense, Ananya defended her cache eviction invariants against concurrent streaming token generation, achieving a remarkable 99.1 defense rating."
+      "In the live peer defense, Ananya defended her cache eviction invariants against concurrent streaming token generation, achieving a remarkable 99.1 defense rating and an immediate overseas production offer."
     ],
     systemAudited: "SYS-12: High-Throughput Tensor Inference Engine",
     defenseStatus: "PASSED_WITH_DISTINCTION",
@@ -102,23 +106,25 @@ export const INITIAL_CASE_STUDIES: CaseStudy[] = [
       role: "AI Inference Pod • Vector Compute",
       college: "Anna University",
       track: "AI Systems",
-      avatar: "/images/students/student-2.jpg"
+      avatar: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80"
     },
     publishedAt: "Sep 10, 2026",
     readTime: "6 min read",
-    coverImage: "/images/students/student-laptop-focus.jpg",
+    coverImage: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
     tags: ["AI Runtime", "CUDA / C++", "KV-Cache", "LLM Serving"],
     commitHash: "b3-ai-4c91d",
-    featured: true
+    featured: true,
+    status: "PUBLISHED"
   },
   {
     id: "cs-003",
     slug: "karthik-lsm-tree-storage-engine",
-    title: "Building an LSM-Tree Storage Engine with Leveled Compaction from Scratch",
-    subtitle: "Handling high-write ingest with zero write stalls, Bloom filters, and SSTable merges.",
+    title: "Autonomous AI Systems Delivery",
+    subtitle: "Pre-final year students delivering live microservice APIs under production constraints and industry scrutiny.",
     category: "Storage & Compaction",
-    badge: "CORE COMMONS POD",
-    summary: "Replaced SQLite in a systems evaluation with an original Log-Structured Merge-Tree storage engine featuring SkipList MemTables, write-ahead logging (WAL), and tiered SSTable background compaction.",
+    badge: "SYSTEMS ARCHITECTURE",
+    tag: "SYSTEMS ARCHITECTURE",
+    summary: "Pre-final year students delivering live microservice APIs under production constraints and industry scrutiny.",
     fullStory: [
       "Traditional B-Trees degrade under continuous random write spikes. Karthik designed and authored a storage engine based on Log-Structured Merge-Trees (LSM) in modern C++ with zero external dependencies.",
       "The engine features lock-free concurrent SkipLists for in-memory write buffering, block-based SSTables on NVMe storage, and fractional cascading Bloom filters to keep point lookup latency under 0.8ms.",
@@ -137,27 +143,29 @@ export const INITIAL_CASE_STUDIES: CaseStudy[] = [
       role: "Distributed Storage • Log Compaction",
       college: "MIT Chennai",
       track: "Storage Architecture",
-      avatar: "/images/students/student-3.jpg"
+      avatar: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80"
     },
     publishedAt: "Sep 08, 2026",
     readTime: "4 min read",
-    coverImage: "/images/students/student-group-collab.jpg",
+    coverImage: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
     tags: ["Storage Internals", "LSM-Tree", "Compaction", "Systems Programming"],
     commitHash: "b3-lsm-77e3c",
-    featured: true
+    featured: true,
+    status: "PUBLISHED"
   },
   {
     id: "cs-004",
     slug: "meera-zerotrust-ephemeral-mtls",
-    title: "Zero-Trust Service Mesh: Ephemeral mTLS Cryptographic Handshakes at Scale",
-    subtitle: "Automated rotation of student keypairs with sub-millisecond handshake overhead.",
+    title: "Cross-Border Engineering Placement",
+    subtitle: "How verifiable Git commits helped candidate secure an international role without a single standard campus interview.",
     category: "Security & Protocols",
-    badge: "POD IDENTITY & AUDIT",
-    summary: "Architected decentralized mTLS identity verification between student pods. Tied commit signing keys directly to physical attendance geofence receipts with automated 15-minute rotation.",
+    badge: "CAREER ACCELERATION",
+    tag: "CAREER ACCELERATION",
+    summary: "How verifiable Git commits helped candidate secure an international role without a single standard campus interview.",
     fullStory: [
       "Securing communication between autonomous microservices without centralized bottlenecks requires automated, short-lived mutual TLS certificates. Meera engineered an ephemeral mTLS mesh runtime designed for zero-trust microservice clusters.",
       "The architecture integrates with TPM hardware chips and signs ephemeral session keys that automatically rotate every 15 minutes. Even if an individual private key is compromised, subsequent requests are cryptographically quarantined.",
-      "Meera defended her cryptographic state transitions before the Cloud Infrastructure Council, achieving sub-millisecond connection handshake latency."
+      "Meera defended her cryptographic state transitions before the Cloud Infrastructure Council, securing a cross-border engineering placement directly through her repository telemetry."
     ],
     systemAudited: "SYS-18: Zero-Trust Cryptographic Identity Mesh",
     defenseStatus: "PASSED_WITH_DISTINCTION",
@@ -172,14 +180,52 @@ export const INITIAL_CASE_STUDIES: CaseStudy[] = [
       role: "Zero-Trust Identity • Cryptographic Proofs",
       college: "CEG Chennai",
       track: "Security & Protocols",
-      avatar: "/images/students/student-4.jpg"
+      avatar: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80"
     },
     publishedAt: "Sep 05, 2026",
     readTime: "5 min read",
-    coverImage: "/images/students/student-4.jpg",
+    coverImage: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80",
     tags: ["Zero-Trust", "Cryptography", "mTLS", "Identity"],
     commitHash: "b3-sec-11f8a",
-    featured: false
+    featured: false,
+    status: "PUBLISHED"
+  },
+  {
+    id: "cs-005",
+    slug: "vikram-linux-ebpf-telemetry",
+    title: "Open Source Core Contributor Track",
+    subtitle: "Transforming undergraduate developers into recognized maintainers of production open source tooling.",
+    category: "Kernel & eBPF",
+    badge: "OPEN SOURCE LEADERSHIP",
+    tag: "OPEN SOURCE LEADERSHIP",
+    summary: "Transforming undergraduate developers into recognized maintainers of production open source tooling.",
+    fullStory: [
+      "Operating at the boundary between user space and kernel space requires deep understanding of the Linux networking subsystem. Vikram authored an eBPF tracing engine that captures per-socket TCP retransmit events with zero kernel modifications.",
+      "By attaching custom BPF kprobes and tracepoints to kernel functions, the engine generates sub-microsecond latency histograms directly in kernel memory, eliminating expensive context switching.",
+      "The pull request was merged upstream into the primary open source network monitoring project, promoting Vikram to recognized maintainer status before his final college semester."
+    ],
+    systemAudited: "SYS-21: eBPF Linux Network Observability Mesh",
+    defenseStatus: "PASSED_WITH_DISTINCTION",
+    metrics: [
+      { label: "Trace Overhead", value: "< 0.2%" },
+      { label: "Probe Latency", value: "240ns" },
+      { label: "Defense Score", value: "99.4 / 100" }
+    ],
+    student: {
+      name: "Vikram Natarajan",
+      dos_id: "DOS-B3-005",
+      role: "Kernel Pod • eBPF Tracing",
+      college: "PSG Tech Coimbatore",
+      track: "Systems Observability",
+      avatar: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80"
+    },
+    publishedAt: "Sep 02, 2026",
+    readTime: "5 min read",
+    coverImage: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
+    tags: ["eBPF", "Linux Kernel", "C", "Observability"],
+    commitHash: "b3-ebpf-33d11",
+    featured: true,
+    status: "PUBLISHED"
   }
 ];
 

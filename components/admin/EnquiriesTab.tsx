@@ -67,7 +67,10 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
 
     const matchesStatus =
       statusFilter === "ALL" ||
-      item.status === statusFilter;
+      (item.status as string) === statusFilter ||
+      (statusFilter === "NEW" && ((item.status as string) === "NEW" || (item.status as string) === "PENDING")) ||
+      (statusFilter === "APPROVED" && ((item.status as string) === "ACCEPTED" || (item.status as string) === "APPROVED")) ||
+      (statusFilter === "ARCHIVED" && ((item.status as string) === "INACTIVE" || (item.status as string) === "ARCHIVED"));
 
     return matchesSearch && matchesRole && matchesStatus;
   });
@@ -360,8 +363,8 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
             <option value="ALL">All Statuses</option>
             <option value="NEW">New</option>
             <option value="CONTACTED">Contacted</option>
-            <option value="ACCEPTED">Accepted</option>
-            <option value="INACTIVE">Inactive</option>
+            <option value="APPROVED">Approved</option>
+            <option value="ARCHIVED">Archived</option>
           </select>
 
           <select

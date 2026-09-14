@@ -56,10 +56,56 @@ function Reveal({
   );
 }
 
+const DEFAULT_CASE_STUDIES = [
+  {
+    id: "cs-001",
+    slug: "siddharth-raft-consensus-engine",
+    tag: "GLOBAL IMMERSION",
+    title: "The 36-Hour Hackathon & Singapore Immersion",
+    image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+    summary: "How longitudinal telemetry filtered 200+ builders to select the top squad for international cross-border deployment.",
+  },
+  {
+    id: "cs-002",
+    slug: "ananya-paged-kv-cache-runtime",
+    tag: "PRODUCTION DEPLOYMENT",
+    title: "From Campus Theory to High-Velocity Production",
+    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
+    summary: "How an auditable repository ledger replaced the conventional resume for overseas SME engineering teams.",
+  },
+  {
+    id: "cs-003",
+    slug: "karthik-lsm-tree-storage-engine",
+    tag: "SYSTEMS ARCHITECTURE",
+    title: "Autonomous AI Systems Delivery",
+    image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
+    summary: "Pre-final year students delivering live microservice APIs under production constraints and industry scrutiny.",
+  },
+  {
+    id: "cs-004",
+    slug: "meera-zerotrust-ephemeral-mtls",
+    tag: "CAREER ACCELERATION",
+    title: "Cross-Border Engineering Placement",
+    image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80",
+    summary: "How verifiable Git commits helped candidate secure an international role without a single standard campus interview.",
+  },
+  {
+    id: "cs-005",
+    slug: "vikram-linux-ebpf-telemetry",
+    tag: "OPEN SOURCE LEADERSHIP",
+    title: "Open Source Core Contributor Track",
+    image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
+    summary: "Transforming undergraduate developers into recognized maintainers of production open source tooling.",
+  },
+];
+
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<TalentosUser | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // Dynamic Case Studies State (synchronized with Admin CMS)
+  const [caseStudies, setCaseStudies] = useState(DEFAULT_CASE_STUDIES);
 
   // Terminal Access Input State
   const [accessPass, setAccessPass] = useState("");
@@ -88,6 +134,34 @@ export default function Home() {
 
   useEffect(() => {
     setUser(getClientSession());
+
+    // Fetch active published case studies from Admin CMS API
+    async function loadDynamicCaseStudies() {
+      try {
+        const res = await fetch("/api/casestudies");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.casestudies && Array.isArray(data.casestudies) && data.casestudies.length > 0) {
+            const published = data.casestudies
+              .filter((s: any) => s.status !== "DRAFT")
+              .map((s: any) => ({
+                id: s.id,
+                slug: s.slug,
+                tag: s.tag || s.badge || s.category || "CASE STUDY",
+                title: s.title,
+                image: s.coverImage || s.bannerImage || s.image || "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
+                summary: s.summary || s.subtitle || s.shortDescription || "",
+              }));
+            if (published.length > 0) {
+              setCaseStudies(published);
+            }
+          }
+        }
+      } catch {
+        // Fallback to default published case studies
+      }
+    }
+    loadDynamicCaseStudies();
   }, []);
 
   const handleVerify = (e: React.FormEvent) => {
@@ -850,48 +924,7 @@ export default function Home() {
             ref={caseStudyScrollRef}
             className="flex gap-6 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-4"
           >
-            {[
-              {
-                id: "cs-1",
-                slug: "siddharth-raft-consensus-engine",
-                tag: "GLOBAL IMMERSION",
-                title: "The 36-Hour Hackathon & Singapore Immersion",
-                image: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=800&q=80",
-                summary: "How longitudinal telemetry filtered 200+ builders to select the top squad for international cross-border deployment.",
-              },
-              {
-                id: "cs-2",
-                slug: "ananya-paged-kv-cache-runtime",
-                tag: "PRODUCTION DEPLOYMENT",
-                title: "From Campus Theory to High-Velocity Production",
-                image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=800&q=80",
-                summary: "How an auditable repository ledger replaced the conventional resume for overseas SME engineering teams.",
-              },
-              {
-                id: "cs-3",
-                slug: "karthik-lsm-tree-storage-engine",
-                tag: "SYSTEMS ARCHITECTURE",
-                title: "Autonomous AI Systems Delivery",
-                image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
-                summary: "Pre-final year students delivering live microservice APIs under production constraints and industry scrutiny.",
-              },
-              {
-                id: "cs-4",
-                slug: "meera-zerotrust-ephemeral-mtls",
-                tag: "CAREER ACCELERATION",
-                title: "Cross-Border Engineering Placement",
-                image: "https://images.unsplash.com/photo-1521737604893-d14cc237f11d?auto=format&fit=crop&w=800&q=80",
-                summary: "How verifiable Git commits helped candidate secure an international role without a single standard campus interview.",
-              },
-              {
-                id: "cs-5",
-                slug: "siddharth-raft-consensus-engine",
-                tag: "OPEN SOURCE LEADERSHIP",
-                title: "Open Source Core Contributor Track",
-                image: "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=800&q=80",
-                summary: "Transforming undergraduate developers into recognized maintainers of production open source tooling.",
-              },
-            ].map((study) => (
+            {caseStudies.map((study) => (
               <Link
                 key={study.id}
                 href={`/casestudies/${study.slug}`}
