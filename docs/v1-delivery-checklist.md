@@ -18,7 +18,7 @@
 | **07. Evidence & Deliverables** | 7 | Complete (7/7) | PRODUCT_ACCEPTED |
 | **08. Certifications** | 4 | Complete (4/4) | PRODUCT_ACCEPTED |
 | **09. Skills Matrix** | 5 | Complete (5/5) | PRODUCT_ACCEPTED |
-| **10. Notifications** | 4 | Complete (3/4) | DEV_VERIFIED |
+| **10. Notifications** | 4 | Complete (4/4) | PRODUCT_ACCEPTED |
 | **11. College Reporting** | 5 | Complete (5/5) | PRODUCT_ACCEPTED |
 | **12. Progressive Web App** | 4 | Complete (4/4) | PRODUCT_ACCEPTED |
 | **13. Student Journey** | 3 | Complete (3/3) | PRODUCT_ACCEPTED |

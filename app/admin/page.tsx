@@ -15,9 +15,12 @@ import {
   XIcon,
   RadioIcon,
   FileTextIcon,
+  BellIcon,
 } from "@/components/Icons";
 import PopupsTab from "@/components/admin/PopupsTab";
 import LandingCmsTab from "@/components/admin/LandingCmsTab";
+import EnquiriesTab from "@/components/admin/EnquiriesTab";
+import PushNotificationsTab from "@/components/admin/PushNotificationsTab";
 
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 import { formatConfigDateTime } from "@/lib/datetime";
@@ -463,6 +466,7 @@ function AdminHubContent() {
         { id: "students", label: "Students", icon: <UsersIcon className="w-4 h-4" />, count: students.length },
         { id: "experts", label: "Experts", icon: <AcademicCapIcon className="w-4 h-4" />, count: experts.length, badge: "NEW" },
         { id: "institutions", label: "Institutions", icon: <BuildingIcon className="w-4 h-4" />, count: institutions.length },
+        { id: "enquiries", label: "Admissions Enquiries", icon: <UsersIcon className="w-4 h-4" />, badge: "NEW" },
       ],
     },
     {
@@ -476,6 +480,7 @@ function AdminHubContent() {
       items: [
         { id: "popups", label: "Flash News & Popups", icon: <RadioIcon className="w-4 h-4" />, badge: "LIVE" },
         { id: "cms", label: "Landing Page CMS", icon: <FileTextIcon className="w-4 h-4" /> },
+        { id: "push", label: "Push Notifications", icon: <BellIcon className="w-4 h-4" />, badge: "FCM" },
       ],
     },
     {
@@ -1022,6 +1027,20 @@ function AdminHubContent() {
           {/* ========================================================================= */}
           {activeTab === "cms" && (
             <LandingCmsTab onToast={triggerToast} />
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 8: ADMISSIONS ENQUIRIES                                               */}
+          {/* ========================================================================= */}
+          {activeTab === "enquiries" && (
+            <EnquiriesTab onToast={triggerToast} />
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 9: PUSH NOTIFICATIONS (FIREBASE & PWA)                                */}
+          {/* ========================================================================= */}
+          {activeTab === "push" && (
+            <PushNotificationsTab onToast={triggerToast} />
           )}
         </main>
 

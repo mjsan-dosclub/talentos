@@ -14,18 +14,18 @@
 TALENTOS V1 DELIVERY CONTROL DASHBOARD
 =================================================================================
 Total Requirements Tracked:      99
-Completed (Level 1/2 Verified):  76
+Completed (Level 1/2 Verified):  78
 Ready for Test:                  10
-In Progress:                      6
+In Progress:                      5
 Blocked:                          0
-Not Started / Deferred:           7
+Not Started / Deferred:           6
 
-Critical Deviations:              3 (Logged in docs/deviation-register.md)
+Critical Deviations:              2 (Logged in docs/deviation-register.md)
 Open Product Decisions:           0 (Resolved: DEC-01, DEC-02)
 Critical Bugs:                    0
 ---------------------------------------------------------------------------------
-BUILD COMPLETION (Code Exists):          76 / 99  =  76.8%
-ACCEPTED COMPLETION (Level 3 Approved):  56 / 99  =  56.6%
+BUILD COMPLETION (Code Exists):          78 / 99  =  78.7%
+ACCEPTED COMPLETION (Level 3 Approved):  58 / 99  =  58.5%
 =================================================================================
 ```
 
@@ -245,7 +245,7 @@ When N reaches 40, system automatically allocates new students to Group Beta
 |---|---|---|---|---|---|---|---|
 | TAL-090 | In-App Notification Bell & Badge | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-091 | Communication Gateways Config (SMTP, WhatsApp, Telegram) | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
-| TAL-092 | Web Push / PWA Notification Permissions | SHOULD | Deferred | Not Tested | NOT STARTED | DEV-02 | Dev |
+| TAL-092 | Web Push / PWA Notification Permissions (Firebase Cloud Messaging) | SHOULD | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-093 | Audience Targeting (Batch, Role, Pod) | SHOULD | Complete | Passed | DEV_VERIFIED | None | Dev |
 
 ### Module 11: College Reporting Portal (`/college`)
@@ -263,7 +263,7 @@ When N reaches 40, system automatically allocates new students to Group Beta
 | TAL-102 | PWA Webmanifest (`/manifest.webmanifest`) | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-103 | App Icons (192x192, 512x512) & Theme Color | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 | TAL-104 | Mobile First Viewport & Responsive Layouts | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
-| TAL-105 | Fast Add to Home Screen (A2HS) Readiness | MUST | Complete | Passed | QA_VERIFIED | None | Dev |
+| TAL-105 | Fast Add to Home Screen (A2HS) Readiness | MUST | Complete | Passed | PRODUCT_ACCEPTED | None | Dev |
 
 ### Module 13: Student Journey
 | ID | Requirement | Priority | Build Status | Test Status | Acceptance Level | Deviation | Owner |

@@ -35,8 +35,10 @@ export default function Home() {
   // Enquiry Form State
   const [enquiry, setEnquiry] = useState({
     name: "",
-    contact: "",
-    category: "Student",
+    phone: "",
+    email: "",
+    current_role: "Engineering Student (Year 3-4)",
+    referral_source: "LinkedIn / Social Media",
     message: "",
   });
   const [enquiryStatus, setEnquiryStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -1166,6 +1168,7 @@ export default function Home() {
                 )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Full Name */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-[#777E90] mb-2">
                       Full Name *
@@ -1180,44 +1183,88 @@ export default function Home() {
                     />
                   </div>
 
+                  {/* Mobile [WhatsApp] */}
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-wider text-[#777E90] mb-2">
-                      Email or WhatsApp *
+                      Mobile [WhatsApp] *
                     </label>
                     <input
-                      type="text"
+                      type="tel"
                       required
-                      placeholder="e.g. siddharth@example.com / +91..."
-                      value={enquiry.contact}
-                      onChange={(e) => setEnquiry({ ...enquiry, contact: e.target.value })}
+                      placeholder="e.g. +91 98401 23456"
+                      value={enquiry.phone}
+                      onChange={(e) => setEnquiry({ ...enquiry, phone: e.target.value })}
                       className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
                     />
                   </div>
                 </div>
 
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  {/* Email Address */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#777E90] mb-2">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. siddharth@example.com"
+                      value={enquiry.email}
+                      onChange={(e) => setEnquiry({ ...enquiry, email: e.target.value })}
+                      className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
+                    />
+                  </div>
+
+                  {/* Current Role */}
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-[#777E90] mb-2">
+                      Current Role *
+                    </label>
+                    <select
+                      value={enquiry.current_role}
+                      onChange={(e) => setEnquiry({ ...enquiry, current_role: e.target.value })}
+                      className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
+                    >
+                      <option value="Engineering Student (Year 1-2)">Engineering Student (Year 1–2)</option>
+                      <option value="Engineering Student (Year 3-4)">Engineering Student (Year 3–4)</option>
+                      <option value="Recent Engineering Graduate">Recent Engineering Graduate</option>
+                      <option value="Early Professional (0-2 YOE)">Early Professional / Junior Dev (0–2 YOE)</option>
+                      <option value="Senior Engineer (2+ YOE)">Senior Engineer / Lead (2+ YOE)</option>
+                      <option value="Self-Taught Builder">Self-Taught Builder / Open Source</option>
+                      <option value="Other">Other / Non-Traditional</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* How did you know us? */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#777E90] mb-2">
-                    Current Background
+                    How did you know us? *
                   </label>
                   <select
-                    value={enquiry.category}
-                    onChange={(e) => setEnquiry({ ...enquiry, category: e.target.value })}
+                    value={enquiry.referral_source}
+                    onChange={(e) => setEnquiry({ ...enquiry, referral_source: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
                   >
-                    <option value="Student">Engineering Student (Year 1-4)</option>
-                    <option value="Recent Graduate">Recent Engineering Graduate</option>
-                    <option value="Self-Taught">Self-Taught Builder</option>
-                    <option value="Working Engineer">Early Professional (0-2 YOE)</option>
+                    <option value="LinkedIn / Social Media">LinkedIn / Social Media</option>
+                    <option value="Campus Workshop / College Event">Campus Workshop / College Event</option>
+                    <option value="DOS Club Member / Alumni Referral">DOS Club Member / Alumni Referral</option>
+                    <option value="WhatsApp Group / Tech Community">WhatsApp Group / Tech Community</option>
+                    <option value="GitHub / Open Source Repository">GitHub / Open Source Repository</option>
+                    <option value="Friend / Peer Recommendation">Friend / Peer Recommendation</option>
+                    <option value="Web Search / Direct Visit">Web Search / Direct Visit</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
 
+                {/* Message / Aspirations */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-[#777E90] mb-2">
-                    Message or Questions (Optional)
+                    Technical Aspirations & Questions (Optional)
                   </label>
                   <textarea
-                    rows={4}
-                    placeholder="Tell us what systems or projects you are excited to build..."
+                    rows={3}
+                    placeholder="Tell us about the distributed systems, AI, or open source projects you are excited to build..."
                     value={enquiry.message}
                     onChange={(e) => setEnquiry({ ...enquiry, message: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
