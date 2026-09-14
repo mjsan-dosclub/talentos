@@ -79,10 +79,62 @@ export default function AppHeader() {
           </Link>
         </div>
 
-        {/* Right: Timezone Clock & User Session (NO top bar navigation links) */}
-        <div className="flex items-center gap-3 sm:gap-4">
+        {/* Center/Right: Navigation Shortcuts & User Session */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Quick Home & Dashboard Navigation */}
+          <div className="flex items-center gap-1.5 mr-1">
+            {pathname !== "/" && (
+              <Link
+                href="/"
+                className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                title="Return to Public Homepage"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span className="hidden md:inline">Home</span>
+              </Link>
+            )}
+
+            {user && (
+              <Link
+                href={
+                  user.role === "SUPER_ADMIN"
+                    ? "/admin"
+                    : user.role === "TRAINER"
+                    ? "/trainer"
+                    : user.role === "COLLEGE_ADMIN"
+                    ? "/college"
+                    : `/record/${encodeURIComponent(user.dos_id || "DOS-B3-001")}`
+                }
+                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                  (user.role === "SUPER_ADMIN" && pathname.startsWith("/admin")) ||
+                  (user.role === "TRAINER" && pathname.startsWith("/trainer")) ||
+                  (user.role === "COLLEGE_ADMIN" && pathname.startsWith("/college")) ||
+                  (user.role === "STUDENT" && pathname.startsWith("/record"))
+                    ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                    : "text-slate-300 hover:text-white hover:bg-slate-800"
+                }`}
+                title="Go to role dashboard"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                <span>
+                  {user.role === "SUPER_ADMIN"
+                    ? "Admin"
+                    : user.role === "TRAINER"
+                    ? "Cockpit"
+                    : user.role === "COLLEGE_ADMIN"
+                    ? "College"
+                    : "Dossier"}
+                </span>
+              </Link>
+            )}
+          </div>
+
           {/* Live Indian Standard Time Clock */}
-          <div className="hidden sm:flex items-center gap-2 bg-slate-800/90 px-2.5 py-1 rounded-md border border-slate-700 text-xs">
+          <div className="hidden lg:flex items-center gap-2 bg-slate-800/90 px-2.5 py-1 rounded-md border border-slate-700 text-xs">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-slate-400 font-mono text-[10px] uppercase">
               {config.timezone === "Asia/Kolkata" ? "IST" : config.timezone}:

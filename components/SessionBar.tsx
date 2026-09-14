@@ -112,7 +112,54 @@ export default function SessionBar() {
               )}
             </div>
 
-            {/* Menu Actions */}
+            {/* Navigation Shortcuts */}
+            <div className="py-1 border-b border-[#F4F5F6] space-y-0.5">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  const target =
+                    user.role === "SUPER_ADMIN"
+                      ? "/admin"
+                      : user.role === "TRAINER"
+                      ? "/trainer"
+                      : user.role === "COLLEGE_ADMIN"
+                      ? "/college"
+                      : `/record/${encodeURIComponent(user.dos_id || "DOS-B3-001")}`;
+                  router.push(target);
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#3772FF] hover:bg-[#3772FF]/10 rounded-xl transition-colors text-left"
+              >
+                <svg className="w-4 h-4 text-[#3772FF]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+                <span>
+                  {user.role === "SUPER_ADMIN"
+                    ? "Admin Console"
+                    : user.role === "TRAINER"
+                    ? "Expert Cockpit"
+                    : user.role === "COLLEGE_ADMIN"
+                    ? "College Portal"
+                    : "My Student Dossier"}
+                </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  router.push("/");
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#23262F] hover:bg-[#F4F5F6] rounded-xl transition-colors text-left"
+              >
+                <svg className="w-4 h-4 text-[#777E90]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+                </svg>
+                <span>Public Home</span>
+              </button>
+            </div>
+
+            {/* Account Settings */}
             <div className="py-1 space-y-0.5">
               <button
                 type="button"

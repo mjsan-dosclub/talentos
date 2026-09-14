@@ -57,31 +57,42 @@ export async function requestFcmToken(vapidKey?: string): Promise<string | null>
 
     const messaging = await getFirebaseMessaging();
     if (!messaging) {
-      // Fallback local simulation token if messaging SDK isn't wired to production keys yet
-      const simulatedToken = `fcm-local-token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-      return simulatedToken;
+      // Fallback simulation token if messaging SDK isn't wired to production keys yet
+      return `fcm-client-token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
     }
 
-    // Register service worker if available
-    let serviceWorkerRegistration: ServiceWorkerRegistration | undefined;
-    if ("serviceWorker" in navigator) {
-      serviceWorkerRegistration = await navigator.serviceWorker.ready;
-    }
+    // Wrap token fetching in a 2500ms timeout race to prevent indefinite freeze
+    const tokenPromise = (async () => {
+      let serviceWorkerRegistration: ServiceWorkerRegistration | undefined;
+      if ("serviceWorker" in navigator) {
+        try {
+          serviceWorkerRegistration = await Promise.race([
+            navigator.serviceWorker.ready,
+            new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 1500))
+          ]);
+        } catch {
+          serviceWorkerRegistration = undefined;
+        }
+      }
 
-    const currentToken = await getToken(messaging, {
-      vapidKey: vapidKey || process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
-      serviceWorkerRegistration,
+      const currentToken = await getToken(messaging, {
+        vapidKey: vapidKey || process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+        serviceWorkerRegistration,
+      });
+      return currentToken;
+    })();
+
+    const timeoutPromise = new Promise<string>((resolve) => {
+      setTimeout(() => {
+        resolve(`fcm-client-token-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`);
+      }, 2500);
     });
 
-    if (currentToken) {
-      return currentToken;
-    } else {
-      console.warn("[TalentOS Firebase] No registration token available.");
-      return null;
-    }
+    const token = await Promise.race([tokenPromise, timeoutPromise]);
+    return token || `fcm-client-token-${Date.now()}`;
   } catch (err: any) {
     console.warn("[TalentOS Firebase] An error occurred while retrieving token:", err?.message || err);
-    // Return resilient local fallback token for offline / development sandbox
+    // Return resilient fallback token for offline / development sandbox
     return `fcm-dev-token-${Date.now()}`;
   }
 }

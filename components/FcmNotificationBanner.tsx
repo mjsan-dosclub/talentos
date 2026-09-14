@@ -73,9 +73,13 @@ export default function FcmNotificationBanner() {
           title: "Push Alerts Activated",
           body: "You will now receive zero-grace attendance and session updates.",
         });
+        setDismissed(true);
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem("talentos_fcm_dismissed", "true");
+        }
         setTimeout(() => setActiveToast(null), 5000);
       } else {
-        if (Notification.permission === "denied") {
+        if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "denied") {
           setPermission("denied");
         }
       }

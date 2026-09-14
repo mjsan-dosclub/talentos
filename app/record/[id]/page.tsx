@@ -684,8 +684,35 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-emerald-100 selection:text-emerald-900 flex flex-col justify-between">
-      {/* 1. Global AppHeader (NO top-bar navigation) */}
+      {/* 1. Global AppHeader */}
       <AppHeader />
+
+      {/* Top Context & Navigation Bar */}
+      <div className="bg-white border-b border-slate-200 sticky top-14 z-30 shadow-2xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-11 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2 text-slate-500">
+            <Link href="/" className="hover:text-slate-900 transition-colors flex items-center gap-1">
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+              </svg>
+              <span>Home</span>
+            </Link>
+            <span>/</span>
+            <Link href="/admin" className="hover:text-slate-900 transition-colors">Admin Console</Link>
+            <span>/</span>
+            <span className="text-slate-900 font-semibold font-mono">{identifier}</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Link
+              href="/admin?tab=students"
+              className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 border border-slate-200"
+            >
+              <span>&larr; Back to Admin Roster</span>
+            </Link>
+          </div>
+        </div>
+      </div>
 
       {/* 2. Main Workspace Layout with Left Sidebar */}
       <div className="flex-1 flex flex-col md:flex-row w-full max-w-7xl mx-auto">

@@ -21,6 +21,7 @@ import PopupsTab from "@/components/admin/PopupsTab";
 import LandingCmsTab from "@/components/admin/LandingCmsTab";
 import EnquiriesTab from "@/components/admin/EnquiriesTab";
 import PushNotificationsTab from "@/components/admin/PushNotificationsTab";
+import NotificationEngineTab from "@/components/admin/NotificationEngineTab";
 
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 import { formatConfigDateTime } from "@/lib/datetime";
@@ -478,9 +479,10 @@ function AdminHubContent() {
     {
       title: "Content & Broadcast",
       items: [
+        { id: "notifications", label: "Notification Engine", icon: <BellIcon className="w-4 h-4" />, badge: "3-WAY" },
         { id: "popups", label: "Flash News & Popups", icon: <RadioIcon className="w-4 h-4" />, badge: "LIVE" },
         { id: "cms", label: "Landing Page CMS", icon: <FileTextIcon className="w-4 h-4" /> },
-        { id: "push", label: "Push Notifications", icon: <BellIcon className="w-4 h-4" />, badge: "FCM" },
+        { id: "push", label: "Push Notifications", icon: <RadioIcon className="w-4 h-4" />, badge: "FCM" },
       ],
     },
     {
@@ -1037,7 +1039,14 @@ function AdminHubContent() {
           )}
 
           {/* ========================================================================= */}
-          {/* TAB 9: PUSH NOTIFICATIONS (FIREBASE & PWA)                                */}
+          {/* TAB 9: TARGETED NOTIFICATION ENGINE (EMAIL | WHATSAPP | PUSH)             */}
+          {/* ========================================================================= */}
+          {activeTab === "notifications" && (
+            <NotificationEngineTab onToast={triggerToast} />
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 10: PUSH NOTIFICATIONS (FIREBASE & PWA)                               */}
           {/* ========================================================================= */}
           {activeTab === "push" && (
             <PushNotificationsTab onToast={triggerToast} />
