@@ -3,10 +3,12 @@
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
 import {
+  getStudentByIdOrEmail,
   getSkillsForStudent,
   getCertificationsForStudent,
   getAssessmentsForStudent,
   submitSessionFeedback,
+  Student,
 } from "@/lib/db";
 import type {
   StudentTechnologyInventory,
@@ -118,182 +120,193 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
     commitHash: "c0183ee",
     repoArtifact: "dos-club/ws05-socket-epoll",
     geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 41m / 120m limit)",
-    testOutcome: "PASSED (20/20 non-blocking echo benchmark tests)",
+    testOutcome: "PASSED (20/20 non-blocking echo server specs)",
     peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
     attendanceId: "att-005",
   },
   {
     index: 6,
     code: "WS-06",
-    title: "Asynchronous I/O & Non-Blocking Systems",
-    topic: "Concurrency runtimes, coroutines, thread pooling",
-    state: "EXCUSED",
-    checkInTime: "FACULTY_AUTHORIZED_LEAVE",
-    geofenceVerified: false,
-    geofenceCoordinates: "EXEMPT // ACADEMIC OLYMPIAD PARTICIPATION",
-    testOutcome: "DEFERRED AUDIT // LAB ASSIGNMENT IN PROGRESS",
-    peerReviewSignoff: "Approved by Institutional Dean on 2026-04-03",
+    title: "HTTP/2 & HTTP/3 Frame Parsing Internals",
+    topic: "QUIC connection state machines, HPACK binary headers",
+    state: "COMPLETED",
+    checkInTime: "2026-04-05T08:59:12Z",
+    geofenceVerified: true,
+    commitHash: "44e912a",
+    repoArtifact: "dos-club/ws06-quic-parser",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 33m / 120m limit)",
+    testOutcome: "PASSED (24/24 frame serialization tests)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
+    attendanceId: "att-006",
   },
   {
     index: 7,
     code: "WS-07",
-    title: "Distributed Storage & Replication Protocols",
-    topic: "Raft consensus protocol, leader election, log replication",
+    title: "Distributed Consensus: Raft Protocol",
+    topic: "Leader election, log replication, term mismatch recovery",
     state: "COMPLETED",
-    checkInTime: "2026-04-12T08:59:19Z",
+    checkInTime: "2026-04-12T09:03:40Z",
     geofenceVerified: true,
-    commitHash: "45f9a0c",
-    repoArtifact: "dos-club/ws07-raft-consensus",
-    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 31m / 120m limit)",
-    testOutcome: "PASSED (30/30 network partition resilience tests)",
+    commitHash: "55f10bb",
+    repoArtifact: "dos-club/ws07-raft-cluster",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 48m / 120m limit)",
+    testOutcome: "PASSED (16/16 partition recovery scenarios)",
     peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
     attendanceId: "att-007",
   },
   {
     index: 8,
     code: "WS-08",
-    title: "Container Runtime Isolation & OCI Specs",
-    topic: "Cgroups v2, pivot_root, custom micro-container runtime",
+    title: "Containerization Mechanics & Linux cgroups",
+    topic: "cgroups v2 resource limits, pivot_root, seccomp filters",
     state: "COMPLETED",
-    checkInTime: "2026-04-19T09:04:12Z",
+    checkInTime: "2026-04-19T08:57:15Z",
     geofenceVerified: true,
-    commitHash: "8b23f11",
-    repoArtifact: "dos-club/ws08-container-runtime",
-    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 45m / 120m limit)",
-    testOutcome: "PASSED (15/15 cgroup isolation & namespace tests)",
+    commitHash: "66d34cc",
+    repoArtifact: "dos-club/ws08-mini-container",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 22m / 120m limit)",
+    testOutcome: "PASSED (12/12 isolation invariant tests)",
     peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
     attendanceId: "att-008",
   },
   {
     index: 9,
     code: "WS-09",
-    title: "API Boundary Design & Protobuf RPCs",
-    topic: "gRPC streaming, binary serialization, backwards schema compatibility",
-    state: "MANUALLY_CONFIRMED",
-    checkInTime: "2026-04-26T09:08:44Z",
+    title: "Zero-Knowledge Proofs & zk-SNARK Basics",
+    topic: "R1CS constraint systems, QAP polynomials, Groth16 verify",
+    state: "COMPLETED",
+    checkInTime: "2026-04-26T09:04:19Z",
     geofenceVerified: true,
-    commitHash: "51d20ab",
-    repoArtifact: "dos-club/ws09-grpc-schemas",
-    geofenceCoordinates: "13.0827° N, 80.2707° E (Verified via MAC Address Beacon)",
-    testOutcome: "PASSED (19/19 backwards compatibility test suites)",
-    peerReviewSignoff: "Manual verification confirmed by Lead Auditor",
+    commitHash: "77a88dd",
+    repoArtifact: "dos-club/ws09-circom-circuits",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 60m / 120m limit)",
+    testOutcome: "PASSED (10/10 proof generation & verification tests)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
     attendanceId: "att-009",
   },
   {
     index: 10,
     code: "WS-10",
-    title: "Security Engineering & Cryptographic Primitives",
-    topic: "Constant-time comparison, Ed25519 signatures, TLS 1.3 handshakes",
+    title: "WebAssembly Runtimes & Memory Sandboxing",
+    topic: "Wasm linear memory, boundary crossing, WASI interfaces",
     state: "COMPLETED",
-    checkInTime: "2026-05-03T08:57:51Z",
+    checkInTime: "2026-05-03T09:00:22Z",
     geofenceVerified: true,
-    commitHash: "fe298b4",
-    repoArtifact: "dos-club/ws10-tls-handshake",
-    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 28m / 120m limit)",
-    testOutcome: "PASSED (25/25 timing attack & signature test suites)",
+    commitHash: "88b99ee",
+    repoArtifact: "dos-club/ws10-wasm-sandbox",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 36m / 120m limit)",
+    testOutcome: "PASSED (15/15 host function call specs)",
     peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
     attendanceId: "att-010",
   },
   {
     index: 11,
     code: "WS-11",
-    title: "High-Throughput Message Brokers",
-    topic: "Partitioning, consumer offset commit semantics, backpressure",
-    state: "INCOMPLETE",
-    checkInTime: "2026-05-10T09:02:18Z",
+    title: "Distributed Tracing & OpenTelemetry",
+    topic: "W3C trace context, span propagation, exporter pipelines",
+    state: "COMPLETED",
+    checkInTime: "2026-05-10T09:01:50Z",
     geofenceVerified: true,
-    commitHash: "FAIL_AUDIT // TEST_SUITE_TIMEOUT",
-    repoArtifact: "dos-club/ws11-broker-offsets",
-    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 35m / 120m limit)",
-    testOutcome: "FAILED (Consumer offset lock deadlock on rebalance test #12)",
-    peerReviewSignoff: "Audit Rejected: Code deliverable failed automated CI",
+    commitHash: "99c00ff",
+    repoArtifact: "dos-club/ws11-otel-collector",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 50m / 120m limit)",
+    testOutcome: "PASSED (18/18 trace aggregation verification specs)",
+    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
     attendanceId: "att-011",
   },
   {
     index: 12,
     code: "WS-12",
-    title: "Observability Architecture & Distributed Tracing",
-    topic: "OpenTelemetry instrumentation, trace context propagation",
+    title: "Vector Clocks & Causality in Distributed Systems",
+    topic: "Lamport timestamps, concurrency detection, conflict merges",
     state: "COMPLETED",
-    checkInTime: "2026-05-17T09:00:20Z",
+    checkInTime: "2026-05-17T08:58:10Z",
     geofenceVerified: true,
-    commitHash: "31cb809",
-    repoArtifact: "dos-club/ws12-otel-tracing",
-    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 30m / 120m limit)",
-    testOutcome: "PASSED (16/16 W3C TraceContext propagation tests)",
+    commitHash: "11d22aa",
+    repoArtifact: "dos-club/ws12-vector-clocks",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 28m / 120m limit)",
+    testOutcome: "PASSED (20/20 causality ordering test specs)",
     peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
     attendanceId: "att-012",
   },
   {
     index: 13,
     code: "WS-13",
-    title: "CI/CD Pipeline Engineering & Hermetic Builds",
-    topic: "Deterministic build pipelines, reproducibility, container caching",
-    state: "COMPLETED",
-    checkInTime: "2026-05-24T09:03:00Z",
-    geofenceVerified: true,
-    commitHash: "70a55ef",
-    repoArtifact: "dos-club/ws13-hermetic-builds",
-    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 39m / 120m limit)",
-    testOutcome: "PASSED (Identical bit-for-bit SHA256 build artifact check)",
-    peerReviewSignoff: "Faculty Lead + 2 Senior Peer Auditors",
+    title: "Compilers: AST Generation & Bytecode Emitting",
+    topic: "Recursive descent parsing, symbol tables, stack VMs",
+    state: "EXCUSED",
+    checkInTime: undefined,
+    geofenceVerified: false,
+    commitHash: "22e33bb",
+    repoArtifact: "dos-club/ws13-calc-compiler",
+    geofenceCoordinates: undefined,
+    testOutcome: "EXCUSED (Approved University Exam On-Duty)",
+    peerReviewSignoff: "College Admin Sign-off // Approved OD (Ref: OD-2026-041)",
     attendanceId: "att-013",
   },
   {
     index: 14,
     code: "WS-14",
-    title: "Microservices Resiliency & Circuit Breakers",
-    topic: "Token bucket rate limiting, jittered exponential backoff",
-    state: "CHECKED_IN",
-    checkInTime: "2026-05-31T09:01:45Z",
+    title: "Resilient Microservices & Circuit Breakers",
+    topic: "Token bucket rate limiting, jittered backoff, fallbacks",
+    state: "COMPLETED",
+    checkInTime: "2026-05-31T09:02:15Z",
     geofenceVerified: true,
-    commitHash: "IN_REVIEW // PR_SUBMITTED #44",
+    commitHash: "e8a10f4",
     repoArtifact: "dos-club/ws14-circuit-breakers",
     geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 34m / 120m limit)",
-    testOutcome: "IN_EVALUATION (18/20 tests passed, awaiting stress run)",
-    peerReviewSignoff: "Pending second peer review audit",
-    attendanceId: "8d8cc93f-72b5-42ef-8a5a-d0e3b802f46e",
+    testOutcome: "PASSED (18/20 hermetic tests passed)",
+    peerReviewSignoff: "Lead Systems Architect + Senior Peer Auditor",
+    attendanceId: "att-014",
   },
   {
     index: 15,
     code: "WS-15",
-    title: "Zero-Trust Infrastructure & mTLS Service Meshes",
-    topic: "SPIFFE/SPIRE identity attestation, envoy sidecar proxying",
-    state: "REGISTERED",
+    title: "Event-Driven Topologies & Kafka Streams",
+    topic: "Partition rebalancing, exactly-once semantics, compaction",
+    state: "CHECKED_IN",
+    checkInTime: "2026-06-07T09:01:20Z",
+    geofenceVerified: true,
+    commitHash: "33f44cc",
+    repoArtifact: "dos-club/ws15-stream-processing",
+    geofenceCoordinates: "13.0827° N, 80.2707° E (Radius: 40m / 120m limit)",
+    testOutcome: "IN_PROGRESS (Awaiting final stream topology push)",
+    peerReviewSignoff: "Pending session end verification",
+    attendanceId: "att-015",
   },
   {
     index: 16,
     code: "WS-16",
-    title: "Database Sharding & Distributed Queries",
-    topic: "Consistent hashing rings, two-phase commit, distributed transactions",
+    title: "High-Throughput In-Memory Caches & LRU Eviction",
+    topic: "Segmented locks, slab allocators, cache-stampede mitigation",
     state: "REGISTERED",
   },
   {
     index: 17,
     code: "WS-17",
-    title: "Edge Compute & CDN Caching Algorithms",
-    topic: "Vary header invalidation, stale-while-revalidate, edge workers",
+    title: "Public-Key Cryptography & TLS 1.3 Handshake",
+    topic: "Diffie-Hellman ephemeral, certificate verification, AES-GCM",
     state: "REGISTERED",
   },
   {
     index: 18,
     code: "WS-18",
-    title: "Modern Frontend Architecture & Hydration Internals",
-    topic: "Server components, streaming HTML, selective hydration",
+    title: "Distributed File Systems & Metadata Architecture",
+    topic: "Chunk servers, master leases, heartbeats, replication factors",
     state: "REGISTERED",
   },
   {
     index: 19,
     code: "WS-19",
-    title: "WebAssembly Runtimes & Sandboxed Execution",
-    topic: "Wasm memory linear buffers, host bindings, isolation guarantees",
+    title: "Actor Model Concurrency & Supervision Trees",
+    topic: "Mailboxes, immutability, let-it-crash fault isolation",
     state: "REGISTERED",
   },
   {
     index: 20,
     code: "WS-20",
-    title: "Distributed Consensus: Paxos & Multi-Paxos",
-    topic: "Ballot numbers, phase 1a/1b promises, lease read optimizations",
+    title: "Columnar Storage Formats & Vectorized Execution",
+    topic: "Parquet/ORC encoders, dictionary compression, SIMD filtering",
     state: "REGISTERED",
   },
   {
@@ -350,39 +363,39 @@ const WORKSHOP_CURRICULUM: WorkshopRecord[] = [
 function getStateBadge(state: ApprovedState) {
   switch (state) {
     case "COMPLETED":
-      return "border-emerald-300 bg-emerald-50 text-emerald-800 font-semibold";
+      return "border-emerald-200 bg-emerald-50 text-emerald-700 font-medium";
     case "CHECKED_IN":
-      return "border-sky-300 bg-sky-50 text-sky-800 font-semibold";
+      return "border-sky-200 bg-sky-50 text-sky-700 font-medium";
     case "LATE":
-      return "border-amber-300 bg-amber-50 text-amber-800 font-semibold";
+      return "border-amber-200 bg-amber-50 text-amber-700 font-medium";
     case "INCOMPLETE":
-      return "border-orange-300 bg-orange-50 text-orange-800 font-semibold";
+      return "border-orange-200 bg-orange-50 text-orange-700 font-medium";
     case "EXCUSED":
-      return "border-purple-300 bg-purple-50 text-purple-800 font-semibold";
+      return "border-purple-200 bg-purple-50 text-purple-700 font-medium";
     case "MANUALLY_CONFIRMED":
-      return "border-teal-300 bg-teal-50 text-teal-800 font-semibold";
+      return "border-teal-200 bg-teal-50 text-teal-700 font-medium";
     case "ABSENT_CONFIRMED":
     case "ABSENT_UNCONFIRMED":
-      return "border-red-300 bg-red-50 text-red-800 font-semibold";
+      return "border-red-200 bg-red-50 text-red-700 font-medium";
     case "REGISTERED":
     default:
-      return "border-neutral-200 bg-neutral-100 text-neutral-500 font-normal";
+      return "border-slate-200 bg-slate-100 text-slate-600 font-normal";
   }
 }
 
 function getMaturityBadge(maturity: SkillMaturity) {
   switch (maturity) {
     case "CONSISTENTLY_DEMONSTRATED":
-      return "bg-emerald-100 text-emerald-800 border-emerald-300";
+      return "bg-emerald-50 text-emerald-700 border-emerald-200";
     case "DEMONSTRATED":
-      return "bg-teal-100 text-teal-800 border-teal-300";
+      return "bg-teal-50 text-teal-700 border-teal-200";
     case "APPLIED":
-      return "bg-blue-100 text-blue-800 border-blue-300";
+      return "bg-sky-50 text-sky-700 border-sky-200";
     case "EXPLORED":
-      return "bg-amber-100 text-amber-800 border-amber-300";
+      return "bg-amber-50 text-amber-700 border-amber-200";
     case "INTRODUCED":
     default:
-      return "bg-neutral-100 text-neutral-600 border-neutral-200";
+      return "bg-slate-100 text-slate-600 border-slate-200";
   }
 }
 
@@ -405,6 +418,10 @@ function getAssessedBadge(level: string) {
 export default function RecordPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const identifier = decodeURIComponent(resolvedParams.id || "DOS-B3-001");
+
+  // Dynamic Student Profile State
+  const [student, setStudent] = useState<Student | null>(null);
+  const [isLoadingStudent, setIsLoadingStudent] = useState(true);
 
   // Tab State: "journey" | "skills" | "certifications" | "assessments"
   const [activeTab, setActiveTab] = useState<"journey" | "skills" | "certifications" | "assessments">("journey");
@@ -456,14 +473,53 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Fetch student data on mount
+  // Fetch student profile & related records on mount
   useEffect(() => {
+    setIsLoadingStudent(true);
+    getStudentByIdOrEmail(identifier).then(({ student: fetchedStudent }) => {
+      setStudent(fetchedStudent);
+      setIsLoadingStudent(false);
+    });
+
     getSkillsForStudent(identifier).then(setSkills);
     getCertificationsForStudent(identifier).then(setCertifications);
     getAssessmentsForStudent(identifier).then(setAssessments);
   }, [identifier]);
 
-  // Raw counts - STRICTLY ZERO COMPOSITE OR ALGORITHMIC SCORES (Rule 3)
+  // Compute student display info
+  const studentName =
+    student?.full_name ||
+    (identifier === "DOS-B3-009"
+      ? "Janani Balaji"
+      : identifier === "DOS-B3-001"
+      ? "Arunachalam Sundaram"
+      : `Cohort Member (${identifier})`);
+
+  const studentInitials =
+    studentName
+      .trim()
+      .split(" ")
+      .map((part) => part[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "DO";
+
+  const studentEmail =
+    student?.email ||
+    (identifier === "DOS-B3-009" ? "janani@student.dosclub.org" : "arun@student.dosclub.org");
+
+  const studentDept =
+    student?.department ||
+    (identifier === "DOS-B3-009" ? "Computer Technology" : "Computer Science & Engineering");
+
+  const studentCourse =
+    student?.course ||
+    (identifier === "DOS-B3-009" ? "B.Tech Computer Technology" : "B.Tech Computer Science & Engineering");
+
+  const studentYear = student?.year_of_study || 3;
+
+  // Longitudinal Counts
   const completedCount = WORKSHOP_CURRICULUM.filter(
     (w) => w.state === "COMPLETED" || w.state === "MANUALLY_CONFIRMED"
   ).length;
@@ -572,14 +628,14 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
     setIsSubmittingFeedback(false);
     if (res.feedback) {
-      setFeedbackStatus("FEEDBACK_RECORDED // PULSE APPENDED TO AUDIT TRAIL");
+      setFeedbackStatus("REFLECTION COMMITTED // Feedback securely recorded on student ledger");
       setTimeout(() => {
         setFeedbackWorkshop(null);
         setFeedbackStatus(null);
         setFeedbackLearning("");
       }, 1500);
     } else {
-      setFeedbackStatus(res.error || "FEEDBACK RECORDED LOCALLY");
+      setFeedbackStatus(res.error || "Reflection recorded locally on ledger");
       setTimeout(() => {
         setFeedbackWorkshop(null);
         setFeedbackStatus(null);
@@ -592,8 +648,8 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
     {
       title: "Student Dossier",
       items: [
-        { id: "journey", label: "27-Workshop Journey", icon: "🗺️", count: completedCount },
-        { id: "skills", label: "Skills Inventory", icon: "🛠️", count: skills.length },
+        { id: "journey", label: "Curriculum Journey", icon: "🎓", count: completedCount },
+        { id: "skills", label: "Skills & Tools", icon: "🛠️", count: skills.length },
         { id: "certifications", label: "Certifications", icon: "📜", count: certifications.length },
         { id: "assessments", label: "Assessments & Honors", icon: "🏆", count: assessments.length },
       ],
@@ -628,499 +684,671 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
           }}
         />
 
-        {/* Main Content */}
-        <main className="flex-1 p-6 sm:p-8 flex flex-col gap-8 max-w-5xl">
-        {/* Student 360 Header Dossier */}
-        <section className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 border-b border-neutral-200 pb-8">
-          <div className="flex flex-col gap-2.5">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded border border-neutral-200 bg-neutral-100 font-mono text-[10px] sm:text-xs text-neutral-700 tracking-widest uppercase self-start font-medium">
-              STUDENT 360 AUDIT DOSSIER // BATCH 3 (2026)
-            </div>
-            <h1 className="text-2xl sm:text-4xl font-semibold tracking-tight text-neutral-950">
-              {identifier === "DOS-B3-001" ? "Arunachalam Sundaram" : `Student Profile // ${identifier}`}
-            </h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 font-mono text-xs text-neutral-600">
-              <span>MEMBER_ID: <strong className="text-neutral-900">{identifier}</strong></span>
-              <span>•</span>
-              <span>INSTITUTION: <strong className="text-neutral-900">Anna University & DOS Hub</strong></span>
-              <span>•</span>
-              <span>COHORT: <strong className="text-neutral-900">Group Alpha (Systems)</strong></span>
-            </div>
-          </div>
-
-          {/* Raw Factual Counts - STRICTLY ZERO COMPOSITE SCORES */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border border-neutral-200 bg-white p-4 font-mono text-xs w-full md:w-auto shadow-2xs">
-            <div className="flex flex-col">
-              <span className="text-neutral-500 text-[10px]">WORKSHOPS</span>
-              <span className="text-base font-semibold text-emerald-700">{completedCount} / 27</span>
-            </div>
-            <div className="flex flex-col border-l border-neutral-200 pl-3">
-              <span className="text-neutral-500 text-[10px]">SKILLS INVENTORY</span>
-              <span className="text-base font-semibold text-sky-700">{skills.length} Tools</span>
-            </div>
-            <div className="flex flex-col border-l border-neutral-200 pl-3">
-              <span className="text-neutral-500 text-[10px]">CREDENTIALS</span>
-              <span className="text-base font-semibold text-purple-700">
-                {certifications.filter((c) => c.status === "VERIFIED").length} Verified
-              </span>
-            </div>
-            <div className="flex flex-col border-l border-neutral-200 pl-3">
-              <span className="text-neutral-500 text-[10px]">BENCHMARKS</span>
-              <span className="text-base font-semibold text-neutral-800">{assessments.length} Audited</span>
-            </div>
-          </div>
-        </section>
-
-        {/* 3. 4-Tab Switcher */}
-        <nav className="flex border-b border-neutral-200 overflow-x-auto gap-2">
-          <button
-            type="button"
-            onClick={() => setActiveTab("journey")}
-            className={`pb-3 px-3 font-mono text-xs uppercase tracking-wider font-semibold border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === "journey"
-                ? "border-neutral-900 text-neutral-900"
-                : "border-transparent text-neutral-400 hover:text-neutral-700"
-            }`}
-          >
-            01 // WORKSHOP JOURNEY (27)
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("skills")}
-            className={`pb-3 px-3 font-mono text-xs uppercase tracking-wider font-semibold border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === "skills"
-                ? "border-neutral-900 text-neutral-900"
-                : "border-transparent text-neutral-400 hover:text-neutral-700"
-            }`}
-          >
-            02 // SKILLS & TOOLS ({skills.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("certifications")}
-            className={`pb-3 px-3 font-mono text-xs uppercase tracking-wider font-semibold border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === "certifications"
-                ? "border-neutral-900 text-neutral-900"
-                : "border-transparent text-neutral-400 hover:text-neutral-700"
-            }`}
-          >
-            03 // CERTIFICATIONS ({certifications.length})
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab("assessments")}
-            className={`pb-3 px-3 font-mono text-xs uppercase tracking-wider font-semibold border-b-2 whitespace-nowrap transition-colors ${
-              activeTab === "assessments"
-                ? "border-neutral-900 text-neutral-900"
-                : "border-transparent text-neutral-400 hover:text-neutral-700"
-            }`}
-          >
-            04 // ASSESSMENTS & RECOGNITIONS
-          </button>
-        </nav>
-
-        {/* ===================================================================== */}
-        {/* TAB 01: WORKSHOP JOURNEY (27 SESSIONS) */}
-        {/* ===================================================================== */}
-        {activeTab === "journey" && (
-          <section aria-label="Workshop Timeline" className="flex flex-col gap-4">
-            {/* Filter Bar */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 font-mono text-xs">
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-neutral-400 mr-1 uppercase text-[10px]">FILTER:</span>
-                {["ALL", "COMPLETED", "IN_PROGRESS", "EXCUSED", "REGISTERED"].map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setWorkshopFilter(f)}
-                    className={`px-2.5 py-1 rounded border text-[11px] transition-colors ${
-                      workshopFilter === f
-                        ? "bg-neutral-900 text-white border-neutral-900 font-medium"
-                        : "bg-white text-neutral-600 border-neutral-200 hover:bg-neutral-50"
-                    }`}
-                  >
-                    {f}
-                  </button>
-                ))}
-              </div>
-              <span className="text-neutral-500 text-[11px]">
-                CLICK ANY SESSION TO INSPECT AUDIT PROOF & REFLECTION
-              </span>
-            </div>
-
-            {/* Curriculum Table */}
-            <div className="border border-neutral-200 bg-white divide-y divide-neutral-200 shadow-2xs">
-              {filteredWorkshops.map((ws) => (
-                <div
-                  key={ws.index}
-                  onClick={() => setSelectedWorkshop(ws)}
-                  className="p-4 sm:p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 hover:bg-neutral-50/80 transition-colors cursor-pointer group"
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelectedWorkshop(ws);
-                    }
-                  }}
-                >
-                  {/* Left: Code, Title, Topic */}
-                  <div className="flex items-start gap-3 sm:gap-4 max-w-xl">
-                    <span className="font-mono text-xs text-neutral-500 mt-0.5 shrink-0 group-hover:text-neutral-900 transition-colors">
-                      {ws.code}
-                    </span>
-                    <div className="flex flex-col gap-1">
-                      <div className="text-sm font-medium text-neutral-900 group-hover:text-black">
-                        {ws.title}
-                      </div>
-                      <div className="text-xs text-neutral-500">
-                        {ws.topic}
-                      </div>
-                    </div>
+        {/* Main Content Area */}
+        <main className="flex-1 p-6 sm:p-8 flex flex-col gap-6 max-w-5xl">
+          {/* Student 360 Profile Hero Card */}
+          <section className="bg-white rounded-2xl border border-slate-200/80 p-6 sm:p-8 shadow-xs flex flex-col gap-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+              {/* Left: Avatar & Personal Info */}
+              <div className="flex items-start sm:items-center gap-5">
+                {/* Profile Avatar with gradient ring */}
+                <div className="relative shrink-0">
+                  <div className="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 text-white font-bold text-xl sm:text-2xl flex items-center justify-center shadow-md shadow-emerald-500/20 ring-4 ring-emerald-50">
+                    {studentInitials}
                   </div>
-
-                  {/* Right: Status Badge & Evidence Record */}
-                  <div className="flex flex-wrap md:flex-nowrap items-center gap-3 sm:gap-6 font-mono text-xs w-full md:w-auto justify-between md:justify-end">
-                    {/* Artifact / Git Evidence */}
-                    <div className="flex flex-col items-start md:items-end text-[11px]">
-                      {ws.repoArtifact ? (
-                        <span className="text-neutral-800 font-medium group-hover:underline">
-                          {ws.repoArtifact}
-                        </span>
-                      ) : (
-                        <span className="text-neutral-400">NO_ARTIFACT_SUBMITTED</span>
-                      )}
-
-                      {ws.commitHash && (
-                        <span className="text-neutral-500 text-[10px]">
-                          commit: {ws.commitHash}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* Geofence Check-in Status */}
-                    <div className="hidden lg:flex flex-col items-end text-[11px] text-neutral-500">
-                      <span>{ws.checkInTime ? ws.checkInTime.slice(0, 19).replace("T", " ") : "UPCOMING"}</span>
-                      {ws.geofenceVerified && (
-                        <span className="text-emerald-700 text-[10px] font-semibold">GEO_VERIFIED</span>
-                      )}
-                    </div>
-
-                    {/* Approved State Badge */}
-                    <div
-                      className={`px-2.5 py-1 rounded border text-[10px] uppercase tracking-wider font-medium shrink-0 ${getStateBadge(
-                        ws.state
-                      )}`}
-                    >
-                      {ws.state}
-                    </div>
-
-                    {/* Visual inspect indicator */}
-                    <span className="text-neutral-400 group-hover:text-neutral-900 text-xs hidden sm:inline-block font-mono">
-                      &rarr;
-                    </span>
+                  <div
+                    className="absolute -bottom-1 -right-1 h-5 w-5 rounded-full bg-emerald-500 border-2 border-white flex items-center justify-center"
+                    title="Active Cohort Member"
+                  >
+                    <span className="h-2 w-2 rounded-full bg-white animate-pulse" />
                   </div>
                 </div>
-              ))}
+
+                {/* Name & Academic Meta */}
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
+                      {studentName}
+                    </h1>
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      Active Cohort Member
+                    </span>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                      Batch 3 (Class of 2026)
+                    </span>
+                  </div>
+
+                  {/* Sub-meta details */}
+                  <div className="flex flex-wrap items-center gap-y-1.5 gap-x-4 text-xs text-slate-600">
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-slate-400">🏛️</span>
+                      <strong className="text-slate-800 font-semibold">Anna University, CEG Campus</strong>
+                    </span>
+                    <span className="text-slate-300 hidden sm:inline">•</span>
+                    <span className="flex items-center gap-1.5">
+                      <span className="text-slate-400">🎓</span>
+                      <span>{studentCourse} (Year {studentYear})</span>
+                    </span>
+                    <span className="text-slate-300 hidden sm:inline">•</span>
+                    <span className="flex items-center gap-1.5 font-mono text-slate-700">
+                      <span className="text-slate-400 font-sans">🪪</span>
+                      <span>{identifier}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleCopyProof("PROFILE")}
+                        className="text-[10px] text-emerald-600 hover:text-emerald-700 font-sans font-semibold underline ml-1 cursor-pointer"
+                      >
+                        {copyStatus ? "Copied!" : "Copy"}
+                      </button>
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-500 mt-0.5">
+                    <a
+                      href={`mailto:${studentEmail}`}
+                      className="hover:text-emerald-600 transition-colors flex items-center gap-1"
+                    >
+                      <span>✉️</span>
+                      <span>{studentEmail}</span>
+                    </a>
+                    {student?.phone && (
+                      <span className="flex items-center gap-1 text-slate-500">
+                        <span>📞</span>
+                        <span>{student.phone}</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right: Quick Action Buttons */}
+              <div className="flex flex-row lg:flex-col gap-2.5 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(window.location.href);
+                    setCopyStatus(true);
+                    setTimeout(() => setCopyStatus(false), 2000);
+                  }}
+                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <span>🔗</span>
+                  <span>{copyStatus ? "Dossier Link Copied!" : "Share Dossier"}</span>
+                </button>
+                <div className="flex gap-2">
+                  <Link
+                    href={`/checkin?dos_id=${encodeURIComponent(identifier)}`}
+                    className="flex-1 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold text-center transition-colors flex items-center justify-center gap-1"
+                  >
+                    <span>📱</span>
+                    <span>Check In</span>
+                  </Link>
+                  <Link
+                    href="/submit"
+                    className="flex-1 px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold text-center transition-colors flex items-center justify-center gap-1"
+                  >
+                    <span>📤</span>
+                    <span>Submit</span>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Longitudinal Key Metrics: 4 Modern Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 border-t border-slate-100">
+              {/* 1. Workshops */}
+              <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/60 flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-xs font-medium text-slate-500">Curriculum</span>
+                  <span className="text-base">🎓</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-bold text-slate-900">{completedCount}</span>
+                  <span className="text-xs font-medium text-slate-500">/ 27 Done</span>
+                </div>
+                <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-2">
+                  <div
+                    className="bg-emerald-600 h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.round((completedCount / 27) * 100)}%` }}
+                  />
+                </div>
+                <span className="text-[10px] text-emerald-700 font-semibold mt-1">
+                  {Math.round((completedCount / 27) * 100)}% Completion Rate
+                </span>
+              </div>
+
+              {/* 2. Skills */}
+              <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/60 flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-xs font-medium text-slate-500">Skills Inventory</span>
+                  <span className="text-base">🛠️</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-bold text-slate-900">{skills.length}</span>
+                  <span className="text-xs font-medium text-slate-500">Tools</span>
+                </div>
+                <span className="text-[10px] text-sky-700 font-semibold mt-auto pt-2">
+                  3 Developmental Dimensions
+                </span>
+              </div>
+
+              {/* 3. Credentials */}
+              <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/60 flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-xs font-medium text-slate-500">Certifications</span>
+                  <span className="text-base">📜</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-bold text-slate-900">
+                    {certifications.filter((c) => c.status === "VERIFIED").length}
+                  </span>
+                  <span className="text-xs font-medium text-slate-500">Verified</span>
+                </div>
+                <span className="text-[10px] text-purple-700 font-semibold mt-auto pt-2">
+                  External Registry Validated
+                </span>
+              </div>
+
+              {/* 4. Honors & Audits */}
+              <div className="bg-slate-50/80 rounded-xl p-3.5 border border-slate-200/60 flex flex-col justify-between">
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className="text-xs font-medium text-slate-500">Evaluations</span>
+                  <span className="text-base">🏆</span>
+                </div>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-xl sm:text-2xl font-bold text-slate-900">{assessments.length}</span>
+                  <span className="text-xs font-medium text-slate-500">Audited</span>
+                </div>
+                <span className="text-[10px] text-amber-700 font-semibold mt-auto pt-2">
+                  Faculty Benchmark Reports
+                </span>
+              </div>
             </div>
           </section>
-        )}
 
-        {/* ===================================================================== */}
-        {/* TAB 02: MULTI-DIMENSIONAL SKILLS & TECHNOLOGY INVENTORY */}
-        {/* ===================================================================== */}
-        {activeTab === "skills" && (
-          <section aria-label="Skills & Technology Matrix" className="flex flex-col gap-6">
-            {/* Explainer Note - PRD Section 19 & 20 Alignment */}
-            <div className="border border-neutral-200 bg-white p-5 rounded-xs shadow-2xs font-mono text-xs">
-              <div className="flex items-center gap-2 text-neutral-900 font-semibold uppercase tracking-wider mb-1">
-                <span className="h-2 w-2 rounded-full bg-sky-600" />
-                THREE DISTINCT SKILL DIMENSIONS (NO COMPOSITE SCORES)
-              </div>
-              <p className="text-neutral-600 text-[11px] leading-relaxed">
-                Per DOS Club TalentOS PRD Section 19 & 20, technical competence is captured across three
-                distinct, unmerged dimensions: <strong>Dimension 1: Self-Reported Confidence</strong> (1–5),
-                <strong> Dimension 2: Audited Exposure Count</strong> (deliverables & verified commits), and
-                <strong> Dimension 3: Developmental Maturity</strong> (Introduced &rarr; Consistently Demonstrated).
-                Evaluations use developmental growth language (Developing, Progressing, Consistent, Demonstrated, Growth Opportunity).
-              </p>
-            </div>
-
-            {/* Actions & Search */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-              <div className="w-full sm:w-80">
-                <input
-                  type="text"
-                  value={skillSearch}
-                  onChange={(e) => setSkillSearch(e.target.value)}
-                  placeholder="FILTER TECHNOLOGY / TOOL..."
-                  className="w-full border border-neutral-300 bg-white px-3 py-2 font-mono text-xs text-neutral-900 placeholder:text-neutral-400 uppercase tracking-wider focus:outline-none focus:border-neutral-900 shadow-2xs"
-                />
-              </div>
-
+          {/* 3. Modern Tabs Navigation */}
+          <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto">
+            {[
+              { id: "journey", label: "Curriculum Journey", icon: "🎓", count: 27 },
+              { id: "skills", label: "Skills & Tools", icon: "🛠️", count: skills.length },
+              { id: "certifications", label: "Certifications", icon: "📜", count: certifications.length },
+              { id: "assessments", label: "Assessments & Honors", icon: "🏆", count: assessments.length },
+            ].map((tab) => (
               <button
+                key={tab.id}
                 type="button"
-                onClick={() => setIsAddingSkill(true)}
-                className="px-4 py-2 bg-neutral-900 text-white hover:bg-neutral-800 font-mono text-xs uppercase tracking-wider font-medium shadow-2xs"
+                onClick={() => setActiveTab(tab.id as any)}
+                className={`pb-3.5 pt-2 px-4 text-xs font-semibold flex items-center gap-2 border-b-2 whitespace-nowrap transition-all cursor-pointer ${
+                  activeTab === tab.id
+                    ? "border-emerald-600 text-emerald-800"
+                    : "border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300"
+                }`}
               >
-                + ADD TECHNICAL TOOL
+                <span className="text-sm">{tab.icon}</span>
+                <span>{tab.label}</span>
+                <span
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${
+                    activeTab === tab.id
+                      ? "bg-emerald-100 text-emerald-800"
+                      : "bg-slate-100 text-slate-600"
+                  }`}
+                >
+                  {tab.count}
+                </span>
               </button>
-            </div>
+            ))}
+          </div>
 
-            {/* Skills Inventory Table */}
-            <div className="border border-neutral-200 bg-white shadow-2xs overflow-x-auto">
-              <table className="w-full text-left font-mono text-xs">
-                <thead className="border-b border-neutral-200 bg-neutral-50/70 text-[10px] text-neutral-500 uppercase tracking-wider">
-                  <tr>
-                    <th className="p-3.5 sm:px-6">Technology / Tool</th>
-                    <th className="p-3.5 sm:px-4">Dim 1: Self-Confidence</th>
-                    <th className="p-3.5 sm:px-4">Dim 2: Audited Exposure</th>
-                    <th className="p-3.5 sm:px-4">Dim 3: Developmental Maturity</th>
-                    <th className="p-3.5 sm:px-4">Assessed Level</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-200">
-                  {filteredSkills.map((skill) => (
-                    <tr key={skill.id} className="hover:bg-neutral-50/60 transition-colors">
-                      <td className="p-3.5 sm:px-6 font-medium text-neutral-900">
-                        {skill.tool_name}
-                      </td>
-                      <td className="p-3.5 sm:px-4">
-                        <div className="flex items-center gap-1">
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <span
-                              key={star}
-                              className={`h-2.5 w-4 rounded-xs border ${
-                                star <= skill.self_confidence
-                                  ? "bg-neutral-900 border-neutral-900"
-                                  : "bg-neutral-100 border-neutral-300"
-                              }`}
-                            />
-                          ))}
-                          <span className="ml-2 text-[11px] text-neutral-500 font-semibold">
-                            {skill.self_confidence}/5
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-3.5 sm:px-4 text-neutral-700 font-semibold">
-                        {skill.evidence_count} {skill.evidence_count === 1 ? "deliverable" : "deliverables"}
-                      </td>
-                      <td className="p-3.5 sm:px-4">
-                        <span
-                          className={`px-2 py-0.5 rounded border text-[10px] uppercase tracking-wider font-medium ${getMaturityBadge(
-                            skill.evidence_backed_maturity
-                          )}`}
-                        >
-                          {skill.evidence_backed_maturity.replace("_", " ")}
-                        </span>
-                      </td>
-                      <td className="p-3.5 sm:px-4">
-                        <span
-                          className={`px-2 py-0.5 rounded border text-[10px] font-semibold ${getAssessedBadge(
-                            skill.assessed_level
-                          )}`}
-                        >
-                          {skill.assessed_level}
-                        </span>
-                      </td>
-                    </tr>
+          {/* ===================================================================== */}
+          {/* TAB 01: WORKSHOP JOURNEY (27 SESSIONS) */}
+          {/* ===================================================================== */}
+          {activeTab === "journey" && (
+            <section aria-label="Workshop Timeline" className="flex flex-col gap-4">
+              {/* Filter Bar */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-xs font-semibold text-slate-500 mr-1">Filter:</span>
+                  {[
+                    { id: "ALL", label: "All Sessions (27)" },
+                    { id: "COMPLETED", label: `Completed (${completedCount})` },
+                    { id: "IN_PROGRESS", label: `In Progress (${inProgressCount})` },
+                    { id: "EXCUSED", label: `Excused (${excusedCount})` },
+                    { id: "REGISTERED", label: `Upcoming (${scheduledCount})` },
+                  ].map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      onClick={() => setWorkshopFilter(f.id)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                        workshopFilter === f.id
+                          ? "bg-slate-900 text-white shadow-xs font-semibold"
+                          : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50 hover:text-slate-900"
+                      }`}
+                    >
+                      {f.label}
+                    </button>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
+                </div>
+                <span className="text-xs text-slate-400 font-medium">
+                  Click any workshop card to inspect evidence & reflection
+                </span>
+              </div>
 
-        {/* ===================================================================== */}
-        {/* TAB 03: STRUCTURED CERTIFICATIONS */}
-        {/* ===================================================================== */}
-        {activeTab === "certifications" && (
-          <section aria-label="Certifications Ledger" className="flex flex-col gap-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-700 font-semibold">
-                  AUDITED CREDENTIALS & INDUSTRY CERTIFICATIONS
-                </h2>
-                <p className="font-mono text-[11px] text-neutral-500 mt-1">
-                  Credentials submitted by students require verification against issuing registries.
+              {/* Modern Workshop Cards Grid */}
+              <div className="flex flex-col gap-3">
+                {filteredWorkshops.map((ws) => (
+                  <div
+                    key={ws.index}
+                    onClick={() => setSelectedWorkshop(ws)}
+                    className="bg-white border border-slate-200/80 hover:border-emerald-300 rounded-xl p-5 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col gap-3.5 group"
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedWorkshop(ws);
+                      }
+                    }}
+                  >
+                    {/* Top: Code pill, Title, and State Badge */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div className="flex items-center gap-3">
+                        <span className="px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 font-mono text-xs font-bold text-slate-700 group-hover:bg-emerald-50 group-hover:border-emerald-200 group-hover:text-emerald-800 transition-colors">
+                          {ws.code}
+                        </span>
+                        <h3 className="text-sm sm:text-base font-semibold text-slate-900 group-hover:text-emerald-800 transition-colors">
+                          {ws.title}
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        <span
+                          className={`px-2.5 py-1 rounded-full text-xs font-semibold border ${getStateBadge(
+                            ws.state
+                          )}`}
+                        >
+                          {ws.state.replace("_", " ")}
+                        </span>
+                        <span className="text-slate-400 group-hover:text-emerald-700 text-sm font-semibold transition-transform group-hover:translate-x-0.5">
+                          &rarr;
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Topic / Learning Objective */}
+                    <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                      {ws.topic}
+                    </p>
+
+                    {/* Bottom Evidence Strip */}
+                    <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-4 pt-3 border-t border-slate-100 text-xs">
+                      {/* Left: Artifact & Commit */}
+                      <div className="flex flex-wrap items-center gap-3">
+                        {ws.repoArtifact ? (
+                          <span className="flex items-center gap-1.5 font-mono text-slate-700 font-medium">
+                            <span className="text-slate-400 font-sans">📦</span>
+                            <span className="text-emerald-700 hover:underline">{ws.repoArtifact}</span>
+                          </span>
+                        ) : (
+                          <span className="text-slate-400 italic">No deliverable submitted</span>
+                        )}
+
+                        {ws.commitHash && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-slate-100 border border-slate-200 font-mono text-[11px] text-slate-600">
+                            <span>commit:</span>
+                            <strong>{ws.commitHash}</strong>
+                          </span>
+                        )}
+
+                        {ws.testOutcome && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 text-[11px] font-medium">
+                            <span>✓</span>
+                            <span>{ws.testOutcome.replace("PASSED (", "").replace(")", "")}</span>
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Right: Timestamp & Geofence */}
+                      <div className="flex items-center gap-3 text-slate-500 text-[11px]">
+                        {ws.checkInTime && (
+                          <span>
+                            {ws.checkInTime.slice(0, 10)} at {ws.checkInTime.slice(11, 16)} IST
+                          </span>
+                        )}
+                        {ws.geofenceVerified && (
+                          <span className="inline-flex items-center gap-1 text-emerald-700 font-semibold">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            Geofence Verified
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* ===================================================================== */}
+          {/* TAB 02: MULTI-DIMENSIONAL SKILLS & TECHNOLOGY INVENTORY */}
+          {/* ===================================================================== */}
+          {activeTab === "skills" && (
+            <section aria-label="Skills & Technology Matrix" className="flex flex-col gap-6">
+              {/* Explainer Note - PRD Section 19 & 20 Alignment */}
+              <div className="bg-gradient-to-r from-emerald-50/70 to-sky-50/70 border border-emerald-100 rounded-2xl p-6 shadow-xs flex flex-col gap-2">
+                <div className="flex items-center gap-2 text-slate-900 font-bold text-sm">
+                  <span className="text-base">📊</span>
+                  <span>Three Developmental Dimensions (Zero Composite Scores)</span>
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                  Technical competence in TalentOS is captured across three independent, unmerged developmental dimensions:
+                  <strong> Dimension 1: Self-Reported Confidence</strong> (1–5 scale),
+                  <strong> Dimension 2: Audited Exposure Count</strong> (commits and verified deliverables), and
+                  <strong> Dimension 3: Developmental Maturity</strong> (Introduced → Applied → Demonstrated → Consistently Demonstrated).
+                  Evaluations adhere to developmental growth standards rather than reductive numerical scores.
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setIsAddingCert(true)}
-                className="px-4 py-2 bg-neutral-900 text-white hover:bg-neutral-800 font-mono text-xs uppercase tracking-wider font-medium shadow-2xs shrink-0"
-              >
-                + SUBMIT CREDENTIAL
-              </button>
-            </div>
-
-            <div className="border border-neutral-200 bg-white shadow-2xs divide-y divide-neutral-200">
-              {certifications.map((cert) => (
-                <div key={cert.id} className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                  <div className="flex flex-col gap-1.5 max-w-xl">
-                    <div className="flex items-center gap-2">
-                      <span className="font-mono text-[10px] text-neutral-500 uppercase px-2 py-0.5 rounded border border-neutral-200 bg-neutral-50 font-medium">
-                        {cert.provider}
-                      </span>
-                      <span className="font-mono text-[10px] text-neutral-400">
-                        ISSUED: {cert.completed_date}
-                      </span>
-                    </div>
-                    <div className="text-sm font-semibold text-neutral-900">
-                      {cert.title}
-                    </div>
-                    <div className="font-mono text-xs text-neutral-500">
-                      Category: {cert.category} • Level: {cert.level}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 font-mono text-xs">
-                    {cert.credential_url && (
-                      <a
-                        href={cert.credential_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-neutral-700 hover:text-neutral-900 underline text-[11px]"
-                      >
-                        Registry Link ↗
-                      </a>
-                    )}
-                    <span
-                      className={`px-2.5 py-1 rounded border text-[10px] uppercase tracking-wider font-semibold ${
-                        cert.status === "VERIFIED"
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-300"
-                          : cert.status === "PENDING_VERIFICATION"
-                          ? "bg-amber-50 text-amber-800 border-amber-300"
-                          : "bg-red-50 text-red-800 border-red-300"
-                      }`}
-                    >
-                      {cert.status.replace("_", " ")}
-                    </span>
-                  </div>
+              {/* Actions & Search */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div className="w-full sm:w-80 relative">
+                  <input
+                    type="text"
+                    value={skillSearch}
+                    onChange={(e) => setSkillSearch(e.target.value)}
+                    placeholder="Search technology or tool..."
+                    className="w-full border border-slate-300 rounded-xl bg-white px-4 py-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
+                  />
                 </div>
-              ))}
-            </div>
-          </section>
-        )}
 
-        {/* ===================================================================== */}
-        {/* TAB 04: ASSESSMENTS & TRAINER RECOGNITIONS */}
-        {/* ===================================================================== */}
-        {activeTab === "assessments" && (
-          <section aria-label="Assessments & Recognitions" className="flex flex-col gap-8">
-            {/* 1. Diagnostic Benchmarks */}
-            <div className="flex flex-col gap-4">
-              <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-700 font-semibold">
-                BASELINE & EXTERNAL DIAGNOSTIC BENCHMARKS
-              </h2>
-              <div className="border border-neutral-200 bg-white shadow-2xs divide-y divide-neutral-200">
-                {assessments.map((ass) => (
-                  <div key={ass.id} className="p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="flex flex-col gap-1.5">
-                      <div className="flex items-center gap-2 font-mono text-[10px] text-neutral-500">
-                        <span className="px-2 py-0.5 rounded border border-neutral-200 bg-neutral-50">
-                          {ass.provider}
+                <button
+                  type="button"
+                  onClick={() => setIsAddingSkill(true)}
+                  className="px-4 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5"
+                >
+                  <span>+</span>
+                  <span>Add Technical Tool</span>
+                </button>
+              </div>
+
+              {/* Skills Table in Modern Rounded Container */}
+              <div className="border border-slate-200 bg-white rounded-2xl shadow-xs overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="border-b border-slate-200 bg-slate-50/80 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                    <tr>
+                      <th className="py-3.5 px-6">Technology / Tool</th>
+                      <th className="py-3.5 px-4">Self-Confidence</th>
+                      <th className="py-3.5 px-4">Audited Exposure</th>
+                      <th className="py-3.5 px-4">Developmental Maturity</th>
+                      <th className="py-3.5 px-4">Assessed Level</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {filteredSkills.map((skill) => (
+                      <tr key={skill.id} className="hover:bg-slate-50/60 transition-colors">
+                        <td className="py-4 px-6 font-semibold text-slate-900">
+                          {skill.tool_name}
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex gap-1">
+                              {[1, 2, 3, 4, 5].map((lvl) => (
+                                <div
+                                  key={lvl}
+                                  className={`h-2.5 w-3.5 rounded-xs transition-colors ${
+                                    lvl <= skill.self_confidence
+                                      ? "bg-emerald-600"
+                                      : "bg-slate-200"
+                                  }`}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-xs text-slate-500 font-semibold ml-1">
+                              {skill.self_confidence}/5
+                            </span>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4 text-slate-700 font-semibold">
+                          {skill.evidence_count} {skill.evidence_count === 1 ? "deliverable" : "deliverables"}
+                        </td>
+                        <td className="py-4 px-4">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full border text-[11px] font-semibold ${getMaturityBadge(
+                              skill.evidence_backed_maturity
+                            )}`}
+                          >
+                            {skill.evidence_backed_maturity.replace("_", " ")}
+                          </span>
+                        </td>
+                        <td className="py-4 px-4">
+                          <span
+                            className={`px-2.5 py-0.5 rounded-full border text-[11px] font-semibold ${getAssessedBadge(
+                              skill.assessed_level
+                            )}`}
+                          >
+                            {skill.assessed_level}
+                          </span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
+
+          {/* ===================================================================== */}
+          {/* TAB 03: STRUCTURED CERTIFICATIONS */}
+          {/* ===================================================================== */}
+          {activeTab === "certifications" && (
+            <section aria-label="Certifications Ledger" className="flex flex-col gap-6">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Audited Credentials & Industry Certifications
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Verified against official issuing registries (Credly, Linux Foundation, AWS, CNCF).
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setIsAddingCert(true)}
+                  className="px-4 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold rounded-xl shadow-xs transition-colors cursor-pointer flex items-center gap-1.5 shrink-0"
+                >
+                  <span>+</span>
+                  <span>Submit Credential</span>
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {certifications.map((cert) => (
+                  <div
+                    key={cert.id}
+                    className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between gap-4"
+                  >
+                    <div className="flex flex-col gap-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
+                          {cert.provider}
                         </span>
-                        <span>ASSESSED: {ass.assessed_at.slice(0, 10)}</span>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full border text-[11px] font-semibold ${
+                            cert.status === "VERIFIED"
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-200"
+                              : cert.status === "PENDING_VERIFICATION"
+                              ? "bg-amber-50 text-amber-700 border-amber-200"
+                              : "bg-red-50 text-red-700 border-red-200"
+                          }`}
+                        >
+                          {cert.status.replace("_", " ")}
+                        </span>
                       </div>
-                      <div className="text-sm font-semibold text-neutral-900">
-                        {ass.assessment_title}
-                      </div>
+
+                      <h3 className="text-base font-bold text-slate-900 mt-1">
+                        {cert.title}
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Category: <strong className="text-slate-700">{cert.category}</strong> • Level:{" "}
+                        <strong className="text-slate-700">{cert.level}</strong>
+                      </p>
                     </div>
 
-                    <div className="flex items-center gap-4 font-mono text-xs">
-                      <div className="flex flex-col items-end">
-                        <span className="text-[10px] text-neutral-400 uppercase">RAW SCORE</span>
-                        <span className="font-bold text-neutral-900">{ass.score_raw}</span>
-                      </div>
-                      <span className="px-2.5 py-1 rounded border border-teal-200 bg-teal-50 text-teal-800 text-[10px] font-semibold uppercase">
-                        {ass.proficiency_band}
+                    <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+                      <span className="text-slate-400">
+                        Issued: {cert.completed_date}
                       </span>
-                      {ass.deep_link && (
+                      {cert.credential_url && (
                         <a
-                          href={ass.deep_link}
+                          href={cert.credential_url}
                           target="_blank"
                           rel="noreferrer"
-                          className="text-neutral-700 hover:text-neutral-900 underline text-[11px]"
+                          className="text-emerald-600 hover:text-emerald-700 font-semibold inline-flex items-center gap-1"
                         >
-                          Audit Report ↗
+                          <span>Verify on Registry</span>
+                          <span>↗</span>
                         </a>
                       )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            </section>
+          )}
 
-            {/* 2. Trainer Standout Recognitions (PRD Section 10) */}
-            <div className="flex flex-col gap-4">
-              <div className="flex justify-between items-center">
-                <h2 className="font-mono text-xs uppercase tracking-wider text-neutral-700 font-semibold">
-                  TRAINER OBSERVATIONS & STANDOUT RECOGNITION (PRD SECTION 10)
-                </h2>
-                <span className="font-mono text-[10px] text-neutral-400">
-                  TOP-3 STANDOUT PARTICIPANT TAGS LOGGED BY LEAD FACULTY
-                </span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="border border-neutral-200 bg-white p-5 shadow-2xs flex flex-col gap-2.5">
-                  <div className="flex justify-between items-center font-mono text-[10px]">
-                    <span className="text-emerald-700 font-bold uppercase">WS-14 // MICROSERVICES RESILIENCY</span>
-                    <span className="text-neutral-400">2026-05-31</span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-neutral-900">
-                    Exceptional Resiliency Architecture & Fault Recovery
-                  </h3>
-                  <p className="text-xs text-neutral-600 leading-relaxed font-mono">
-                    &ldquo;Arun demonstrated production-grade implementation of token-bucket rate limiting with
-                    jittered exponential backoff. Effectively prevented cascading failure in stress test simulations.&rdquo;
+          {/* ===================================================================== */}
+          {/* TAB 04: ASSESSMENTS & TRAINER RECOGNITIONS */}
+          {/* ===================================================================== */}
+          {activeTab === "assessments" && (
+            <section aria-label="Assessments & Recognitions" className="flex flex-col gap-8">
+              {/* 1. Diagnostic Benchmarks */}
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Baseline & Diagnostic Benchmarks
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Longitudinal assessment benchmarks validated across standardized engineering evaluation batteries.
                   </p>
-                  <div className="font-mono text-[10px] text-neutral-500 pt-2 border-t border-neutral-100">
-                    Observed by: DeScience Systems Faculty Lead
-                  </div>
                 </div>
 
-                <div className="border border-neutral-200 bg-white p-5 shadow-2xs flex flex-col gap-2.5">
-                  <div className="flex justify-between items-center font-mono text-[10px]">
-                    <span className="text-emerald-700 font-bold uppercase">WS-07 // DISTRIBUTED STORAGE</span>
-                    <span className="text-neutral-400">2026-04-12</span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-neutral-900">
-                    Fastest Zero-Regression Raft Consensus Implementation
-                  </h3>
-                  <p className="text-xs text-neutral-600 leading-relaxed font-mono">
-                    &ldquo;Clean leader election and log replication under simulated network partition.
-                    Assisted peers in debugging quorum split-brain states.&rdquo;
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {assessments.map((ass) => (
+                    <div
+                      key={ass.id}
+                      className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col justify-between gap-4"
+                    >
+                      <div className="flex flex-col gap-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="px-2.5 py-1 rounded-md bg-slate-100 border border-slate-200 text-xs font-semibold text-slate-700">
+                            {ass.provider}
+                          </span>
+                          <span className="px-2.5 py-0.5 rounded-full border border-teal-200 bg-teal-50 text-teal-800 text-[11px] font-semibold">
+                            {ass.proficiency_band}
+                          </span>
+                        </div>
+
+                        <h3 className="text-base font-bold text-slate-900 mt-1">
+                          {ass.assessment_title}
+                        </h3>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100 text-xs">
+                        <div className="flex items-baseline gap-1.5">
+                          <span className="text-xs text-slate-400">Score:</span>
+                          <strong className="text-base font-bold text-slate-900">{ass.score_raw}</strong>
+                        </div>
+
+                        {ass.deep_link && (
+                          <a
+                            href={ass.deep_link}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-emerald-600 hover:text-emerald-700 font-semibold inline-flex items-center gap-1"
+                          >
+                            <span>Audit Report</span>
+                            <span>↗</span>
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* 2. Trainer Standout Recognitions */}
+              <div className="flex flex-col gap-4">
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">
+                    Faculty Observations & Standout Recognitions
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Live engineering recognitions awarded by technical experts during workshop execution.
                   </p>
-                  <div className="font-mono text-[10px] text-neutral-500 pt-2 border-t border-neutral-100">
-                    Observed by: Faculty Lead + Senior Peer Auditor
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col gap-3">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
+                        WS-14 • Microservices Resiliency
+                      </span>
+                      <span className="text-slate-400">31 May 2026</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      Exceptional Resiliency Architecture & Fault Recovery
+                    </h3>
+                    <p className="text-xs text-slate-600 leading-relaxed italic">
+                      &ldquo;Demonstrated production-grade implementation of token-bucket rate limiting with
+                      jittered exponential backoff. Effectively prevented cascading failure in stress test simulations.&rdquo;
+                    </p>
+                    <div className="text-[11px] text-slate-500 pt-3 border-t border-slate-100 font-medium">
+                      Observed by: DeScience Systems Faculty Lead
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col gap-3">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
+                        WS-07 • Distributed Consensus
+                      </span>
+                      <span className="text-slate-400">12 Apr 2026</span>
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-900">
+                      Fastest Zero-Regression Raft Consensus Implementation
+                    </h3>
+                    <p className="text-xs text-slate-600 leading-relaxed italic">
+                      &ldquo;Clean leader election and log replication under simulated network partition.
+                      Assisted peers in debugging quorum split-brain states.&rdquo;
+                    </p>
+                    <div className="text-[11px] text-slate-500 pt-3 border-t border-slate-100 font-medium">
+                      Observed by: Faculty Lead + Senior Peer Auditor
+                    </div>
                   </div>
                 </div>
               </div>
+            </section>
+          )}
+
+          {/* Audit Verification Footer Stamp */}
+          <section className="border border-slate-200/80 bg-white rounded-2xl p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xs">
+            <div className="flex flex-col gap-1">
+              <span className="text-slate-900 font-bold text-sm">Cryptographic Audit Ledger Verification</span>
+              <span className="text-slate-500 text-xs font-mono">
+                SHA-256: 4a8b79e1c2d0f3a6e8b7c9a2d1f4e5a8b7c9a2d1f4e5a8b7c9a2d1f4e5a8b7c9
+              </span>
             </div>
+            <button
+              type="button"
+              onClick={() => window.print()}
+              className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl transition-colors text-xs font-semibold shadow-xs cursor-pointer"
+            >
+              Print Audit Dossier
+            </button>
           </section>
-        )}
-
-        {/* Audit Verification Footer Stamp */}
-        <section className="border border-neutral-200 bg-white p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 font-mono text-xs shadow-2xs">
-          <div className="flex flex-col gap-1">
-            <span className="text-neutral-900 font-semibold">CRYPTOGRAPHIC AUDIT RECORD STAMP</span>
-            <span className="text-neutral-500 text-[11px]">
-              SHA-256: 4a8b79e1c2d0f3a6e8b7c9a2d1f4e5a8b7c9a2d1f4e5a8b7c9a2d1f4e5a8b7c9
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => window.print()}
-            className="px-4 py-2 bg-neutral-900 text-white hover:bg-neutral-800 transition-colors uppercase tracking-wider text-[11px] font-medium shadow-2xs"
-          >
-            PRINT AUDIT RECORD
-          </button>
-        </section>
-      </main>
-    </div>
+        </main>
+      </div>
 
       {/* ===================================================================== */}
       {/* DRAWER: WORKSHOP DELIVERABLE & AUDIT DOSSIER */}
@@ -1129,22 +1357,24 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
         <div className="fixed inset-0 z-50 overflow-hidden">
           <div
             onClick={() => setSelectedWorkshop(null)}
-            className="fixed inset-0 bg-neutral-950/30 backdrop-blur-2xs transition-opacity"
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs transition-opacity"
             aria-hidden="true"
           />
 
           <div className="fixed inset-y-0 right-0 max-w-full flex pl-10">
-            <aside className="w-screen max-w-xl bg-white border-l border-neutral-200 shadow-2xl flex flex-col justify-between overflow-y-auto">
-              <div className="p-6 border-b border-neutral-200 bg-neutral-50/70 sticky top-0 z-10">
+            <aside className="w-screen max-w-xl bg-white border-l border-slate-200 shadow-2xl flex flex-col justify-between overflow-y-auto">
+              <div className="p-6 border-b border-slate-200 bg-slate-50/80 sticky top-0 z-10">
                 <div className="flex justify-between items-start gap-4">
-                  <div className="flex flex-col gap-2">
-                    <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded border border-neutral-200 bg-white font-mono text-[10px] text-neutral-600 tracking-wider uppercase font-medium">
-                      AUDIT DOSSIER // {selectedWorkshop.code}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full border border-slate-200 bg-white text-xs text-slate-700 font-semibold self-start">
+                      <span>{selectedWorkshop.code}</span>
+                      <span>•</span>
+                      <span>Audit Dossier</span>
                     </div>
-                    <h3 className="text-lg font-semibold text-neutral-950">
+                    <h3 className="text-lg font-bold text-slate-900">
                       {selectedWorkshop.title}
                     </h3>
-                    <p className="text-xs text-neutral-500 font-mono">
+                    <p className="text-xs text-slate-600">
                       {selectedWorkshop.topic}
                     </p>
                   </div>
@@ -1152,10 +1382,10 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                   <button
                     type="button"
                     onClick={() => setSelectedWorkshop(null)}
-                    className="p-1.5 text-neutral-400 hover:text-neutral-900 hover:bg-neutral-200/60 rounded border border-neutral-200 font-mono text-xs transition-colors shrink-0"
+                    className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-lg text-sm transition-colors shrink-0 cursor-pointer"
                     aria-label="Close dossier"
                   >
-                    ESC ✕
+                    ✕
                   </button>
                 </div>
               </div>
@@ -1163,78 +1393,80 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
               {/* Drawer Body */}
               <div className="p-6 flex flex-col gap-6 flex-1 text-xs">
                 {/* 1. Status Invariant */}
-                <div className="flex justify-between items-center p-3.5 border border-neutral-200 bg-neutral-50/50 rounded-xs">
-                  <span className="font-mono text-[11px] text-neutral-600 font-medium uppercase tracking-wider">
-                    CURRENT APPROVED LIFECYCLE STATE:
+                <div className="flex justify-between items-center p-4 border border-slate-200 bg-slate-50/60 rounded-xl">
+                  <span className="text-xs text-slate-700 font-semibold">
+                    Approved Lifecycle State:
                   </span>
                   <span
-                    className={`px-2.5 py-1 rounded border text-[11px] uppercase tracking-wider ${getStateBadge(
+                    className={`px-3 py-1 rounded-full text-xs font-semibold border ${getStateBadge(
                       selectedWorkshop.state
                     )}`}
                   >
-                    {selectedWorkshop.state}
+                    {selectedWorkshop.state.replace("_", " ")}
                   </span>
                 </div>
 
                 {/* 2. Geofenced Presence Audit */}
-                <div className="flex flex-col gap-2 border border-neutral-200 p-4 bg-white">
-                  <span className="font-mono text-[11px] font-semibold text-neutral-900 tracking-wider uppercase">
-                    01 / ZERO-GRACE PRESENCE AUDIT
+                <div className="flex flex-col gap-3 border border-slate-200 rounded-xl p-5 bg-white shadow-2xs">
+                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <span>📍</span>
+                    <span>Zero-Grace Presence Verification</span>
                   </span>
-                  <div className="flex flex-col gap-2 font-mono text-[11px] text-neutral-600 pt-2 border-t border-neutral-100">
+                  <div className="flex flex-col gap-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">SCHEDULED WINDOW:</span>
-                      <span className="text-neutral-800">09:00:00 UTC - 09:05:00 UTC</span>
+                      <span className="text-slate-400">Scheduled Check-In Window:</span>
+                      <span className="text-slate-800 font-medium">09:00:00 - 09:05:00 IST</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">RECORDED CHECK-IN:</span>
-                      <span className="text-neutral-800 font-medium">
-                        {selectedWorkshop.checkInTime || "NO_PRESENCE_RECORDED"}
+                      <span className="text-slate-400">Recorded Check-In:</span>
+                      <span className="text-slate-900 font-semibold">
+                        {selectedWorkshop.checkInTime ? selectedWorkshop.checkInTime.replace("T", " ").replace("Z", " IST") : "No presence logged"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">GEOFENCE STATUS:</span>
-                      <span className={selectedWorkshop.geofenceVerified ? "text-emerald-700 font-medium" : "text-neutral-500"}>
-                        {selectedWorkshop.geofenceVerified ? "VERIFIED (IN-BOUNDS)" : "NOT_APPLICABLE"}
+                      <span className="text-slate-400">Geofence Validation:</span>
+                      <span className={selectedWorkshop.geofenceVerified ? "text-emerald-700 font-semibold" : "text-slate-500"}>
+                        {selectedWorkshop.geofenceVerified ? "✓ Verified (Within 120m Campus Beacon)" : "Not Applicable"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">LOCATION LOG:</span>
-                      <span className="text-neutral-700">
-                        {selectedWorkshop.geofenceCoordinates || "STANDARD CLASSROOM BEACON"}
+                      <span className="text-slate-400">Location Coordinates:</span>
+                      <span className="text-slate-700 font-mono text-[11px]">
+                        {selectedWorkshop.geofenceCoordinates || "Standard Classroom Beacon"}
                       </span>
                     </div>
                   </div>
                 </div>
 
                 {/* 3. Code & Deliverable Evidence */}
-                <div className="flex flex-col gap-2 border border-neutral-200 p-4 bg-white">
-                  <span className="font-mono text-[11px] font-semibold text-neutral-900 tracking-wider uppercase">
-                    02 / CODE ARTIFACT & DELIVERABLE EVIDENCE
+                <div className="flex flex-col gap-3 border border-slate-200 rounded-xl p-5 bg-white shadow-2xs">
+                  <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                    <span>📦</span>
+                    <span>Code Artifact & Deliverable Evidence</span>
                   </span>
-                  <div className="flex flex-col gap-2 font-mono text-[11px] text-neutral-600 pt-2 border-t border-neutral-100">
+                  <div className="flex flex-col gap-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">REPOSITORY:</span>
-                      <span className="text-neutral-900 font-medium">
-                        {selectedWorkshop.repoArtifact || "NO_REPOSITORY_BOUND"}
+                      <span className="text-slate-400">Repository:</span>
+                      <span className="text-emerald-700 font-semibold font-mono">
+                        {selectedWorkshop.repoArtifact || "No repository bound"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">COMMIT SHA:</span>
-                      <span className="text-neutral-800 font-mono">
+                      <span className="text-slate-400">Commit SHA:</span>
+                      <span className="text-slate-800 font-mono font-medium">
                         {selectedWorkshop.commitHash || "N/A"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">TEST SUITE RUN:</span>
-                      <span className="text-neutral-800">
-                        {selectedWorkshop.testOutcome || "UPCOMING_OR_NOT_STARTED"}
+                      <span className="text-slate-400">Automated Tests:</span>
+                      <span className="text-emerald-700 font-semibold">
+                        {selectedWorkshop.testOutcome || "Awaiting submission"}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-neutral-400">AUDIT SIGN-OFF:</span>
-                      <span className="text-neutral-800">
-                        {selectedWorkshop.peerReviewSignoff || "PENDING_SCHEDULED_EVALUATION"}
+                      <span className="text-slate-400">Audit Sign-Off:</span>
+                      <span className="text-slate-800 font-medium">
+                        {selectedWorkshop.peerReviewSignoff || "Pending scheduled evaluation"}
                       </span>
                     </div>
                   </div>
@@ -1242,53 +1474,52 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
                 {/* 4. Session Feedback / Student Reflection Button */}
                 {(selectedWorkshop.state === "COMPLETED" || selectedWorkshop.state === "CHECKED_IN") && (
-                  <div className="border border-neutral-200 p-4 bg-neutral-50/60 flex flex-col gap-3">
-                    <div className="flex justify-between items-center font-mono text-[11px]">
-                      <span className="font-semibold text-neutral-900 uppercase">SESSION FEEDBACK & LEARNING REFLECTION</span>
-                      <span className="text-emerald-700 font-medium">STEP 09 AUDIT</span>
+                  <div className="border border-emerald-200 bg-emerald-50/50 rounded-xl p-5 flex flex-col gap-3">
+                    <div className="flex justify-between items-center text-xs">
+                      <span className="font-bold text-emerald-950">Student Learning Reflection</span>
+                      <span className="text-emerald-700 font-semibold">Audit Step 09</span>
                     </div>
-                    <p className="text-[11px] text-neutral-600 font-mono">
-                      Reflect on technical concepts mastered, rate session pacing, and record self-confidence.
+                    <p className="text-xs text-emerald-800 leading-relaxed">
+                      Record key concepts mastered, rate session pacing, and document production edge cases solved.
                     </p>
                     <button
                       type="button"
                       onClick={() => {
                         setFeedbackWorkshop(selectedWorkshop);
                       }}
-                      className="w-full py-2 bg-white hover:bg-neutral-100 text-neutral-900 border border-neutral-300 font-mono text-xs uppercase tracking-wider font-semibold shadow-2xs transition-colors"
+                      className="w-full py-2.5 bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300 text-xs font-semibold rounded-lg shadow-xs transition-colors cursor-pointer"
                     >
-                      ✍️ Submit / Update Reflection Pulse
+                      ✍️ Submit or Update Learning Reflection
                     </button>
                   </div>
                 )}
               </div>
 
               {/* Drawer Footer Actions */}
-              <div className="p-6 border-t border-neutral-200 bg-neutral-50/70 flex flex-col gap-3">
-                <div className="flex justify-between items-center font-mono text-[10px] text-neutral-500">
-                  <span>CRYPTOGRAPHIC PROOF DIGEST</span>
-                  <span>SHA-256 VERIFIED</span>
+              <div className="p-6 border-t border-slate-200 bg-slate-50/80 flex flex-col gap-3">
+                <div className="flex justify-between items-center text-[11px] text-slate-500 font-mono">
+                  <span>Cryptographic Digest: SHA-256 Verified</span>
                 </div>
                 <div className="flex gap-2.5">
                   <button
                     type="button"
                     onClick={() => handleCopyProof(selectedWorkshop.code)}
-                    className="flex-1 py-2.5 px-3 bg-neutral-900 text-white hover:bg-neutral-800 font-mono text-xs uppercase tracking-wider font-medium transition-colors text-center"
+                    className="flex-1 py-2.5 px-3 bg-slate-900 text-white hover:bg-slate-800 text-xs font-semibold rounded-lg transition-colors text-center cursor-pointer"
                   >
-                    {copyStatus ? "PROOF LINK COPIED!" : "COPY VERIFICATION LINK"}
+                    {copyStatus ? "Proof Link Copied!" : "Copy Verification Link"}
                   </button>
                   <Link
                     href="/submit"
-                    className="py-2.5 px-3 border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 font-mono text-xs uppercase tracking-wider font-medium transition-colors text-center"
+                    className="py-2.5 px-4 border border-slate-300 bg-white hover:bg-slate-50 text-slate-800 text-xs font-semibold rounded-lg transition-colors text-center"
                   >
-                    SUBMIT ARTIFACT
+                    Submit Artifact
                   </Link>
                   <button
                     type="button"
                     onClick={() => setSelectedWorkshop(null)}
-                    className="py-2.5 px-4 border border-neutral-300 bg-white hover:bg-neutral-100 text-neutral-800 font-mono text-xs uppercase tracking-wider font-medium transition-colors"
+                    className="py-2.5 px-4 border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 text-xs font-medium rounded-lg transition-colors cursor-pointer"
                   >
-                    CLOSE
+                    Close
                   </button>
                 </div>
               </div>
@@ -1304,24 +1535,24 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
         <div className="fixed inset-0 z-60 overflow-y-auto flex items-center justify-center p-4">
           <div
             onClick={() => setFeedbackWorkshop(null)}
-            className="fixed inset-0 bg-neutral-950/40 backdrop-blur-2xs"
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
             aria-hidden="true"
           />
 
-          <div className="relative bg-white border border-neutral-300 w-full max-w-lg p-6 sm:p-8 shadow-2xl flex flex-col gap-6 z-10">
+          <div className="relative bg-white border border-slate-200 rounded-2xl w-full max-w-lg p-6 sm:p-8 shadow-2xl flex flex-col gap-6 z-10">
             <div className="flex justify-between items-start">
               <div className="flex flex-col gap-1">
-                <span className="font-mono text-[10px] uppercase tracking-wider text-neutral-500 font-medium">
-                  FEEDBACK PULSE // {feedbackWorkshop.code}
+                <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
+                  Session Feedback • {feedbackWorkshop.code}
                 </span>
-                <h3 className="text-lg font-semibold text-neutral-950">
+                <h3 className="text-lg font-bold text-slate-950">
                   {feedbackWorkshop.title}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setFeedbackWorkshop(null)}
-                className="font-mono text-xs text-neutral-400 hover:text-neutral-900"
+                className="text-slate-400 hover:text-slate-700 text-sm font-semibold p-1 cursor-pointer"
               >
                 ✕
               </button>
@@ -1330,24 +1561,24 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
             <form onSubmit={handleSubmitFeedback} className="flex flex-col gap-5">
               {/* Rating Scale (1-4) */}
               <div className="flex flex-col gap-2">
-                <label className="font-mono text-xs uppercase font-medium text-neutral-800">
-                  Session Comprehension Rating (1 to 4):
+                <label className="text-xs font-semibold text-slate-800">
+                  Session Comprehension Rating:
                 </label>
-                <div className="grid grid-cols-4 gap-2 font-mono text-xs">
+                <div className="grid grid-cols-4 gap-2 text-xs">
                   {[
-                    { val: 1, label: "1: Basic Exposure" },
-                    { val: 2, label: "2: Working Knowledge" },
-                    { val: 3, label: "3: Confident App" },
-                    { val: 4, label: "4: Production Mastery" },
+                    { val: 1, label: "1: Basic" },
+                    { val: 2, label: "2: Working" },
+                    { val: 3, label: "3: Confident" },
+                    { val: 4, label: "4: Mastery" },
                   ].map((r) => (
                     <button
                       key={r.val}
                       type="button"
                       onClick={() => setFeedbackRating(r.val)}
-                      className={`p-2 border text-center rounded-xs transition-colors text-[11px] ${
+                      className={`p-2 border text-center rounded-lg transition-colors text-xs cursor-pointer ${
                         feedbackRating === r.val
-                          ? "border-neutral-900 bg-neutral-900 text-white font-semibold"
-                          : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+                          ? "border-emerald-600 bg-emerald-600 text-white font-semibold shadow-xs"
+                          : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
                       }`}
                     >
                       {r.label}
@@ -1358,9 +1589,9 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
               {/* Confidence Score (1-5) */}
               <div className="flex flex-col gap-2">
-                <div className="flex justify-between font-mono text-xs">
-                  <span className="uppercase font-medium text-neutral-800">Self-Assessed Confidence:</span>
-                  <span className="font-bold text-neutral-900">{feedbackConfidence} / 5</span>
+                <div className="flex justify-between text-xs">
+                  <span className="font-semibold text-slate-800">Self-Assessed Confidence:</span>
+                  <span className="font-bold text-emerald-700">{feedbackConfidence} / 5</span>
                 </div>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((lvl) => (
@@ -1368,10 +1599,10 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                       key={lvl}
                       type="button"
                       onClick={() => setFeedbackConfidence(lvl)}
-                      className={`flex-1 py-2 border text-center font-mono text-xs font-semibold rounded-xs transition-colors ${
+                      className={`flex-1 py-2 border text-center text-xs font-semibold rounded-lg transition-colors cursor-pointer ${
                         lvl <= feedbackConfidence
-                          ? "border-emerald-600 bg-emerald-600 text-white"
-                          : "border-neutral-200 bg-neutral-50 text-neutral-400 hover:bg-neutral-100"
+                          ? "border-emerald-600 bg-emerald-600 text-white shadow-xs"
+                          : "border-slate-200 bg-slate-50 text-slate-400 hover:bg-slate-100"
                       }`}
                     >
                       {lvl}
@@ -1382,7 +1613,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
               {/* Key Technical Learning Text */}
               <div className="flex flex-col gap-2">
-                <label className="font-mono text-xs uppercase font-medium text-neutral-800">
+                <label className="text-xs font-semibold text-slate-800">
                   Key Technical Reflection & Edge Cases Solved:
                 </label>
                 <textarea
@@ -1390,13 +1621,13 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                   rows={4}
                   value={feedbackLearning}
                   onChange={(e) => setFeedbackLearning(e.target.value)}
-                  placeholder="E.g., Successfully engineered a half-open state machine with token bucket replenishment to prevent cascading connection pool exhaustion..."
-                  className="w-full border border-neutral-300 p-3 font-mono text-xs focus:outline-none focus:border-neutral-900"
+                  placeholder="E.g., Engineered a half-open state machine with token bucket replenishment to prevent cascading connection pool exhaustion..."
+                  className="w-full border border-slate-300 rounded-xl p-3 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
                 />
               </div>
 
               {feedbackStatus && (
-                <div className="p-3 bg-neutral-100 border border-neutral-300 font-mono text-xs text-neutral-800 font-semibold text-center">
+                <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold text-center">
                   {feedbackStatus}
                 </div>
               )}
@@ -1405,16 +1636,16 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                 <button
                   type="submit"
                   disabled={isSubmittingFeedback}
-                  className="flex-1 py-2.5 bg-neutral-900 text-white hover:bg-neutral-800 font-mono text-xs uppercase tracking-wider font-semibold disabled:opacity-50"
+                  className="flex-1 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold rounded-xl shadow-xs disabled:opacity-50 cursor-pointer"
                 >
-                  {isSubmittingFeedback ? "RECORDING..." : "COMMIT REFLECTION TO LEDGER"}
+                  {isSubmittingFeedback ? "Recording..." : "Commit Reflection to Ledger"}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFeedbackWorkshop(null)}
-                  className="py-2.5 px-4 border border-neutral-300 text-neutral-800 font-mono text-xs uppercase hover:bg-neutral-100"
+                  className="py-2.5 px-4 border border-slate-300 text-slate-700 text-xs font-medium rounded-xl hover:bg-slate-50 cursor-pointer"
                 >
-                  CANCEL
+                  Cancel
                 </button>
               </div>
             </form>
@@ -1429,17 +1660,17 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
         <div className="fixed inset-0 z-60 overflow-y-auto flex items-center justify-center p-4">
           <div
             onClick={() => setIsAddingSkill(false)}
-            className="fixed inset-0 bg-neutral-950/40 backdrop-blur-2xs"
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
             aria-hidden="true"
           />
 
-          <div className="relative bg-white border border-neutral-300 w-full max-w-md p-6 shadow-2xl flex flex-col gap-5 z-10 font-mono text-xs">
-            <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
-              <span className="font-bold text-neutral-900 uppercase">ADD TECHNICAL TOOL</span>
+          <div className="relative bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 sm:p-8 shadow-2xl flex flex-col gap-5 z-10 text-xs">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <span className="font-bold text-slate-900 text-sm">Add Technical Tool</span>
               <button
                 type="button"
                 onClick={() => setIsAddingSkill(false)}
-                className="text-neutral-400 hover:text-neutral-900"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer text-sm"
               >
                 ✕
               </button>
@@ -1447,20 +1678,20 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
             <form onSubmit={handleAddSkill} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-neutral-700 font-semibold">TOOL / FRAMEWORK / PROTOCOL:</label>
+                <label className="text-slate-700 font-semibold">Tool / Framework / Protocol:</label>
                 <input
                   type="text"
                   required
                   value={newSkillName}
                   onChange={(e) => setNewSkillName(e.target.value)}
                   placeholder="E.g., Apache Kafka / Vector Clocks"
-                  className="border border-neutral-300 p-2.5 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900"
+                  className="border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-neutral-700 font-semibold">
-                  SELF-REPORTED CONFIDENCE (1–5):
+                <label className="text-slate-700 font-semibold">
+                  Self-Reported Confidence (1–5):
                 </label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((s) => (
@@ -1468,10 +1699,10 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                       key={s}
                       type="button"
                       onClick={() => setNewSkillConfidence(s)}
-                      className={`flex-1 py-1.5 border text-center font-bold ${
+                      className={`flex-1 py-2 border text-center font-bold rounded-lg transition-colors cursor-pointer ${
                         s <= newSkillConfidence
-                          ? "bg-neutral-900 text-white border-neutral-900"
-                          : "bg-white text-neutral-500 border-neutral-200"
+                          ? "bg-emerald-600 text-white border-emerald-600 shadow-xs"
+                          : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
                       }`}
                     >
                       {s}
@@ -1483,16 +1714,16 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
               <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-neutral-900 text-white hover:bg-neutral-800 uppercase font-semibold"
+                  className="flex-1 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold rounded-xl shadow-xs cursor-pointer"
                 >
-                  RECORD INVENTORY
+                  Record Tool
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsAddingSkill(false)}
-                  className="py-2.5 px-3 border border-neutral-300 hover:bg-neutral-100 text-neutral-700 uppercase"
+                  className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl cursor-pointer"
                 >
-                  CANCEL
+                  Cancel
                 </button>
               </div>
             </form>
@@ -1507,17 +1738,17 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
         <div className="fixed inset-0 z-60 overflow-y-auto flex items-center justify-center p-4">
           <div
             onClick={() => setIsAddingCert(false)}
-            className="fixed inset-0 bg-neutral-950/40 backdrop-blur-2xs"
+            className="fixed inset-0 bg-slate-950/40 backdrop-blur-xs"
             aria-hidden="true"
           />
 
-          <div className="relative bg-white border border-neutral-300 w-full max-w-md p-6 shadow-2xl flex flex-col gap-5 z-10 font-mono text-xs">
-            <div className="flex justify-between items-center border-b border-neutral-200 pb-3">
-              <span className="font-bold text-neutral-900 uppercase">SUBMIT CREDENTIAL FOR VERIFICATION</span>
+          <div className="relative bg-white border border-slate-200 rounded-2xl w-full max-w-md p-6 sm:p-8 shadow-2xl flex flex-col gap-5 z-10 text-xs">
+            <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+              <span className="font-bold text-slate-900 text-sm">Submit Credential for Verification</span>
               <button
                 type="button"
                 onClick={() => setIsAddingCert(false)}
-                className="text-neutral-400 hover:text-neutral-900"
+                className="text-slate-400 hover:text-slate-700 cursor-pointer text-sm"
               >
                 ✕
               </button>
@@ -1525,35 +1756,35 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
             <form onSubmit={handleAddCert} className="flex flex-col gap-4">
               <div className="flex flex-col gap-1.5">
-                <label className="text-neutral-700 font-semibold">CREDENTIAL TITLE:</label>
+                <label className="text-slate-700 font-semibold">Credential Title:</label>
                 <input
                   type="text"
                   required
                   value={newCertTitle}
                   onChange={(e) => setNewCertTitle(e.target.value)}
                   placeholder="E.g., Certified Kubernetes Administrator (CKA)"
-                  className="border border-neutral-300 p-2.5 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900"
+                  className="border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-neutral-700 font-semibold">ISSUING AUTHORITY / PROVIDER:</label>
+                <label className="text-slate-700 font-semibold">Issuing Authority / Provider:</label>
                 <input
                   type="text"
                   required
                   value={newCertProvider}
                   onChange={(e) => setNewCertProvider(e.target.value)}
                   placeholder="E.g., Linux Foundation / CNCF"
-                  className="border border-neutral-300 p-2.5 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900"
+                  className="border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
                 />
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-neutral-700 font-semibold">CATEGORY:</label>
+                <label className="text-slate-700 font-semibold">Category:</label>
                 <select
                   value={newCertCategory}
                   onChange={(e) => setNewCertCategory(e.target.value)}
-                  className="border border-neutral-300 p-2.5 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900"
+                  className="border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
                 >
                   <option value="Systems & Infrastructure">Systems & Infrastructure</option>
                   <option value="Cloud Architecture">Cloud Architecture</option>
@@ -1563,29 +1794,29 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
               </div>
 
               <div className="flex flex-col gap-1.5">
-                <label className="text-neutral-700 font-semibold">VERIFIABLE REGISTRY URL:</label>
+                <label className="text-slate-700 font-semibold">Verifiable Registry URL:</label>
                 <input
                   type="url"
                   value={newCertUrl}
                   onChange={(e) => setNewCertUrl(e.target.value)}
                   placeholder="https://www.credly.com/badges/..."
-                  className="border border-neutral-300 p-2.5 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900"
+                  className="border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-xs"
                 />
               </div>
 
               <div className="flex gap-2 pt-2">
                 <button
                   type="submit"
-                  className="flex-1 py-2.5 bg-neutral-900 text-white hover:bg-neutral-800 uppercase font-semibold"
+                  className="flex-1 py-2.5 bg-emerald-600 text-white hover:bg-emerald-700 text-xs font-semibold rounded-xl shadow-xs cursor-pointer"
                 >
-                  SUBMIT CREDENTIAL
+                  Submit Credential
                 </button>
                 <button
                   type="button"
                   onClick={() => setIsAddingCert(false)}
-                  className="py-2.5 px-3 border border-neutral-300 hover:bg-neutral-100 text-neutral-700 uppercase"
+                  className="py-2.5 px-4 border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-xl cursor-pointer"
                 >
-                  CANCEL
+                  Cancel
                 </button>
               </div>
             </form>

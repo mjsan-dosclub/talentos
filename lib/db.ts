@@ -92,6 +92,71 @@ export const FALLBACK_STUDENTS: Student[] = [
     is_archived: false,
     created_at: "2026-03-01T00:00:00Z",
   },
+  {
+    id: "a0000006-0000-0000-0000-000000000006",
+    dos_id: "DOS-B3-006",
+    group_id: SEED_GROUP_ID,
+    full_name: "Naveen Raj S.",
+    email: "naveen@student.dosclub.org",
+    phone: "+91 98406 78901",
+    course: "B.Tech Computer Science & Engineering",
+    department: "Computer Science & Engineering",
+    year_of_study: 3,
+    is_archived: false,
+    created_at: "2026-03-01T00:00:00Z",
+  },
+  {
+    id: "a0000007-0000-0000-0000-000000000007",
+    dos_id: "DOS-B3-007",
+    group_id: SEED_GROUP_ID,
+    full_name: "Priya Dharshini M.",
+    email: "priya@student.dosclub.org",
+    phone: "+91 98407 89012",
+    course: "B.Tech Information Technology",
+    department: "Information Technology",
+    year_of_study: 3,
+    is_archived: false,
+    created_at: "2026-03-01T00:00:00Z",
+  },
+  {
+    id: "a0000008-0000-0000-0000-000000000008",
+    dos_id: "DOS-B3-008",
+    group_id: SEED_GROUP_ID,
+    full_name: "Karthik Sundar",
+    email: "karthik.s@student.dosclub.org",
+    phone: "+91 98408 90123",
+    course: "B.Tech Electronics & Communication",
+    department: "Electronics & Communication",
+    year_of_study: 3,
+    is_archived: false,
+    created_at: "2026-03-01T00:00:00Z",
+  },
+  {
+    id: "a0000009-0000-0000-0000-000000000009",
+    dos_id: "DOS-B3-009",
+    group_id: SEED_GROUP_ID,
+    full_name: "Janani Balaji",
+    email: "janani@student.dosclub.org",
+    phone: "+91 98409 01234",
+    course: "B.Tech Computer Technology",
+    department: "Computer Technology",
+    year_of_study: 3,
+    is_archived: false,
+    created_at: "2026-03-01T00:00:00Z",
+  },
+  {
+    id: "a0000010-0000-0000-0000-000000000010",
+    dos_id: "DOS-B3-010",
+    group_id: SEED_GROUP_ID,
+    full_name: "Vigneshwaran K.",
+    email: "vignesh@student.dosclub.org",
+    phone: "+91 98410 12345",
+    course: "B.Tech AI & Data Science",
+    department: "Artificial Intelligence & Data Science",
+    year_of_study: 2,
+    is_archived: false,
+    created_at: "2026-03-01T00:00:00Z",
+  },
 ];
 
 export const WORKSHOP_TOPICS_27 = [
@@ -189,9 +254,33 @@ export async function getStudentByIdOrEmail(query: string): Promise<{ student: S
 
   const fallback = FALLBACK_STUDENTS.find(
     (s) => s.dos_id.toLowerCase() === clean || s.email.toLowerCase() === clean
-  ) || null;
+  );
+  if (fallback) {
+    return { student: fallback, isLiveDb: false };
+  }
 
-  return { student: fallback, isLiveDb: false };
+  // Dynamic fallback for any DOS-B3-xxx ID
+  if (clean.startsWith("dos-b3-")) {
+    const num = query.trim().toUpperCase().replace("DOS-B3-", "");
+    return {
+      student: {
+        id: `auto-${clean}`,
+        dos_id: query.trim().toUpperCase(),
+        group_id: SEED_GROUP_ID,
+        full_name: `Cohort Member ${num}`,
+        email: `student.${num.toLowerCase()}@dosclub.org`,
+        phone: "+91 98400 " + num.padStart(5, "0"),
+        course: "B.Tech Computer Science & Engineering",
+        department: "Computer Technology",
+        year_of_study: 3,
+        is_archived: false,
+        created_at: "2026-03-01T00:00:00Z",
+      },
+      isLiveDb: false,
+    };
+  }
+
+  return { student: null, isLiveDb: false };
 }
 
 /**
