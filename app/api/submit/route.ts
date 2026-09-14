@@ -13,24 +13,54 @@ export async function POST(request: Request) {
       );
     }
 
-    const payload = {
-      id: crypto.randomUUID(),
-      workshop_id,
-      student_id,
-      status: "SUBMITTED",
-      artifact_url,
-      notes: notes || "",
-      submitted_at: new Date().toISOString(),
-    };
-
-    const { data, error } = await supabaseAdmin
+    // Check if submission already exists for this workshop and student
+    const { data: existing, error: findError } = await supabaseAdmin
       .from("evidence_submissions")
-      .upsert([payload], { onConflict: "workshop_id,student_id" })
-      .select()
+      .select("id")
+      .eq("workshop_id", workshop_id)
+      .eq("student_id", student_id)
       .maybeSingle();
 
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (findError) {
+      return NextResponse.json({ error: findError.message }, { status: 500 });
+    }
+
+    let data;
+    if (existing) {
+      const { data: updated, error: updateError } = await supabaseAdmin
+        .from("evidence_submissions")
+        .update({
+          status: "SUBMITTED",
+          artifact_url,
+          notes: notes || "",
+          submitted_at: new Date().toISOString(),
+        })
+        .eq("id", existing.id)
+        .select()
+        .single();
+
+      if (updateError) {
+        return NextResponse.json({ error: updateError.message }, { status: 500 });
+      }
+      data = updated;
+    } else {
+      const { data: inserted, error: insertError } = await supabaseAdmin
+        .from("evidence_submissions")
+        .insert({
+          workshop_id,
+          student_id,
+          status: "SUBMITTED",
+          artifact_url,
+          notes: notes || "",
+          submitted_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+
+      if (insertError) {
+        return NextResponse.json({ error: insertError.message }, { status: 500 });
+      }
+      data = inserted;
     }
 
     return NextResponse.json({ submission: data, isLiveDb: true });
