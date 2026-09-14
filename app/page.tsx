@@ -18,6 +18,7 @@ import {
   AlertTriangleIcon,
   CheckCircleIcon,
 } from "@/components/Icons";
+import { TiltCard } from "@/components/TiltCard";
 
 export default function Home() {
   const router = useRouter();
@@ -257,17 +258,35 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Right Column: Editorial Lassie-style Student Photography Collage */}
+          {/* Right Column: Editorial Lassie & Acadium-style Student Photography with 3D Tilt */}
           <div className="lg:col-span-5 relative">
             <div className="relative mx-auto max-w-md">
-              {/* Primary Focused Student Photo */}
-              <div className="rounded-2xl overflow-hidden border border-neutral-200/90 shadow-md bg-white">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/students/student-2.jpg"
-                  alt="Indian engineering student focused on systems coding"
-                  className="w-full h-80 sm:h-96 object-cover object-top hover:scale-102 transition-transform duration-500"
-                />
+              {/* Primary Focused Student Photo with Tilt.com 3D perspective */}
+              <TiltCard
+                maxTilt={5}
+                scale={1.01}
+                className="rounded-2xl overflow-hidden border border-neutral-200/90 shadow-md bg-white group cursor-pointer"
+              >
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="/images/students/student-2.jpg"
+                    alt="Indian engineering student focused on systems coding"
+                    className="w-full h-80 sm:h-96 object-cover object-top group-hover:scale-103 transition-transform duration-700"
+                  />
+
+                  {/* Acadium-style Contextual Student Badge */}
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[10px] font-mono tracking-wide flex items-center gap-1.5 shadow-sm border border-white/10">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#1B7A55] animate-pulse" />
+                    <span>Aditya K. • CEG Campus</span>
+                  </div>
+
+                  {/* Cohort Track Chip (Warm Ochre Accent) */}
+                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-[#FEF3C7] text-[#9A6C23] border border-[#C28E3A]/30 text-[10px] font-mono font-semibold tracking-wider">
+                    BATCH 3 // 2026
+                  </div>
+                </div>
+
                 <div className="p-4 bg-white/95 backdrop-blur-sm border-t border-neutral-100 flex items-center justify-between">
                   <div className="flex flex-col">
                     <span className="text-xs font-serif font-medium text-[#0A0A0A]">
@@ -281,27 +300,35 @@ export default function Home() {
                     VERIFIED
                   </span>
                 </div>
-              </div>
+              </TiltCard>
 
-              {/* Floating Collaboration Card (Lassie style overlap) */}
-              <div className="hidden sm:flex absolute -bottom-6 -left-8 w-56 rounded-xl overflow-hidden border border-neutral-200/90 shadow-lg bg-white p-2.5 flex-col gap-2">
-                <div className="h-28 rounded-lg overflow-hidden">
+              {/* Floating Collaboration Card (Lassie style overlap + Tilt.com float physics) */}
+              <TiltCard
+                maxTilt={8}
+                scale={1.03}
+                glare={false}
+                className="hidden sm:flex absolute -bottom-6 -left-8 w-60 rounded-xl overflow-hidden border border-neutral-200/90 shadow-xl bg-white p-2.5 flex-col gap-2 animate-tilt-float z-30 cursor-pointer"
+              >
+                <div className="h-28 rounded-lg overflow-hidden relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src="/images/students/student-4.jpg"
                     alt="Indian students collaborating"
                     className="w-full h-full object-cover"
                   />
+                  <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-xs text-white text-[9px] font-mono">
+                    Zero Grace Defense
+                  </div>
                 </div>
-                <div className="flex flex-col px-1">
+                <div className="flex items-center justify-between px-1">
                   <span className="text-[11px] font-serif text-[#0A0A0A] font-medium">
                     Peer Systems Defense
                   </span>
-                  <span className="text-[9px] text-neutral-500 font-mono">
-                    27 Workshops • Zero Grace
+                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23] font-mono font-semibold">
+                    27 SESSIONS
                   </span>
                 </div>
-              </div>
+              </TiltCard>
             </div>
           </div>
         </section>
@@ -320,58 +347,50 @@ export default function Home() {
             </h2>
           </div>
 
-          {/* Literary Cadence Flow */}
+          {/* Literary Cadence Flow with Micro-Tilt */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-            <div className="bg-white p-7 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between min-h-[160px] group hover:border-[#1B7A55]/40 transition-colors">
-              <span className="text-xs font-mono text-neutral-400">01</span>
-              <p className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
-                A workshop attended.
-              </p>
-            </div>
-
-            <div className="bg-white p-7 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between min-h-[160px] group hover:border-[#1B7A55]/40 transition-colors">
-              <span className="text-xs font-mono text-neutral-400">02</span>
-              <p className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
-                A problem solved.
-              </p>
-            </div>
-
-            <div className="bg-white p-7 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between min-h-[160px] group hover:border-[#1B7A55]/40 transition-colors">
-              <span className="text-xs font-mono text-neutral-400">03</span>
-              <p className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
-                A project built.
-              </p>
-            </div>
-
-            <div className="bg-white p-7 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between min-h-[160px] group hover:border-[#1B7A55]/40 transition-colors">
-              <span className="text-xs font-mono text-neutral-400">04</span>
-              <p className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
-                A skill demonstrated.
-              </p>
-            </div>
-
-            <div className="bg-white p-7 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between min-h-[160px] group hover:border-[#1B7A55]/40 transition-colors">
-              <span className="text-xs font-mono text-neutral-400">05</span>
-              <p className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
-                A mentor who noticed.
-              </p>
-            </div>
-
-            <div className="bg-white p-7 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between min-h-[160px] group hover:border-[#1B7A55]/40 transition-colors">
-              <span className="text-xs font-mono text-neutral-400">06</span>
-              <p className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
-                A credential earned.
-              </p>
-            </div>
+            {[
+              { num: "01", text: "A workshop attended." },
+              { num: "02", text: "A problem solved." },
+              { num: "03", text: "A project built." },
+              { num: "04", text: "A skill demonstrated." },
+              { num: "05", text: "A mentor who noticed." },
+              { num: "06", text: "A credential earned." },
+            ].map((item) => (
+              <TiltCard
+                key={item.num}
+                maxTilt={4}
+                scale={1.02}
+                glare={false}
+                className="bg-white p-7 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between min-h-[160px] group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
+              >
+                <span className="text-xs font-mono text-neutral-400 group-hover:text-[#C28E3A] transition-colors font-medium">
+                  {item.num}
+                </span>
+                <p className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
+                  {item.text}
+                </p>
+              </TiltCard>
+            ))}
           </div>
 
-          {/* Photo banner of Indian student collaboration */}
-          <div className="relative rounded-2xl overflow-hidden border border-neutral-200/80 mt-4 shadow-sm bg-white">
+          {/* Photo banner of Indian student collaboration with Tilt.com 3D perspective */}
+          <TiltCard
+            maxTilt={3}
+            scale={1.005}
+            className="relative rounded-2xl overflow-hidden border border-neutral-200/80 mt-4 shadow-sm bg-white group cursor-pointer"
+          >
             <div className="grid grid-cols-1 md:grid-cols-12 gap-0 items-center">
               <div className="md:col-span-5 p-8 sm:p-10 flex flex-col justify-center gap-4">
-                <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55]">
-                  Quiet Precision
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55] font-semibold">
+                    Quiet Precision
+                  </span>
+                  <span className="w-1 h-1 rounded-full bg-[#C28E3A]" />
+                  <span className="text-[10px] font-mono text-[#9A6C23] px-2 py-0.5 rounded bg-[#FEF3C7]">
+                    ACCREDITED
+                  </span>
+                </div>
                 <p className="text-xl sm:text-2xl font-serif text-[#0A0A0A] leading-snug">
                   TalentOS quietly connects them. When industry meets you, your work speaks before your résumé does.
                 </p>
@@ -384,21 +403,26 @@ export default function Home() {
                 <img
                   src="/images/students/student-workshop-build.jpg"
                   alt="Indian university students collaborating on systems projects"
-                  className="w-full h-full object-cover object-center hover:scale-103 transition-transform duration-700"
+                  className="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700"
                 />
+                {/* Acadium-style Lab Evaluation Chip */}
+                <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[10px] font-mono flex items-center gap-2 border border-white/10 shadow-sm">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1B7A55] animate-pulse" />
+                  <span>Live Lab Evaluation • Anna University Hub</span>
+                </div>
               </div>
             </div>
-          </div>
+          </TiltCard>
         </section>
 
         {/* =========================================================================
             SECTION 3: THE "AIRPORT LOUNGE" EMOTIONAL SECTION
             "Some students wait for opportunity. DOS Club members prepare before it arrives."
-            Real student lifestyle & prep imagery.
+            Real student lifestyle & prep imagery with Tilt.com 3D perspective.
             ========================================================================= */}
         <section id="lounge" aria-label="Access and Preparation" className="flex flex-col gap-12 border-t border-[rgba(0,0,0,0.08)] pt-16 scroll-mt-24">
           <div className="max-w-3xl space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55] font-semibold block">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#C28E3A] font-semibold block">
               The Lounge Principle
             </span>
             <h2 className="text-3xl sm:text-5xl font-serif font-normal tracking-tight text-[#0A0A0A] leading-tight">
@@ -412,10 +436,14 @@ export default function Home() {
             </p>
           </div>
 
-          {/* 5 Visual Pillars with authentic student photo accents (Lassie style) */}
+          {/* 5 Visual Pillars with authentic student photo accents (Lassie & Acadium style + Tilt.com) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Pillar 1: Priority Access */}
-            <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#1B7A55]/30 transition-colors">
+            <TiltCard
+              maxTilt={4}
+              scale={1.01}
+              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
+            >
               <div className="h-44 overflow-hidden relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -423,20 +451,26 @@ export default function Home() {
                   alt="Indian student working with laptop"
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-black/70 text-white text-[9px] font-mono tracking-wider">
+                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
                   01 // ACCESS
                 </span>
               </div>
               <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A]">Priority Access</h3>
+                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
+                  Priority Access
+                </h3>
                 <p className="text-xs text-neutral-600 leading-relaxed font-light">
                   Direct pathways into engineering conversations without getting lost in unverified applicant tracking black holes.
                 </p>
               </div>
-            </div>
+            </TiltCard>
 
             {/* Pillar 2: Curated Learning */}
-            <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#1B7A55]/30 transition-colors">
+            <TiltCard
+              maxTilt={4}
+              scale={1.01}
+              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
+            >
               <div className="h-44 overflow-hidden relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -444,20 +478,26 @@ export default function Home() {
                   alt="Indian student on campus with tech books"
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-black/70 text-white text-[9px] font-mono tracking-wider">
+                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
                   02 // DEPTH
                 </span>
               </div>
               <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A]">Curated Learning</h3>
+                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
+                  Curated Learning
+                </h3>
                 <p className="text-xs text-neutral-600 leading-relaxed font-light">
                   A 27-workshop systems curriculum exploring POSIX syscalls, Raft consensus, and AI infrastructure from first principles.
                 </p>
               </div>
-            </div>
+            </TiltCard>
 
             {/* Pillar 3: Industry Exposure */}
-            <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#1B7A55]/30 transition-colors">
+            <TiltCard
+              maxTilt={4}
+              scale={1.01}
+              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
+            >
               <div className="h-44 overflow-hidden relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -465,20 +505,26 @@ export default function Home() {
                   alt="Indian students discussing with mentor"
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-black/70 text-white text-[9px] font-mono tracking-wider">
+                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
                   03 // NETWORK
                 </span>
               </div>
               <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A]">Industry Exposure</h3>
+                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
+                  Industry Exposure
+                </h3>
                 <p className="text-xs text-neutral-600 leading-relaxed font-light">
                   Direct interactions with staff engineers, technical fellows, and architects who evaluate code through production lenses.
                 </p>
               </div>
-            </div>
+            </TiltCard>
 
             {/* Pillar 4: Recognition */}
-            <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#1B7A55]/30 transition-colors">
+            <TiltCard
+              maxTilt={4}
+              scale={1.01}
+              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
+            >
               <div className="h-44 overflow-hidden relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -486,20 +532,26 @@ export default function Home() {
                   alt="Indian students solving problems"
                   className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-black/70 text-white text-[9px] font-mono tracking-wider">
+                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
                   04 // MERIT
                 </span>
               </div>
               <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A]">Recognition</h3>
+                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
+                  Recognition
+                </h3>
                 <p className="text-xs text-neutral-600 leading-relaxed font-light">
                   Students who consistently show up, build, and submit receive durable, visible honour rather than generic participation paper.
                 </p>
               </div>
-            </div>
+            </TiltCard>
 
             {/* Pillar 5: International Opportunities (Wider Card) */}
-            <div className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs sm:col-span-2 lg:col-span-2 group hover:border-[#1B7A55]/30 transition-colors">
+            <TiltCard
+              maxTilt={4}
+              scale={1.01}
+              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs sm:col-span-2 lg:col-span-2 group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
+            >
               <div className="h-44 overflow-hidden relative">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -507,17 +559,19 @@ export default function Home() {
                   alt="Indian university campus courtyard"
                   className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-3 left-3 px-2 py-0.5 rounded-full bg-black/70 text-white text-[9px] font-mono tracking-wider">
+                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
                   05 // HORIZONS
                 </span>
               </div>
               <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A]">International Opportunities</h3>
+                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
+                  International Opportunities
+                </h3>
                 <p className="text-xs text-neutral-600 leading-relaxed font-light max-w-xl">
                   Connecting promising engineering minds across Tamil Nadu with global technology hubs in Singapore and beyond, expanding where your capabilities can take you.
                 </p>
               </div>
-            </div>
+            </TiltCard>
           </div>
         </section>
 
@@ -525,9 +579,13 @@ export default function Home() {
             SECTION 4: STUDENT PASSPORT CONCEPT
             Passport-style stamps / milestones in a refined, modern editorial style
             ========================================================================= */}
+        {/* =========================================================================
+            SECTION 4: STUDENT PASSPORT CONCEPT
+            Passport-style stamps / milestones in a refined, modern editorial style with 3D Tilt
+            ========================================================================= */}
         <section id="passport" aria-label="Student Passport" className="flex flex-col gap-12 border-t border-[rgba(0,0,0,0.08)] pt-16 scroll-mt-24">
           <div className="max-w-3xl space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55] font-semibold block">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#C28E3A] font-semibold block">
               The Digital Passport
             </span>
             <h2 className="text-3xl sm:text-5xl font-serif font-normal tracking-tight text-[#0A0A0A] leading-tight">
@@ -538,10 +596,14 @@ export default function Home() {
             </p>
           </div>
 
-          {/* Passport Stamps Grid */}
+          {/* Passport Stamps Grid with Tilt.com 3D perspective and Dual Palette */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Stamp 1: Learning */}
-            <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm">
+            {/* Stamp 1: Learning (Forest Green) */}
+            <TiltCard
+              maxTilt={5}
+              scale={1.02}
+              className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#1B7A55]/50 transition-colors cursor-pointer"
+            >
               <div className="flex items-start justify-between">
                 <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 01 // LEARNING</span>
                 <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
@@ -552,13 +614,18 @@ export default function Home() {
                   POSIX internals, memory allocators, Raft log replication, eBPF & GPU shaders.
                 </p>
               </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400">
-                AUDITED CURRICULUM // VERIFIED
+              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400 flex items-center justify-between">
+                <span>AUDITED CURRICULUM</span>
+                <span className="text-[#1B7A55] font-semibold">VERIFIED</span>
               </div>
-            </div>
+            </TiltCard>
 
-            {/* Stamp 2: Projects */}
-            <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm">
+            {/* Stamp 2: Projects (Forest Green) */}
+            <TiltCard
+              maxTilt={5}
+              scale={1.02}
+              className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#1B7A55]/50 transition-colors cursor-pointer"
+            >
               <div className="flex items-start justify-between">
                 <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 02 // PROJECTS</span>
                 <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
@@ -569,47 +636,62 @@ export default function Home() {
                   Hermetic container builds, clean concurrency, and working distributed primitives.
                 </p>
               </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400">
-                COMMITS STAMPED & ARCHIVED
+              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400 flex items-center justify-between">
+                <span>COMMITS STAMPED</span>
+                <span className="text-[#1B7A55] font-semibold">ARCHIVED</span>
               </div>
-            </div>
+            </TiltCard>
 
-            {/* Stamp 3: Credentials */}
-            <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm">
+            {/* Stamp 3: Credentials (Warm Ochre / Gold Accent) */}
+            <TiltCard
+              maxTilt={5}
+              scale={1.02}
+              className="bg-[#FAF8F2] p-6 rounded-2xl border border-[#C28E3A]/30 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#C28E3A] transition-colors cursor-pointer"
+            >
               <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 03 // CREDENTIALS</span>
-                <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#9A6C23]">STAMP 03 // CREDENTIALS</span>
+                <span className="w-2 h-2 rounded-full bg-[#C28E3A]" />
               </div>
               <div className="space-y-1 my-3">
                 <p className="text-base font-serif font-medium text-[#0A0A0A]">Verified Industry Certifications</p>
-                <p className="text-xs text-neutral-500 font-light">
+                <p className="text-xs text-neutral-600 font-light">
                   Integrated validation from Linux Foundation, AWS, and accredited registries.
                 </p>
               </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400">
-                REGISTRY ATTESTED
+              <div className="pt-3 border-t border-dashed border-[#C28E3A]/30 text-[10px] font-mono text-[#9A6C23] flex items-center justify-between font-semibold">
+                <span>REGISTRY ATTESTED</span>
+                <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23]">OFFICIAL</span>
               </div>
-            </div>
+            </TiltCard>
 
-            {/* Stamp 4: Recognition */}
-            <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm">
+            {/* Stamp 4: Recognition (Warm Ochre / Gold Accent) */}
+            <TiltCard
+              maxTilt={5}
+              scale={1.02}
+              className="bg-[#FAF8F2] p-6 rounded-2xl border border-[#C28E3A]/30 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#C28E3A] transition-colors cursor-pointer"
+            >
               <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 04 // RECOGNITION</span>
-                <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#9A6C23]">STAMP 04 // RECOGNITION</span>
+                <span className="w-2 h-2 rounded-full bg-[#C28E3A]" />
               </div>
               <div className="space-y-1 my-3">
                 <p className="text-base font-serif font-medium text-[#0A0A0A]">Staff Engineer Standouts</p>
-                <p className="text-xs text-neutral-500 font-light">
+                <p className="text-xs text-neutral-600 font-light">
                   Independent citations honoring architectural clarity, grit, and peer mentorship.
                 </p>
               </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400">
-                MERIT ENDORSEMENT
+              <div className="pt-3 border-t border-dashed border-[#C28E3A]/30 text-[10px] font-mono text-[#9A6C23] flex items-center justify-between font-semibold">
+                <span>MERIT ENDORSEMENT</span>
+                <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23]">HONOUR</span>
               </div>
-            </div>
+            </TiltCard>
 
-            {/* Stamp 5: Evidence */}
-            <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm">
+            {/* Stamp 5: Evidence (Forest Green) */}
+            <TiltCard
+              maxTilt={5}
+              scale={1.02}
+              className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#1B7A55]/50 transition-colors cursor-pointer"
+            >
               <div className="flex items-start justify-between">
                 <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 05 // EVIDENCE</span>
                 <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
@@ -620,31 +702,38 @@ export default function Home() {
                   Geofenced physical presence proving punctuality, discipline, and stamina.
                 </p>
               </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400">
-                IMMUTABLE TIMESTAMPS
+              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400 flex items-center justify-between">
+                <span>IMMUTABLE TIMESTAMPS</span>
+                <span className="text-[#1B7A55] font-semibold">AUDITED</span>
               </div>
-            </div>
+            </TiltCard>
 
-            {/* Stamp 6: Exposure */}
-            <div className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm">
+            {/* Stamp 6: Exposure (Warm Ochre / Gold Accent) */}
+            <TiltCard
+              maxTilt={5}
+              scale={1.02}
+              className="bg-[#FAF8F2] p-6 rounded-2xl border border-[#C28E3A]/30 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#C28E3A] transition-colors cursor-pointer"
+            >
               <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 06 // EXPOSURE</span>
-                <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
+                <span className="text-[11px] font-mono uppercase tracking-wider text-[#9A6C23]">STAMP 06 // EXPOSURE</span>
+                <span className="w-2 h-2 rounded-full bg-[#C28E3A]" />
               </div>
               <div className="space-y-1 my-3">
                 <p className="text-base font-serif font-medium text-[#0A0A0A]">Industry Fellow Defenses</p>
-                <p className="text-xs text-neutral-500 font-light">
+                <p className="text-xs text-neutral-600 font-light">
                   Defending systems architectures directly in front of engineering leadership.
                 </p>
               </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400">
-                PEER VALIDATED
+              <div className="pt-3 border-t border-dashed border-[#C28E3A]/30 text-[10px] font-mono text-[#9A6C23] flex items-center justify-between font-semibold">
+                <span>PEER VALIDATED</span>
+                <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23]">DEFENDED</span>
               </div>
-            </div>
+            </TiltCard>
           </div>
 
-          <div className="pt-2">
-            <p className="text-lg font-serif text-[#1B7A55]">
+          <div className="pt-2 flex items-center gap-3">
+            <span className="w-1.5 h-6 rounded-full bg-[#C28E3A]" />
+            <p className="text-lg font-serif text-[#0A0A0A] italic">
               &ldquo;Graduate with evidence, not just eligibility.&rdquo;
             </p>
           </div>
@@ -669,19 +758,19 @@ export default function Home() {
 
           {/* Minimalist Fragment Pills */}
           <div className="flex flex-wrap items-center gap-3 pt-2">
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs">
+            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs hover:border-[#1B7A55]/40 transition-colors">
               27 Workshops
             </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs">
+            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs hover:border-[#1B7A55]/40 transition-colors">
               Projects
             </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs">
+            <span className="px-4 py-2 rounded-full bg-white border border-[#C28E3A]/30 bg-[#FAF8F2] text-xs font-medium text-[#9A6C23] shadow-2xs hover:border-[#C28E3A] transition-colors">
               Credentials
             </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs">
+            <span className="px-4 py-2 rounded-full bg-white border border-[#C28E3A]/30 bg-[#FAF8F2] text-xs font-medium text-[#9A6C23] shadow-2xs hover:border-[#C28E3A] transition-colors">
               Mentor Observations
             </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs">
+            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs hover:border-[#1B7A55]/40 transition-colors">
               Learning Evidence
             </span>
           </div>
@@ -694,7 +783,7 @@ export default function Home() {
             ========================================================================= */}
         <section id="recognition" aria-label="Commitment and Honour" className="flex flex-col gap-10 border-t border-[rgba(0,0,0,0.08)] pt-16 scroll-mt-24">
           <div className="max-w-3xl space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55] font-semibold block">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#C28E3A] font-semibold block">
               Growth, Not Grading
             </span>
             <h2 className="text-3xl sm:text-5xl font-serif font-normal tracking-tight text-[#0A0A0A] leading-tight">
@@ -706,41 +795,26 @@ export default function Home() {
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="bg-white p-5 rounded-xl border border-[rgba(0,0,0,0.06)] flex flex-col gap-2">
-              <span className="text-xs font-mono text-[#1B7A55] font-semibold">01</span>
-              <span className="font-serif text-sm text-[#0A0A0A]">Consistency</span>
-              <p className="text-[11px] text-neutral-500 font-light">Punctual presence across every milestone.</p>
-            </div>
-
-            <div className="bg-white p-5 rounded-xl border border-[rgba(0,0,0,0.06)] flex flex-col gap-2">
-              <span className="text-xs font-mono text-[#1B7A55] font-semibold">02</span>
-              <span className="font-serif text-sm text-[#0A0A0A]">Contribution</span>
-              <p className="text-[11px] text-neutral-500 font-light">Writing code that strengthens the commons.</p>
-            </div>
-
-            <div className="bg-white p-5 rounded-xl border border-[rgba(0,0,0,0.06)] flex flex-col gap-2">
-              <span className="text-xs font-mono text-[#1B7A55] font-semibold">03</span>
-              <span className="font-serif text-sm text-[#0A0A0A]">Improvement</span>
-              <p className="text-[11px] text-neutral-500 font-light">Closing gaps through relentless iteration.</p>
-            </div>
-
-            <div className="bg-white p-5 rounded-xl border border-[rgba(0,0,0,0.06)] flex flex-col gap-2">
-              <span className="text-xs font-mono text-[#1B7A55] font-semibold">04</span>
-              <span className="font-serif text-sm text-[#0A0A0A]">Initiative</span>
-              <p className="text-[11px] text-neutral-500 font-light">Tackling hard bugs beyond assignments.</p>
-            </div>
-
-            <div className="bg-white p-5 rounded-xl border border-[rgba(0,0,0,0.06)] flex flex-col gap-2">
-              <span className="text-xs font-mono text-[#1B7A55] font-semibold">05</span>
-              <span className="font-serif text-sm text-[#0A0A0A]">Completion</span>
-              <p className="text-[11px] text-neutral-500 font-light">Delivering working systems to the finish line.</p>
-            </div>
-
-            <div className="bg-white p-5 rounded-xl border border-[rgba(0,0,0,0.06)] flex flex-col gap-2">
-              <span className="text-xs font-mono text-[#1B7A55] font-semibold">06</span>
-              <span className="font-serif text-sm text-[#0A0A0A]">Execution</span>
-              <p className="text-[11px] text-neutral-500 font-light">Real code performing in real environments.</p>
-            </div>
+            {[
+              { num: "01", title: "Consistency", desc: "Punctual presence across every milestone." },
+              { num: "02", title: "Contribution", desc: "Writing code that strengthens the commons." },
+              { num: "03", title: "Improvement", desc: "Closing gaps through relentless iteration." },
+              { num: "04", title: "Initiative", desc: "Tackling hard bugs beyond assignments." },
+              { num: "05", title: "Completion", desc: "Delivering working systems to the finish line." },
+              { num: "06", title: "Execution", desc: "Real code performing in real environments." },
+            ].map((dim) => (
+              <TiltCard
+                key={dim.num}
+                maxTilt={6}
+                scale={1.02}
+                glare={false}
+                className="bg-white p-5 rounded-xl border border-[rgba(0,0,0,0.06)] flex flex-col gap-2 hover:border-[#C28E3A]/40 transition-colors cursor-pointer shadow-2xs"
+              >
+                <span className="text-xs font-mono text-[#C28E3A] font-semibold">{dim.num}</span>
+                <span className="font-serif text-sm text-[#0A0A0A]">{dim.title}</span>
+                <p className="text-[11px] text-neutral-500 font-light">{dim.desc}</p>
+              </TiltCard>
+            ))}
           </div>
         </section>
 
@@ -765,11 +839,20 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Become a Member Primary Action Block */}
-              <div className="bg-white p-7 rounded-2xl border border-neutral-200/90 shadow-sm space-y-4">
-                <span className="text-xs font-semibold text-neutral-900 block">
-                  Immediate Member Enrollment
-                </span>
+              {/* Become a Member Primary Action Block with 3D Tilt */}
+              <TiltCard
+                maxTilt={3}
+                scale={1.01}
+                className="bg-white p-7 rounded-2xl border border-neutral-200/90 shadow-sm space-y-4 cursor-pointer"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-neutral-900 block">
+                    Immediate Member Enrollment
+                  </span>
+                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23] font-medium">
+                    PRIORITY
+                  </span>
+                </div>
                 <p className="text-xs text-neutral-500 leading-relaxed font-light">
                   Access the complete 27-workshop curriculum, passport credentialing, and live engineering hub sessions.
                 </p>
@@ -782,7 +865,7 @@ export default function Home() {
                   <span>Become a Member</span>
                   <ArrowRightIcon className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                 </a>
-              </div>
+              </TiltCard>
             </div>
 
             {/* Right: Short Enquiry Form */}
