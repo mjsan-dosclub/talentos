@@ -20,7 +20,8 @@ export function middleware(request: NextRequest) {
     pathname.startsWith("/api") ||
     pathname.startsWith("/brand") ||
     pathname.startsWith("/ledger") || // Public certificate verification ledger
-    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|webmanifest)$/) ||
+    pathname.startsWith("/record") || // Public student verified engineering dossier
+    pathname.match(/\.(png|jpg|jpeg|gif|svg|ico|webp|webmanifest|js)$/) ||
     PUBLIC_PATHS.includes(pathname)
   ) {
     return NextResponse.next();
