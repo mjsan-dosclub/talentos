@@ -263,6 +263,14 @@ export default function TrainerDashboardPage() {
               <p className="font-mono text-[11px] text-neutral-500 leading-normal">
                 Students scan via TalentOS mobile PWA. Token rotates every 30s to prevent link forwarding.
               </p>
+
+              <Link
+                href="/checkin"
+                target="_blank"
+                className="w-full py-2 bg-neutral-100 hover:bg-neutral-200 border border-neutral-300 text-neutral-800 font-mono text-xs uppercase tracking-wider font-semibold text-center rounded-xs transition-colors block"
+              >
+                📱 Open Student Mobile Check-In Scanner ↗
+              </Link>
             </div>
           </div>
 

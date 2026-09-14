@@ -602,6 +602,13 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
           <div className="flex items-center gap-2 sm:gap-3">
             <Link
+              href={`/checkin?dos_id=${encodeURIComponent(identifier)}`}
+              className="font-mono text-xs text-emerald-800 border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 px-2.5 py-1 rounded transition-colors font-semibold flex items-center gap-1.5"
+            >
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
+              Mobile Check-In
+            </Link>
+            <Link
               href="/submit"
               className="font-mono text-xs text-neutral-900 border border-neutral-300 bg-neutral-100 hover:bg-neutral-200 px-2.5 py-1 rounded transition-colors font-medium"
             >
