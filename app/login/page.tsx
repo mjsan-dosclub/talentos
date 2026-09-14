@@ -24,8 +24,38 @@ import {
 function LoginContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get("redirect") || null;
+  const rawRedirect = searchParams.get("redirect") || null;
   const errorCode = searchParams.get("error") || null;
+
+  // Sanitize redirect: only accept valid application routes (exclude internal/well-known/static files)
+  const isValidRedirect =
+    rawRedirect &&
+    rawRedirect.startsWith("/") &&
+    !rawRedirect.startsWith("//") &&
+    !rawRedirect.startsWith("/login") &&
+    !rawRedirect.startsWith("/.well-known") &&
+    !rawRedirect.startsWith("/api") &&
+    !rawRedirect.includes(".");
+  const redirectUrl = isValidRedirect ? rawRedirect : null;
+
+  const resolveDestination = (userRole: string, defaultRedirect: string) => {
+    if (!redirectUrl) return defaultRedirect;
+    // Prevent RBAC bounce loops
+    if (redirectUrl.startsWith("/admin") && userRole !== "SUPER_ADMIN") return defaultRedirect;
+    if (
+      redirectUrl.startsWith("/trainer") &&
+      userRole !== "TRAINER" &&
+      userRole !== "SUPER_ADMIN"
+    )
+      return defaultRedirect;
+    if (
+      redirectUrl.startsWith("/college") &&
+      userRole !== "COLLEGE_ADMIN" &&
+      userRole !== "SUPER_ADMIN"
+    )
+      return defaultRedirect;
+    return redirectUrl;
+  };
 
   const [role, setRole] = useState<"student" | "trainer" | "college" | "admin">("student");
   const [email, setEmail] = useState("");
@@ -64,7 +94,7 @@ function LoginContent() {
       const data = await res.json();
       if (data.user) {
         setClientSession(data.user);
-        const destination = redirectUrl || data.redirect;
+        const destination = resolveDestination(data.user.role, data.redirect);
         window.location.href = destination;
       } else {
         setStatusMessage("Could not sign in with demo credentials. Please try again.");
@@ -74,15 +104,15 @@ function LoginContent() {
       console.warn("Fast login error:", err);
       const demoUser = DEMO_ACCOUNTS[demoKey];
       setClientSession(demoUser);
-      const destination =
-        redirectUrl ||
-        (demoUser.role === "TRAINER"
+      const defaultDest =
+        demoUser.role === "TRAINER"
           ? "/trainer"
           : demoUser.role === "COLLEGE_ADMIN"
           ? "/college"
           : demoUser.role === "SUPER_ADMIN"
           ? "/admin"
-          : `/record/${encodeURIComponent(demoUser.dos_id || "DOS-B3-001")}`);
+          : `/record/${encodeURIComponent(demoUser.dos_id || "DOS-B3-001")}`;
+      const destination = resolveDestination(demoUser.role, defaultDest);
       window.location.href = destination;
     }
   };
@@ -114,7 +144,7 @@ function LoginContent() {
       const data = await res.json();
       if (data.user) {
         setClientSession(data.user);
-        const destination = redirectUrl || data.redirect;
+        const destination = resolveDestination(data.user.role, data.redirect);
         window.location.href = destination;
       } else {
         setStatusMessage("Invalid email or password. Please verify your credentials.");
@@ -124,15 +154,16 @@ function LoginContent() {
       console.warn("Auth error fallback:", err);
       const demoUser = DEMO_ACCOUNTS[role as keyof typeof DEMO_ACCOUNTS] || DEMO_ACCOUNTS.student;
       setClientSession(demoUser);
-      window.location.href =
-        redirectUrl ||
-        (role === "trainer"
+      const defaultDest =
+        role === "trainer"
           ? "/trainer"
           : role === "college"
           ? "/college"
           : role === "admin"
           ? "/admin"
-          : `/record/DOS-B3-001`);
+          : `/record/DOS-B3-001`;
+      const destination = resolveDestination(demoUser.role, defaultDest);
+      window.location.href = destination;
     }
   };
 
