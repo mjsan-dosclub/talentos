@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { sendEmail } from "@/lib/email-service";
 
 // In-memory fallback ledger for enquiries so admin panel displays submissions even when database is offline
 export interface EnquiryRecord {
@@ -113,11 +114,136 @@ export async function POST(req: NextRequest) {
       console.warn("Supabase aspirant_enquiries notice:", dbErr);
     }
 
-    // 1. Dispatch Admin Alert Email
-    console.log(`[TalentOS Notification] Admin Email Dispatched: "🚨 New Admissions Enquiry: ${name} (${currentRole}) - Contact: ${phone}, ${email}"`);
+    // 1. Dispatch Candidate Auto-Responder Email (Thank You + Social Channels + Anti-Spam Whitelist)
+    const candidateHtml = `
+      <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; color: #0f172a;">
+        <div style="background: #0f172a; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+          <h2 style="color: #ffffff; margin: 0; font-size: 18px; letter-spacing: -0.02em;">DeScience Open Source Club</h2>
+          <p style="color: #38bdf8; margin: 4px 0 0; font-size: 12px; font-weight: 600;">Admissions & Cohort Allocation Directorate</p>
+        </div>
+        
+        <p style="font-size: 15px; line-height: 1.6; color: #334155;">
+          Dear <strong>${name}</strong>,
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #334155;">
+          Thank you for applying to the DeScience Open Source Club Systems Engineering Fellowship (Reference: <strong style="color: #2563eb;">${enquiryId}</strong>).
+        </p>
+        <p style="font-size: 14px; line-height: 1.6; color: #334155;">
+          Our admissions pod has received your submission. A mentor will review your background and reach out via WhatsApp / Email within 24–48 hours for your technical diagnostic evaluation.
+        </p>
 
-    // 2. Dispatch Candidate Auto-Responder Email (Thank You + Social Channels + Anti-Spam Whitelist)
-    console.log(`[TalentOS Notification] Candidate Confirmation Dispatched to ${email}: "We received your DOS Club Admissions Enquiry (Ref: ${enquiryId}). Follow our WhatsApp Channel & Discord to avoid spam delays."`);
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 24px 0;">
+          <h4 style="margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #0f172a;">
+            While You Wait &mdash; Connect With Our Builders Community:
+          </h4>
+          <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8; color: #334155;">
+            <li><strong>WhatsApp Community Channel:</strong> <a href="https://whatsapp.com/channel/0029VaDeScienceOSClub" style="color: #2563eb; text-decoration: none;">Join Channel &rarr;</a></li>
+            <li><strong>Discord Builders Server:</strong> <a href="https://discord.gg/descience-osclub" style="color: #2563eb; text-decoration: none;">discord.gg/descience-osclub &rarr;</a></li>
+            <li><strong>GitHub Commons:</strong> <a href="https://github.com/descience-osclub" style="color: #2563eb; text-decoration: none;">github.com/descience-osclub &rarr;</a></li>
+            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/company/touchmark-descience/" style="color: #2563eb; text-decoration: none;">Touchmark DeScience &rarr;</a></li>
+          </ul>
+        </div>
+
+        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 20px 0; border-radius: 0 8px 8px 0; font-size: 12px; color: #92400e; line-height: 1.5;">
+          <strong>CRITICAL ANTI-SPAM NOTICE:</strong><br/>
+          To prevent our evaluation pass invitation from landing in your Spam or Promotions folder, please add <strong>admissions@dosclub.org</strong> and <strong>notifications@dosclub.org</strong> to your email contacts right now.
+        </div>
+
+        <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
+        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
+          DeScience Open Source Club &bull; TalentOS Student Growth Engine<br/>
+          This is an automated transmission dispatched with Global CC logging.
+        </p>
+      </div>
+    `;
+
+    const candidateText = `
+Dear ${name},
+
+Thank you for your interest in joining DeScience Open Source Club (Ref: ${enquiryId}).
+
+Our admissions and cohort allocation pod has received your information. A mentor will reach out via WhatsApp / Email within 24–48 hours to discuss your engineering background and upcoming admissions evaluation rounds.
+
+WHILE YOU WAIT — CONNECT WITH OUR COMMUNITY:
+- WhatsApp Community Channel: https://whatsapp.com/channel/0029VaDeScienceOSClub
+- Discord Builders Server: https://discord.gg/descience-osclub
+- LinkedIn: https://www.linkedin.com/company/touchmark-descience/
+- GitHub Commons: https://github.com/descience-osclub
+
+ANTI-SPAM TIP:
+Please save admissions@dosclub.org in your contacts so our interview scheduling invitation does not get delayed in your Spam folder.
+
+Warm regards,
+Admissions Directorate
+DeScience Open Source Club
+    `.trim();
+
+    const candidateEmailResult = await sendEmail({
+      to: email,
+      subject: `We received your DOS Club Admissions Enquiry (Ref: ${enquiryId})`,
+      text: candidateText,
+      html: candidateHtml,
+    });
+
+    // 2. Dispatch Admin Alert Email
+    const adminAlertText = `
+TalentOS Admissions Alert:
+
+A new admissions enquiry has been submitted on the landing page:
+- Reference: ${enquiryId}
+- Candidate Name: ${name}
+- WhatsApp Contact: ${phone}
+- Email Address: ${email}
+- Current Role: ${currentRole}
+- Referral Source: ${referralSource}
+
+Candidate Statement / Message:
+"${message || "No statement provided"}"
+
+Review and manage this application in your Admin Console:
+http://localhost:3000/admin?tab=enquiries
+
+TalentOS Automated Dispatch
+    `.trim();
+
+    const adminAlertHtml = `
+      <div style="font-family: Arial, sans-serif; max-width: 580px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px;">
+        <div style="background: #dc2626; color: white; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 16px;">🚨 New Admissions Enquiry Received</h3>
+        </div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 13px; line-height: 1.6;">
+          <tr><td style="color: #64748b; width: 140px; padding: 4px 0;">Reference ID:</td><td style="font-weight: bold; color: #0f172a;">${enquiryId}</td></tr>
+          <tr><td style="color: #64748b; padding: 4px 0;">Candidate:</td><td style="font-weight: bold; color: #0f172a;">${name}</td></tr>
+          <tr><td style="color: #64748b; padding: 4px 0;">Mobile (WhatsApp):</td><td style="font-weight: bold; color: #15803d;"><a href="https://wa.me/${phone.replace(/[^0-9]/g, "")}" style="color: #15803d; text-decoration: none;">${phone} (Chat on WhatsApp)</a></td></tr>
+          <tr><td style="color: #64748b; padding: 4px 0;">Email:</td><td style="color: #2563eb;"><a href="mailto:${email}" style="color: #2563eb;">${email}</a></td></tr>
+          <tr><td style="color: #64748b; padding: 4px 0;">Current Role:</td><td>${currentRole}</td></tr>
+          <tr><td style="color: #64748b; padding: 4px 0;">Source:</td><td>${referralSource}</td></tr>
+        </table>
+        ${
+          message
+            ? `<div style="background: #f8fafc; border-left: 3px solid #64748b; padding: 10px 14px; margin: 16px 0; font-size: 13px; font-style: italic;">
+                "${message}"
+               </div>`
+            : ""
+        }
+        <div style="margin-top: 20px; text-align: center;">
+          <a href="http://localhost:3000/admin?tab=enquiries" style="display: inline-block; background: #0f172a; color: white; text-decoration: none; padding: 10px 20px; font-size: 12px; font-weight: bold; border-radius: 6px;">
+            Open Enquiries Admin Roster &rarr;
+          </a>
+        </div>
+      </div>
+    `;
+
+    const adminEmail = "admissions@dosclub.org";
+    const adminEmailResult = await sendEmail({
+      to: adminEmail,
+      subject: `🚨 New Admissions Enquiry: ${name} (${currentRole})`,
+      text: adminAlertText,
+      html: adminAlertHtml,
+    });
+
+    console.log(`[TalentOS Notification] Candidate Confirmation:`, candidateEmailResult);
+    console.log(`[TalentOS Notification] Admin Email Alert:`, adminEmailResult);
 
     // 3. Best-effort logging in notification_dispatches
     try {
@@ -125,9 +251,9 @@ export async function POST(req: NextRequest) {
         {
           channel: "EMAIL",
           title: `Admissions Enquiry Acknowledged (${enquiryId})`,
-          content: `Auto-responder sent to ${name} (${email}) with WhatsApp & Discord community onboarding links.`,
+          content: `Auto-responder sent to ${name} (${email}) with WhatsApp & Discord community onboarding links. Admin alerted with Global CC.`,
           dispatched_by: "SYSTEM_ADMISSIONS_POD",
-          sent_count: 2, // 1 candidate + 1 admin
+          sent_count: 2 + (candidateEmailResult.recipients.cc.length || 0),
           created_at: timestamp,
         },
       ]);

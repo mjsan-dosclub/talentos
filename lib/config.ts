@@ -3,8 +3,11 @@ export interface EmailConfig {
   smtpHost: string;
   smtpPort: number;
   smtpUser: string;
+  smtpPass?: string;
+  resendApiKey?: string;
   fromAddress: string;
   fromName: string;
+  globalCc?: string;
   enabled: boolean;
 }
 
@@ -74,12 +77,15 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
     canonicalUrl: "http://localhost:3000",
   },
   email: {
-    provider: "smtp",
-    smtpHost: "smtp.sendgrid.net",
-    smtpPort: 587,
-    smtpUser: "apikey",
-    fromAddress: "notifications@dosclub.org",
+    provider: (process.env.EMAIL_PROVIDER as any) || "smtp",
+    smtpHost: process.env.SMTP_HOST || "smtp.sendgrid.net",
+    smtpPort: parseInt(process.env.SMTP_PORT || "587", 10),
+    smtpUser: process.env.SMTP_USER || "apikey",
+    smtpPass: process.env.SMTP_PASS || "",
+    resendApiKey: process.env.RESEND_API_KEY || "",
+    fromAddress: process.env.EMAIL_FROM || "notifications@dosclub.org",
     fromName: "DOS Club TalentOS",
+    globalCc: process.env.EMAIL_GLOBAL_CC || "descienceosclub@gmail.com, admissions@dosclub.org",
     enabled: true,
   },
   whatsapp: {
