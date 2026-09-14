@@ -18,6 +18,7 @@ import type {
 } from "@/lib/supabase";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
+import { getClientSession, TalentosUser } from "@/lib/session";
 import {
   AcademicCapIcon,
   WrenchIcon,
@@ -469,6 +470,53 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
   // Assessments State
   const [assessments, setAssessments] = useState<ExternalAssessment[]>([]);
+  const [currentUser, setCurrentUser] = useState<TalentosUser | null>(null);
+
+  useEffect(() => {
+    setCurrentUser(getClientSession());
+  }, []);
+
+  const getRoleNavigation = () => {
+    if (!currentUser) {
+      return {
+        parentLabel: "Student Directory",
+        parentUrl: "/",
+        backLabel: "← Back to Home",
+        backUrl: "/",
+      };
+    }
+    if (currentUser.role === "SUPER_ADMIN") {
+      return {
+        parentLabel: "Admin Console",
+        parentUrl: "/admin",
+        backLabel: "← Back to Admin Roster",
+        backUrl: "/admin?tab=students",
+      };
+    }
+    if (currentUser.role === "TRAINER") {
+      return {
+        parentLabel: "Expert Cockpit",
+        parentUrl: "/trainer",
+        backLabel: "← Back to Cockpit",
+        backUrl: "/trainer",
+      };
+    }
+    if (currentUser.role === "COLLEGE_ADMIN") {
+      return {
+        parentLabel: "College Portal",
+        parentUrl: "/college",
+        backLabel: "← Back to College Roster",
+        backUrl: "/college",
+      };
+    }
+    return {
+      parentLabel: "My Learning Dossier",
+      parentUrl: `/record/${encodeURIComponent(currentUser.dos_id || identifier)}`,
+      backLabel: "← Back to Dashboard",
+      backUrl: `/record/${encodeURIComponent(currentUser.dos_id || identifier)}`,
+    };
+  };
+  const roleNav = getRoleNavigation();
 
   // Feedback Modal State (Step 09 - Session Feedback Pulse)
   const [feedbackWorkshop, setFeedbackWorkshop] = useState<WorkshopRecord | null>(null);
@@ -698,17 +746,19 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
               <span>Home</span>
             </Link>
             <span>/</span>
-            <Link href="/admin" className="hover:text-slate-900 transition-colors">Admin Console</Link>
+            <Link href={roleNav.parentUrl} className="hover:text-slate-900 transition-colors font-medium">
+              {roleNav.parentLabel}
+            </Link>
             <span>/</span>
             <span className="text-slate-900 font-semibold font-mono">{identifier}</span>
           </div>
 
           <div className="flex items-center gap-2">
             <Link
-              href="/admin?tab=students"
+              href={roleNav.backUrl}
               className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-md transition-colors flex items-center gap-1.5 border border-slate-200"
             >
-              <span>&larr; Back to Admin Roster</span>
+              <span>{roleNav.backLabel}</span>
             </Link>
           </div>
         </div>

@@ -106,7 +106,7 @@ export default function Home() {
     if (user.role === "SUPER_ADMIN") return "/admin";
     if (user.role === "COLLEGE_ADMIN") return "/college";
     if (user.role === "TRAINER") return "/trainer";
-    return "/student";
+    return `/record/${encodeURIComponent(user.dos_id || "DOS-B3-001")}`;
   };
 
   // Student Cohort Mock Data for UI8 Team section
@@ -218,17 +218,28 @@ export default function Home() {
             {user ? (
               <Link
                 href={getDashboardLink()}
-                className="ui8-btn-stroke text-xs sm:text-sm py-2 px-4.5"
+                className="ui8-btn-stroke text-xs sm:text-sm py-2 px-4.5 font-bold flex items-center gap-1.5"
+                title={`Go to ${user.role.replace("_", " ")} Dashboard`}
               >
-                Dashboard
+                <span>Dashboard</span>
+                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  {user.role === "SUPER_ADMIN"
+                    ? "Admin"
+                    : user.role === "TRAINER"
+                    ? "Expert"
+                    : user.role === "COLLEGE_ADMIN"
+                    ? "College"
+                    : "Student"}
+                </span>
               </Link>
             ) : (
-              <a
-                href="#enquire"
-                className="hidden sm:inline-flex ui8-btn-stroke text-xs sm:text-sm py-2 px-5"
+              <Link
+                href="/login"
+                className="ui8-btn-stroke text-xs sm:text-sm py-2 px-4.5 font-semibold text-[#23262F] hover:text-[#FF592C] transition-colors"
+                title="Member & Admin Portal Sign In"
               >
-                Enquire
-              </a>
+                Portal Sign In
+              </Link>
             )}
 
             <a
@@ -1347,32 +1358,32 @@ export default function Home() {
             {/* Column 2: Navigation Links */}
             <div className="md:col-span-3 space-y-3">
               <div className="text-xs font-bold uppercase tracking-wider text-[#23262F]">
-                Ecosystem
+                Portals & Ecosystem
               </div>
               <ul className="space-y-2 text-sm text-[#777E90]">
                 <li>
-                  <a href="#how-it-works" className="hover:text-[#23262F] transition-colors">
-                    The 4 Dimensions
-                  </a>
+                  <Link href="/login" className="hover:text-[#23262F] font-semibold text-[#3772FF] transition-colors">
+                    Member Portal Sign In &rarr;
+                  </Link>
                 </li>
                 <li>
-                  <a href="#evidence" className="hover:text-[#23262F] transition-colors">
-                    The Invisible Engine
-                  </a>
+                  <Link href="/admin" className="hover:text-[#23262F] transition-colors">
+                    Admin Governance Console
+                  </Link>
                 </li>
                 <li>
-                  <a href="#lounge" className="hover:text-[#23262F] transition-colors">
-                    The Lounge Privilege
-                  </a>
+                  <Link href="/trainer" className="hover:text-[#23262F] transition-colors">
+                    Technical Expert Cockpit
+                  </Link>
                 </li>
                 <li>
-                  <a href="#roster" className="hover:text-[#23262F] transition-colors">
-                    Active Cohort Alpha
-                  </a>
+                  <Link href="/college" className="hover:text-[#23262F] transition-colors">
+                    Partner College Portal
+                  </Link>
                 </li>
                 <li>
                   <Link href="/checkin" className="hover:text-[#23262F] transition-colors">
-                    Venue Check-in Portal
+                    Campus Zero-Grace Check-In
                   </Link>
                 </li>
               </ul>

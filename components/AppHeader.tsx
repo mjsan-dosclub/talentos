@@ -96,7 +96,7 @@ export default function AppHeader() {
               </Link>
             )}
 
-            {user && (
+            {user ? (
               <Link
                 href={
                   user.role === "SUPER_ADMIN"
@@ -115,20 +115,20 @@ export default function AppHeader() {
                     ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                     : "text-slate-300 hover:text-white hover:bg-slate-800"
                 }`}
-                title="Go to role dashboard"
+                title={`Go to ${user.role.replace("_", " ")} Dashboard`}
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
-                <span>
-                  {user.role === "SUPER_ADMIN"
-                    ? "Admin"
-                    : user.role === "TRAINER"
-                    ? "Cockpit"
-                    : user.role === "COLLEGE_ADMIN"
-                    ? "College"
-                    : "Dossier"}
-                </span>
+                <span>Dashboard</span>
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                title="Sign in to TalentOS Portal"
+              >
+                <span>Portal Sign In</span>
               </Link>
             )}
           </div>

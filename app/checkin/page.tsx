@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import SessionBar from "@/components/SessionBar";
+import { getClientSession, TalentosUser } from "@/lib/session";
 import {
   CheckCircleIcon,
   CheckIcon,
@@ -50,6 +51,21 @@ function CheckInContent() {
 
   const [mode, setMode] = useState<"CHECK_IN" | "CHECK_OUT">("CHECK_IN");
   const [dosId, setDosId] = useState(initialStudentId);
+  const [currentUser, setCurrentUser] = useState<TalentosUser | null>(null);
+
+  useEffect(() => {
+    setCurrentUser(getClientSession());
+  }, []);
+
+  const getDashboardReturn = () => {
+    if (!currentUser) return null;
+    if (currentUser.role === "SUPER_ADMIN") return { label: "← Back to Admin Console", url: "/admin" };
+    if (currentUser.role === "TRAINER") return { label: "← Back to Cockpit", url: "/trainer" };
+    if (currentUser.role === "COLLEGE_ADMIN") return { label: "← Back to College Portal", url: "/college" };
+    return { label: "← Back to Dashboard", url: `/record/${encodeURIComponent(currentUser.dos_id || dosId || "DOS-B3-001")}` };
+  };
+  const dashboardReturn = getDashboardReturn();
+
   const [tokenInput, setTokenInput] = useState("");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
@@ -226,9 +242,9 @@ function CheckInContent() {
       <header className="bg-white border-b border-[#E6E8EC] sticky top-0 z-40">
         <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-between">
           <Link
-            href="/"
+            href={dashboardReturn ? dashboardReturn.url : "/"}
             className="flex items-center gap-2.5 text-[#23262F] hover:opacity-80 transition-opacity"
-            title="Return to Public Homepage"
+            title={dashboardReturn ? dashboardReturn.label : "TalentOS Verification"}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/dos-club-logo.png" alt="DOS Club" className="h-8 w-8 rounded-full object-cover border border-[#E6E8EC]" />
@@ -241,16 +257,15 @@ function CheckInContent() {
           </Link>
 
           <div className="flex items-center gap-2">
-            <Link
-              href="/"
-              className="px-2.5 py-1 text-xs font-semibold text-[#777E90] hover:text-[#23262F] hover:bg-[#F4F5F6] rounded-lg transition-colors flex items-center gap-1"
-              title="Return to Homepage"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-              </svg>
-              <span>Home</span>
-            </Link>
+            {dashboardReturn && (
+              <Link
+                href={dashboardReturn.url}
+                className="px-2.5 py-1 text-xs font-semibold text-[#3772FF] hover:bg-[#3772FF]/10 rounded-lg transition-colors"
+                title={dashboardReturn.label}
+              >
+                {dashboardReturn.label}
+              </Link>
+            )}
             <SessionBar />
           </div>
         </div>
@@ -258,20 +273,6 @@ function CheckInContent() {
 
       {/* Main Mobile Card Content */}
       <main className="flex-1 max-w-md w-full mx-auto p-4 py-6 flex flex-col gap-4 justify-center">
-        {/* Navigation Breadcrumb Bar */}
-        <div className="flex items-center justify-between text-xs px-1 text-[#777E90]">
-          <div className="flex items-center gap-1.5">
-            <Link href="/" className="hover:text-[#23262F] transition-colors">Home</Link>
-            <span>/</span>
-            <span className="text-[#23262F] font-semibold">Check-In Gate</span>
-          </div>
-          <Link
-            href="/admin"
-            className="text-[#3772FF] hover:underline font-semibold flex items-center gap-1"
-          >
-            &larr; Admin Dashboard
-          </Link>
-        </div>
         {receipt ? (
           /* Success Receipt Card */
           <div className="border border-[#E6E8EC] bg-white p-6 rounded-3xl shadow-lg flex flex-col gap-4 animate-fade-in">
@@ -327,12 +328,14 @@ function CheckInContent() {
               >
                 Inspect Student 360 Dossier &rarr;
               </Link>
-              <Link
-                href="/admin"
-                className="w-full py-2.5 border border-[#3772FF]/30 text-[#3772FF] hover:bg-[#3772FF]/5 text-xs font-bold rounded-full text-center transition-colors"
-              >
-                &larr; Return to Admin Dashboard
-              </Link>
+              {dashboardReturn && (
+                <Link
+                  href={dashboardReturn.url}
+                  className="w-full py-2.5 border border-[#3772FF]/30 text-[#3772FF] hover:bg-[#3772FF]/5 text-xs font-bold rounded-full text-center transition-colors"
+                >
+                  {dashboardReturn.label}
+                </Link>
+              )}
               <button
                 type="button"
                 onClick={() => {
