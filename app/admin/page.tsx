@@ -13,7 +13,12 @@ import {
   ClipboardListIcon,
   SettingsIcon,
   XIcon,
+  RadioIcon,
+  FileTextIcon,
 } from "@/components/Icons";
+import PopupsTab from "@/components/admin/PopupsTab";
+import LandingCmsTab from "@/components/admin/LandingCmsTab";
+
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 import { formatConfigDateTime } from "@/lib/datetime";
 
@@ -467,12 +472,20 @@ function AdminHubContent() {
       ],
     },
     {
+      title: "Content & Broadcast",
+      items: [
+        { id: "popups", label: "Flash News & Popups", icon: <RadioIcon className="w-4 h-4" />, badge: "LIVE" },
+        { id: "cms", label: "Landing Page CMS", icon: <FileTextIcon className="w-4 h-4" /> },
+      ],
+    },
+    {
       title: "Governance & Tools",
       items: [
         { id: "audit", label: "Audit Logs", icon: <ClipboardListIcon className="w-4 h-4" />, count: auditLogs.length },
         { id: "settings", label: "Settings", icon: <SettingsIcon className="w-4 h-4" /> },
       ],
     },
+
   ];
 
   return (
@@ -996,7 +1009,22 @@ function AdminHubContent() {
               </div>
             </div>
           )}
+
+          {/* ========================================================================= */}
+          {/* TAB 6: FLASH NEWS & WELCOME POPUPS                                       */}
+          {/* ========================================================================= */}
+          {activeTab === "popups" && (
+            <PopupsTab onToast={triggerToast} />
+          )}
+
+          {/* ========================================================================= */}
+          {/* TAB 7: LANDING PAGE CMS                                                   */}
+          {/* ========================================================================= */}
+          {activeTab === "cms" && (
+            <LandingCmsTab onToast={triggerToast} />
+          )}
         </main>
+
       </div>
 
       {/* ========================================================================= */}

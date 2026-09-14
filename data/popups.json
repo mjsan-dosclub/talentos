@@ -1,0 +1,53 @@
+[
+  {
+    "id": "popup-codezap-2026",
+    "title": "CodeZap 2026: National AI Systems Hackathon",
+    "contentType": "FLYER",
+    "mediaUrl": "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80",
+    "badge": "FLASH ANNOUNCEMENT // CODEZAP 2026",
+    "description": "Touchmark Descience Open Source Club announces CodeZap 2026. 48-hour challenge building real-time distributed inference engines. Registrations open for all verified student members.",
+    "actionLabel": "Register for CodeZap 2026",
+    "actionUrl": "https://membership.descienceosclub.com/",
+    "startsAt": "2026-09-14T00:00:00.000Z",
+    "endsAt": null,
+    "isActive": true,
+    "isSuperseded": false,
+    "supersededBy": null,
+    "createdAt": "2026-09-14T00:00:00.000Z",
+    "updatedAt": "2026-09-14T00:00:00.000Z"
+  },
+  {
+    "id": "popup-achiever-divya",
+    "title": "Batch 2 Achiever: Divya Nair joins NeuralScale as AI Engineer",
+    "contentType": "ACHIEVER",
+    "mediaUrl": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+    "badge": "DOS CLUB // RECENT ACHIEVER",
+    "description": "Divya completed 6 system defenses, validated 4 production AI pipelines at DOS Club, and secured a direct invite from NeuralScale with zero fresh graduate discount.",
+    "actionLabel": "View Verified Dossier",
+    "actionUrl": "/record/DOS-B3-009",
+    "startsAt": "2026-09-14T10:00:00.000Z",
+    "endsAt": null,
+    "isActive": false,
+    "isSuperseded": false,
+    "supersededBy": null,
+    "createdAt": "2026-09-14T01:00:00.000Z",
+    "updatedAt": "2026-09-14T01:00:00.000Z"
+  },
+  {
+    "id": "popup-keynote-video",
+    "title": "Watch: DOS Club System Architecture Keynote",
+    "contentType": "YOUTUBE",
+    "mediaUrl": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+    "badge": "KEYNOTE STREAM // TOUCHMARK DESCIENCE",
+    "description": "Deep dive into the 6 verification rings, telemetry validation, and how student engineers deploy autonomous AI agents on edge hardware.",
+    "actionLabel": "Watch on YouTube",
+    "actionUrl": "https://www.youtube.com",
+    "startsAt": "2026-09-14T14:00:00.000Z",
+    "endsAt": "2026-09-15T14:00:00.000Z",
+    "isActive": false,
+    "isSuperseded": false,
+    "supersededBy": null,
+    "createdAt": "2026-09-14T02:00:00.000Z",
+    "updatedAt": "2026-09-14T02:00:00.000Z"
+  }
+]

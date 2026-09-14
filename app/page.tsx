@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getClientSession, TalentosUser } from "@/lib/session";
@@ -10,21 +10,24 @@ import {
   SearchIcon,
   ShieldCheckIcon,
   BoltIcon,
-  AwardIcon,
-  GlobeIcon,
   ClockIcon,
-  AcademicCapIcon,
-  UsersIcon,
-  AlertTriangleIcon,
-  CheckCircleIcon,
+  ExternalLinkIcon,
+  TerminalIcon,
+  CpuIcon,
+  LayersIcon,
+  ActivityIcon,
 } from "@/components/Icons";
 import { TiltCard } from "@/components/TiltCard";
+import WelcomePopupModal from "@/components/WelcomePopupModal";
+import { DEFAULT_LANDING_CMS, LandingCmsData } from "@/lib/cms-defaults";
+
 
 export default function Home() {
   const router = useRouter();
   const [user, setUser] = useState<TalentosUser | null>(null);
+  const [cms, setCms] = useState<LandingCmsData>(DEFAULT_LANDING_CMS);
 
-  // Minimal Enquiry Form State (as requested)
+  // Minimal Enquiry Form State
   const [enquiry, setEnquiry] = useState({
     name: "",
     contact: "",
@@ -41,6 +44,22 @@ export default function Home() {
 
   useEffect(() => {
     setUser(getClientSession());
+
+    // Load dynamic CMS data from backend
+    async function loadCms() {
+      try {
+        const res = await fetch("/api/cms/landing");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.cms) {
+            setCms(data.cms);
+          }
+        }
+      } catch (err) {
+        console.warn("Using default landing CMS configuration:", err);
+      }
+    }
+    loadCms();
   }, []);
 
   const handleEnquirySubmit = async (e: React.FormEvent) => {
@@ -85,9 +104,12 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF9F5] text-[#0A0A0A] font-sans selection:bg-[#1B7A55]/15 selection:text-[#1B7A55] flex flex-col justify-between antialiased">
-      {/* 1. Header Navigation (Equals style: minimal, airy, refined) */}
-      <header className="sticky top-0 z-50 bg-[#FAF9F5]/90 backdrop-blur-md border-b border-[rgba(0,0,0,0.06)] transition-all">
+    <div className="min-h-screen bg-[#FAF9F5] text-[#10222b] font-sans selection:bg-[#4caf50]/20 selection:text-[#2f8a36] flex flex-col justify-between antialiased">
+      {/* Welcome Popup / Flash News Broadcast Modal */}
+      <WelcomePopupModal />
+
+      {/* 1. Header Navigation */}
+      <header className="sticky top-0 z-40 bg-[#FAF9F5]/90 backdrop-blur-md border-b border-black/[0.07] transition-all">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 h-18 flex items-center justify-between gap-6">
           {/* Brand Identity */}
           <Link href="/" className="flex items-center gap-3 group">
@@ -101,230 +123,206 @@ export default function Home() {
               }}
             />
             <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="font-semibold text-base tracking-tight text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
-                  TalentOS
-                </span>
-                <span className="text-[10px] font-mono uppercase tracking-wider px-2 py-0.5 rounded-full bg-black/5 text-neutral-600 border border-black/5 hidden sm:inline">
-                  DOS Club
-                </span>
-              </div>
-              <span className="text-[11px] text-neutral-500 font-normal hidden md:inline">
-                Your Passport to the AI World
+              <span className="font-['Space_Grotesk'] text-base font-semibold tracking-tight text-[#10222b] group-hover:text-[#4caf50] transition-colors">
+                DeScience Open Source Club
+              </span>
+              <span className="text-[10px] text-slate-500 font-mono tracking-wider">
+                TALENTOS // SYSTEMS PLATFORM
               </span>
             </div>
           </Link>
 
-          {/* Minimal Editorial Nav Links */}
-          <nav className="hidden md:flex items-center gap-8 text-xs font-medium text-neutral-600">
-            <a href="#evidence" className="hover:text-black transition-colors">
-              Evidence
-            </a>
-            <a href="#lounge" className="hover:text-black transition-colors">
-              The Lounge
-            </a>
-            <a href="#passport" className="hover:text-black transition-colors">
-              Passport
-            </a>
-            <a href="#recognition" className="hover:text-black transition-colors">
-              Recognition
-            </a>
-            <a href="#enquire" className="hover:text-black transition-colors">
-              Enquire
-            </a>
-          </nav>
+          {/* Minimal Navigation & Two Primary CTAs */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            {/* Quick Dossier Verify Icon Button */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowVerify(!showVerify)}
+                className="p-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-black/5 transition-colors cursor-pointer"
+                title="Verify a Student Dossier"
+                aria-label="Verify Dossier"
+              >
+                <SearchIcon className="w-4 h-4" />
+              </button>
 
-          {/* Header Actions */}
-          <div className="flex items-center gap-3">
-            {/* Verify Dossier Quick Trigger */}
-            <button
-              type="button"
-              onClick={() => setShowVerify(!showVerify)}
-              className="text-xs font-medium text-neutral-600 hover:text-black px-2.5 py-1.5 rounded-lg hover:bg-black/5 transition-colors hidden sm:inline-flex items-center gap-1.5 cursor-pointer"
-            >
-              <SearchIcon className="w-3.5 h-3.5" />
-              <span>Verify</span>
-            </button>
+              {showVerify && (
+                <div className="absolute right-0 mt-2 w-72 p-3 bg-white rounded-xl shadow-xl border border-slate-200 z-50 animate-in fade-in slide-in-from-top-2">
+                  <form onSubmit={handleVerifySubmit} className="space-y-2">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-slate-500 block">
+                      Verify Student Dossier
+                    </span>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        placeholder="e.g. DOS-B3-009"
+                        value={verifyKey}
+                        onChange={(e) => setVerifyKey(e.target.value)}
+                        className="flex-1 px-2.5 py-1.5 text-xs font-mono border border-slate-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#4caf50]"
+                        autoFocus
+                      />
+                      <button
+                        type="submit"
+                        className="px-3 py-1.5 bg-[#10222b] text-white text-xs rounded-lg hover:bg-[#4caf50] transition-colors"
+                      >
+                        Verify
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
 
-            {/* Primary CTA: Become a Member */}
+            {/* Become a Member CTA */}
             <a
               href="https://membership.descienceosclub.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-2 rounded-lg bg-[#0A0A0A] hover:bg-[#1B7A55] text-white text-xs font-semibold tracking-wide transition-all shadow-sm flex items-center gap-1.5 group cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-gradient-to-r from-[#4caf50] to-[#2f8a36] hover:brightness-110 text-white text-xs font-medium tracking-wide shadow-sm hover:shadow-[#4caf50]/25 transition-all cursor-pointer"
             >
               <span>Become a Member</span>
-              <ArrowRightIcon className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+              <ArrowRightIcon className="w-3.5 h-3.5" />
             </a>
 
-            {/* Portal Member Sign In */}
-            {user ? (
-              <Link
-                href={getDashboardLink()}
-                className="px-3 py-2 bg-black/5 hover:bg-black/10 text-neutral-800 text-xs font-medium rounded-lg transition-colors"
-              >
-                Dashboard
-              </Link>
-            ) : (
-              <Link
-                href="/login"
-                className="text-xs font-medium text-neutral-600 hover:text-black px-2 py-1.5 transition-colors hidden lg:inline"
-              >
-                Sign In
-              </Link>
-            )}
+            {/* Portal Dashboard / Sign In */}
+            <Link
+              href={getDashboardLink()}
+              className="inline-flex items-center px-3.5 py-2 rounded-lg border border-slate-300 bg-white/80 hover:bg-slate-50 text-[#10222b] text-xs font-medium transition-colors"
+            >
+              {user ? "Console" : "Sign In"}
+            </Link>
           </div>
         </div>
-
-        {/* Expandable Verification Bar */}
-        {showVerify && (
-          <div className="bg-white border-b border-[rgba(0,0,0,0.08)] py-3 px-5 animate-in slide-in-from-top-2 duration-150">
-            <form onSubmit={handleVerifySubmit} className="max-w-xl mx-auto flex items-center gap-2">
-              <span className="text-xs text-neutral-500 font-mono shrink-0">Student ID:</span>
-              <input
-                type="text"
-                value={verifyKey}
-                onChange={(e) => setVerifyKey(e.target.value)}
-                placeholder="e.g. DOS-B3-009 or DOS-B3-001"
-                className="flex-1 px-3 py-1.5 text-xs bg-[#FAF9F5] border border-neutral-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#1B7A55] font-mono"
-              />
-              <button
-                type="submit"
-                className="px-3 py-1.5 bg-[#0A0A0A] hover:bg-[#1B7A55] text-white text-xs font-medium rounded-lg transition-colors cursor-pointer"
-              >
-                Inspect &rarr;
-              </button>
-            </form>
-          </div>
-        )}
       </header>
 
-      {/* Main Editorial Canvas */}
-      <main className="flex-1 max-w-6xl w-full mx-auto px-5 sm:px-8 py-16 sm:py-24 flex flex-col gap-28 sm:gap-40">
+      {/* Main Narrative Canvas */}
+      <main className="max-w-6xl mx-auto px-5 sm:px-8 py-12 sm:py-20 flex flex-col gap-24 sm:gap-32 w-full">
         {/* =========================================================================
-            SECTION 1: HERO SECTION - Editorial, Large Typography + Authentic Indian Student Imagery
-            "DOS Club TalentOS. Your Passport to the AI World."
+            SECTION 1: HERO - THE PORTAL / INVITATION
             ========================================================================= */}
-        <section aria-label="Hero" className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center pt-2 sm:pt-6">
-          {/* Left Column: Literary Narrative & Actions */}
-          <div className="lg:col-span-7 flex flex-col items-start text-left gap-7">
-            {/* Eyebrow Pill */}
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#EBF7F2] border border-[#1B7A55]/20 text-[#1B7A55] text-xs font-medium tracking-wide">
-              <span className="w-1.5 h-1.5 rounded-full bg-[#1B7A55]" />
-              <span>DOS Club TalentOS</span>
+        <section aria-label="Hero Introduction" className="grid grid-cols-1 lg:grid-cols-12 gap-12 sm:gap-16 items-center pt-4 sm:pt-10">
+          {/* Left Column: Editorial Manifesto */}
+          <div className="lg:col-span-7 space-y-6 sm:space-y-8">
+            {/* Terminal Eyebrow Badge */}
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#e8f5e9] border border-[#4caf50]/30 text-xs font-mono tracking-wide text-[#2f8a36]">
+              <span className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse" />
+              <span>{cms.hero.eyebrow}</span>
             </div>
 
-            {/* Main Hero Title */}
-            <div className="space-y-4">
-              <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif font-normal tracking-tight text-[#0A0A0A] leading-[1.06]">
-                Your Passport to the AI World.
-              </h1>
-              <p className="text-xl sm:text-2xl text-neutral-600 font-light leading-snug">
-                Not another course. Not another certificate.{" "}
-                <span className="text-[#0A0A0A] font-normal block sm:inline">
-                  A journey that makes your capability visible.
+            {/* Large Typography Headline */}
+            <div className="space-y-2">
+              <h1 className="text-4xl sm:text-6xl font-['Space_Grotesk'] font-bold tracking-tight text-[#10222b] leading-[1.1]">
+                {cms.hero.title}{" "}
+                <span className="text-[#4caf50] block sm:inline">
+                  {cms.hero.highlight}
                 </span>
+              </h1>
+              <p className="text-xl sm:text-2xl text-slate-600 font-['Space_Grotesk'] font-medium pt-2">
+                {cms.hero.subtitle}
               </p>
             </div>
 
-            <p className="text-base sm:text-lg text-neutral-600 max-w-xl leading-relaxed font-light">
-              There is a world behind this door. An ecosystem where Indian engineering students build, break, and master 27 real-world systems,
-              graduating with authentic evidence that speaks before their résumé does.
+            {/* Editorial Description */}
+            <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed max-w-xl">
+              {cms.hero.description}
             </p>
 
-            {/* Minimal CTAs (As requested: only two major CTAs) */}
-            <div className="flex flex-wrap items-center gap-4 pt-2">
+            {/* Action Bar */}
+            <div className="pt-2 flex flex-wrap items-center gap-4">
               <a
-                href="https://membership.descienceosclub.com/"
+                href={cms.hero.ctaPrimaryUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-7 py-3.5 rounded-xl bg-[#0A0A0A] hover:bg-[#1B7A55] text-white text-sm font-semibold tracking-wide transition-all shadow-sm flex items-center gap-2 group cursor-pointer"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#4caf50] to-[#2f8a36] hover:brightness-110 text-white text-sm font-semibold tracking-wide shadow-md hover:shadow-[#4caf50]/20 active:scale-[0.98] transition-all cursor-pointer"
               >
-                <span>Become a Member</span>
-                <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <span>{cms.hero.ctaPrimaryText}</span>
+                <ArrowRightIcon className="w-4 h-4" />
               </a>
 
               <a
-                href="#enquire"
-                className="px-6 py-3.5 rounded-xl bg-white hover:bg-neutral-50 text-neutral-800 border border-neutral-300/80 text-sm font-medium transition-all cursor-pointer"
+                href={cms.hero.ctaSecondaryUrl}
+                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl border border-slate-300 bg-white hover:bg-slate-50 text-[#10222b] text-sm font-medium transition-colors"
               >
-                <span>Enquire</span>
+                <span>{cms.hero.ctaSecondaryText}</span>
               </a>
             </div>
 
             {/* Minimal Sub-Attribution */}
-            <div className="pt-3 text-[11px] text-neutral-400 font-mono flex items-center gap-3">
-              <span>Anna University Hub • IIT Madras Research Park • Singapore</span>
+            <div className="pt-3 text-[11px] text-slate-500 font-mono flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#1593c3]" />
+                {cms.hero.subAttribution}
+              </span>
             </div>
           </div>
 
-          {/* Right Column: Editorial Lassie & Acadium-style Student Photography with 3D Tilt */}
+          {/* Right Column: High-End Photography with 3D Tilt */}
           <div className="lg:col-span-5 relative">
             <div className="relative mx-auto max-w-md">
-              {/* Primary Focused Student Photo with Tilt.com 3D perspective */}
+              {/* Primary Focused Student Photo */}
               <TiltCard
                 maxTilt={5}
                 scale={1.01}
-                className="rounded-2xl overflow-hidden border border-neutral-200/90 shadow-md bg-white group cursor-pointer"
+                className="rounded-2xl overflow-hidden border border-slate-200/90 shadow-md bg-white group cursor-pointer"
               >
                 <div className="relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/images/students/student-2.jpg"
-                    alt="Indian engineering student focused on systems coding"
+                    src={cms.hero.studentPhoto}
+                    alt={cms.hero.studentPhotoCaption}
                     className="w-full h-80 sm:h-96 object-cover object-top group-hover:scale-103 transition-transform duration-700"
                   />
 
-                  {/* Acadium-style Contextual Student Badge */}
+                  {/* Contextual Student Badge */}
                   <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[10px] font-mono tracking-wide flex items-center gap-1.5 shadow-sm border border-white/10">
-                    <span className="w-1.5 h-1.5 rounded-full bg-[#1B7A55] animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#4caf50] animate-pulse" />
                     <span>Aditya K. • CEG Campus</span>
                   </div>
 
-                  {/* Cohort Track Chip (Warm Ochre Accent) */}
-                  <div className="absolute top-3 right-3 px-2 py-0.5 rounded-md bg-[#FEF3C7] text-[#9A6C23] border border-[#C28E3A]/30 text-[10px] font-mono font-semibold tracking-wider">
+                  {/* Cohort Track Chip (Cyan / Slate) */}
+                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-md bg-[#0c3346] text-[#8bd08e] border border-[#4caf50]/40 text-[10px] font-mono font-semibold tracking-wider">
                     BATCH 3 // 2026
                   </div>
                 </div>
 
-                <div className="p-4 bg-white/95 backdrop-blur-sm border-t border-neutral-100 flex items-center justify-between">
+                <div className="p-4 bg-white/95 backdrop-blur-sm border-t border-slate-100 flex items-center justify-between">
                   <div className="flex flex-col">
-                    <span className="text-xs font-serif font-medium text-[#0A0A0A]">
+                    <span className="text-xs font-['Space_Grotesk'] font-semibold text-[#10222b]">
                       Engineering Capability in Motion
                     </span>
-                    <span className="text-[10px] text-neutral-500 font-mono">
-                      Cohort 2026 • Real Systems Execution
+                    <span className="text-[10px] text-slate-500 font-mono">
+                      {cms.hero.studentPhotoCaption}
                     </span>
                   </div>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#EBF7F2] text-[#1B7A55] font-mono font-medium">
+                  <span className="text-[10px] px-2.5 py-0.5 rounded-full bg-[#e8f5e9] text-[#2f8a36] font-mono font-medium border border-[#4caf50]/20">
                     VERIFIED
                   </span>
                 </div>
               </TiltCard>
 
-              {/* Floating Collaboration Card (Lassie style overlap + Tilt.com float physics) */}
+              {/* Floating Collaboration Card */}
               <TiltCard
                 maxTilt={8}
                 scale={1.03}
                 glare={false}
-                className="hidden sm:flex absolute -bottom-6 -left-8 w-60 rounded-xl overflow-hidden border border-neutral-200/90 shadow-xl bg-white p-2.5 flex-col gap-2 animate-tilt-float z-30 cursor-pointer"
+                className="hidden sm:flex absolute -bottom-6 -left-8 w-64 rounded-xl overflow-hidden border border-slate-200/90 shadow-xl bg-white p-2.5 flex-col gap-2 animate-tilt-float z-30 cursor-pointer"
               >
                 <div className="h-28 rounded-lg overflow-hidden relative">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src="/images/students/student-4.jpg"
-                    alt="Indian students collaborating"
+                    src={cms.hero.collabPhoto}
+                    alt={cms.hero.collabPhotoCaption}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/70 backdrop-blur-xs text-white text-[9px] font-mono">
+                  <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/75 backdrop-blur-xs text-white text-[9px] font-mono">
                     Zero Grace Defense
                   </div>
                 </div>
                 <div className="flex items-center justify-between px-1">
-                  <span className="text-[11px] font-serif text-[#0A0A0A] font-medium">
+                  <span className="text-[11px] font-['Space_Grotesk'] text-[#10222b] font-semibold">
                     Peer Systems Defense
                   </span>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23] font-mono font-semibold">
+                  <span className="text-[9px] px-2 py-0.5 rounded bg-[#e1f5fe] text-[#0d6b90] font-mono font-semibold border border-[#1593c3]/30">
                     27 SESSIONS
                   </span>
                 </div>
@@ -334,80 +332,118 @@ export default function Home() {
         </section>
 
         {/* =========================================================================
-            SECTION 2: CURIOSITY - "Behind every opportunity is evidence"
-            Poetic, staggered literary cadence with real student study atmosphere.
+            SECTION 2: THE INVISIBLE ENGINE - SYSTEMS EXECUTION PIPELINE
+            Bespoke engineering pipeline replacing the generic card grid.
             ========================================================================= */}
-        <section id="evidence" aria-label="Curiosity and Evidence" className="flex flex-col gap-10 border-t border-[rgba(0,0,0,0.08)] pt-16 scroll-mt-24">
-          <div className="max-w-2xl">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55] font-semibold block mb-3">
-              The Invisible Engine
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-serif font-normal tracking-tight text-[#0A0A0A] leading-tight">
-              Behind every opportunity is evidence.
-            </h2>
+        <section id="evidence" aria-label="Curiosity and Evidence" className="flex flex-col gap-10 border-t border-black/[0.08] pt-16 scroll-mt-24">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div className="max-w-2xl space-y-3">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8f5e9] border border-[#4caf50]/30 text-xs font-mono tracking-widest text-[#2f8a36] font-semibold">
+                <TerminalIcon className="w-3.5 h-3.5" />
+                <span>{cms.invisibleEngine.eyebrow}</span>
+              </div>
+              <h2 className="text-3xl sm:text-5xl font-['Space_Grotesk'] font-bold tracking-tight text-[#10222b] leading-tight">
+                {cms.invisibleEngine.title}
+              </h2>
+            </div>
+            <p className="max-w-md text-sm text-slate-600 leading-relaxed font-mono">
+              {cms.invisibleEngine.description}
+            </p>
           </div>
 
-          {/* Literary Cadence Flow with Micro-Tilt */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-            {[
-              { num: "01", text: "A workshop attended." },
-              { num: "02", text: "A problem solved." },
-              { num: "03", text: "A project built." },
-              { num: "04", text: "A skill demonstrated." },
-              { num: "05", text: "A mentor who noticed." },
-              { num: "06", text: "A credential earned." },
-            ].map((item) => (
-              <TiltCard
-                key={item.num}
-                maxTilt={4}
-                scale={1.02}
-                glare={false}
-                className="bg-white p-7 rounded-2xl border border-[rgba(0,0,0,0.06)] shadow-[0_1px_3px_rgba(0,0,0,0.02)] flex flex-col justify-between min-h-[160px] group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
-              >
-                <span className="text-xs font-mono text-neutral-400 group-hover:text-[#C28E3A] transition-colors font-medium">
-                  {item.num}
+          {/* Connected Technical Pipeline Visualizer */}
+          <div className="relative rounded-2xl bg-[#0c3346] border border-slate-700/80 p-6 sm:p-8 text-white shadow-xl overflow-hidden">
+            {/* Ambient Background Glows */}
+            <div className="absolute top-0 right-0 w-96 h-96 bg-[#1593c3]/10 rounded-full blur-3xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-96 h-96 bg-[#4caf50]/10 rounded-full blur-3xl pointer-events-none" />
+
+            {/* Terminal Header */}
+            <div className="flex items-center justify-between pb-6 border-b border-slate-700/60 font-mono text-xs text-slate-400">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500/80" />
+                <span className="w-3 h-3 rounded-full bg-yellow-500/80" />
+                <span className="w-3 h-3 rounded-full bg-[#4caf50]" />
+                <span className="ml-2 text-slate-300 font-semibold">
+                  ~/dos-club $ ./engine_pipeline --mode=production
                 </span>
-                <p className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#1B7A55] transition-colors">
-                  {item.text}
-                </p>
-              </TiltCard>
-            ))}
+
+              </div>
+              <span className="hidden sm:inline text-[#8bd08e]">
+                ALL 6 TELEMETRY GATES ACTIVE
+              </span>
+            </div>
+
+            {/* The 6 Sequential Verification Stages */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 pt-6">
+              {cms.invisibleEngine.steps.map((step, idx) => (
+                <TiltCard
+                  key={step.code}
+                  maxTilt={4}
+                  scale={1.015}
+                  glare={false}
+                  className="bg-[#10222b]/80 p-5 rounded-xl border border-slate-700/60 hover:border-[#4caf50] transition-all group flex flex-col justify-between min-h-[160px] relative cursor-pointer"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-xs text-[#1593c3] font-semibold tracking-wider">
+                      {step.code}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-[#4caf50]/15 text-[#8bd08e] text-[10px] font-mono border border-[#4caf50]/30 font-medium">
+                      {step.badge}
+                    </span>
+                  </div>
+
+                  <div className="my-3 space-y-1">
+                    <h3 className="text-base font-['Space_Grotesk'] font-bold text-white group-hover:text-[#4caf50] transition-colors">
+                      {step.title}
+                    </h3>
+                    <p className="text-xs text-slate-400 font-light leading-relaxed">
+                      {step.telemetry}
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[10px] font-mono text-slate-500">
+                    <span>GATE {String(idx + 1).padStart(2, "0")}</span>
+                    <span className="text-[#8bd08e] group-hover:underline">VERIFIED // PASS</span>
+                  </div>
+                </TiltCard>
+              ))}
+            </div>
           </div>
 
-          {/* Photo banner of Indian student collaboration with Tilt.com 3D perspective */}
+          {/* Photo banner of Indian student collaboration */}
           <TiltCard
             maxTilt={3}
             scale={1.005}
-            className="relative rounded-2xl overflow-hidden border border-neutral-200/80 mt-4 shadow-sm bg-white group cursor-pointer"
+            className="relative rounded-2xl overflow-hidden border border-slate-200/90 shadow-sm bg-white group cursor-pointer"
           >
             <div className="grid grid-cols-1 md:grid-cols-12 gap-0 items-center">
               <div className="md:col-span-5 p-8 sm:p-10 flex flex-col justify-center gap-4">
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55] font-semibold">
-                    Quiet Precision
+                  <span className="text-xs font-mono uppercase tracking-widest text-[#2f8a36] font-semibold">
+                    {cms.invisibleEngine.bannerTag}
                   </span>
-                  <span className="w-1 h-1 rounded-full bg-[#C28E3A]" />
-                  <span className="text-[10px] font-mono text-[#9A6C23] px-2 py-0.5 rounded bg-[#FEF3C7]">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#1593c3]" />
+                  <span className="text-[10px] font-mono text-[#0d6b90] px-2.5 py-0.5 rounded bg-[#e1f5fe] border border-[#1593c3]/20 font-semibold">
                     ACCREDITED
                   </span>
                 </div>
-                <p className="text-xl sm:text-2xl font-serif text-[#0A0A0A] leading-snug">
-                  TalentOS quietly connects them. When industry meets you, your work speaks before your résumé does.
+                <p className="text-xl sm:text-2xl font-['Space_Grotesk'] font-bold text-[#10222b] leading-snug">
+                  {cms.invisibleEngine.bannerTitle}
                 </p>
-                <p className="text-xs text-neutral-500 font-light leading-relaxed">
-                  No inflated self-assessments. Every capability is anchored in genuine code execution, verified commits, and real mentor observations.
+                <p className="text-xs text-slate-600 font-light leading-relaxed">
+                  {cms.invisibleEngine.bannerSubtitle}
                 </p>
               </div>
               <div className="md:col-span-7 h-64 sm:h-80 relative overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src="/images/students/student-workshop-build.jpg"
-                  alt="Indian university students collaborating on systems projects"
+                  src={cms.invisibleEngine.bannerPhoto}
+                  alt={cms.invisibleEngine.bannerTitle}
                   className="w-full h-full object-cover object-center group-hover:scale-103 transition-transform duration-700"
                 />
-                {/* Acadium-style Lab Evaluation Chip */}
-                <div className="absolute bottom-4 right-4 px-3 py-1 rounded-full bg-black/75 backdrop-blur-md text-white text-[10px] font-mono flex items-center gap-2 border border-white/10 shadow-sm">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#1B7A55] animate-pulse" />
+                {/* Lab Evaluation Chip */}
+                <div className="absolute bottom-4 right-4 px-3 py-1.5 rounded-full bg-[#0c3346]/90 backdrop-blur-md text-white text-[10px] font-mono flex items-center gap-2 border border-[#4caf50]/40 shadow-md">
+                  <span className="w-2 h-2 rounded-full bg-[#4caf50] animate-pulse" />
                   <span>Live Lab Evaluation • Anna University Hub</span>
                 </div>
               </div>
@@ -417,476 +453,298 @@ export default function Home() {
 
         {/* =========================================================================
             SECTION 3: THE "AIRPORT LOUNGE" EMOTIONAL SECTION
-            "Some students wait for opportunity. DOS Club members prepare before it arrives."
-            Real student lifestyle & prep imagery with Tilt.com 3D perspective.
             ========================================================================= */}
-        <section id="lounge" aria-label="Access and Preparation" className="flex flex-col gap-12 border-t border-[rgba(0,0,0,0.08)] pt-16 scroll-mt-24">
+        <section id="lounge" aria-label="Access and Preparation" className="flex flex-col gap-12 border-t border-black/[0.08] pt-16 scroll-mt-24">
           <div className="max-w-3xl space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#C28E3A] font-semibold block">
-              The Lounge Principle
+            <span className="text-xs font-mono uppercase tracking-widest text-[#1593c3] font-semibold block">
+              {cms.lounge.eyebrow}
             </span>
-            <h2 className="text-3xl sm:text-5xl font-serif font-normal tracking-tight text-[#0A0A0A] leading-tight">
-              Some students wait for opportunity.{" "}
-              <span className="text-[#1B7A55] block sm:inline">
-                DOS Club members prepare before it arrives.
+            <h2 className="text-3xl sm:text-5xl font-['Space_Grotesk'] font-bold tracking-tight text-[#10222b] leading-tight">
+              {cms.lounge.title}{" "}
+              <span className="text-[#4caf50] block sm:inline">
+                {cms.lounge.highlight}
               </span>
             </h2>
-            <p className="text-base sm:text-lg text-neutral-600 font-light leading-relaxed">
-              Not superiority. But access, preparation, privilege, and recognition. The feeling of stepping into the lounge while the general public waits at the gate.
+            <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
+              {cms.lounge.description}
             </p>
           </div>
 
-          {/* 5 Visual Pillars with authentic student photo accents (Lassie & Acadium style + Tilt.com) */}
+          {/* 5 Visual Pillars */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Pillar 1: Priority Access */}
-            <TiltCard
-              maxTilt={4}
-              scale={1.01}
-              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
-            >
-              <div className="h-44 overflow-hidden relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/students/student-6.jpg"
-                  alt="Indian student working with laptop"
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
-                  01 // ACCESS
-                </span>
-              </div>
-              <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
-                  Priority Access
-                </h3>
-                <p className="text-xs text-neutral-600 leading-relaxed font-light">
-                  Direct pathways into engineering conversations without getting lost in unverified applicant tracking black holes.
-                </p>
-              </div>
-            </TiltCard>
-
-            {/* Pillar 2: Curated Learning */}
-            <TiltCard
-              maxTilt={4}
-              scale={1.01}
-              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
-            >
-              <div className="h-44 overflow-hidden relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/students/student-5.jpg"
-                  alt="Indian student on campus with tech books"
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
-                  02 // DEPTH
-                </span>
-              </div>
-              <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
-                  Curated Learning
-                </h3>
-                <p className="text-xs text-neutral-600 leading-relaxed font-light">
-                  A 27-workshop systems curriculum exploring POSIX syscalls, Raft consensus, and AI infrastructure from first principles.
-                </p>
-              </div>
-            </TiltCard>
-
-            {/* Pillar 3: Industry Exposure */}
-            <TiltCard
-              maxTilt={4}
-              scale={1.01}
-              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
-            >
-              <div className="h-44 overflow-hidden relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/students/student-1.jpg"
-                  alt="Indian students discussing with mentor"
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
-                  03 // NETWORK
-                </span>
-              </div>
-              <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
-                  Industry Exposure
-                </h3>
-                <p className="text-xs text-neutral-600 leading-relaxed font-light">
-                  Direct interactions with staff engineers, technical fellows, and architects who evaluate code through production lenses.
-                </p>
-              </div>
-            </TiltCard>
-
-            {/* Pillar 4: Recognition */}
-            <TiltCard
-              maxTilt={4}
-              scale={1.01}
-              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
-            >
-              <div className="h-44 overflow-hidden relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/students/student-4.jpg"
-                  alt="Indian students solving problems"
-                  className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
-                  04 // MERIT
-                </span>
-              </div>
-              <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
-                  Recognition
-                </h3>
-                <p className="text-xs text-neutral-600 leading-relaxed font-light">
-                  Students who consistently show up, build, and submit receive durable, visible honour rather than generic participation paper.
-                </p>
-              </div>
-            </TiltCard>
-
-            {/* Pillar 5: International Opportunities (Wider Card) */}
-            <TiltCard
-              maxTilt={4}
-              scale={1.01}
-              className="bg-white rounded-2xl border border-[rgba(0,0,0,0.07)] overflow-hidden flex flex-col justify-between shadow-2xs sm:col-span-2 lg:col-span-2 group hover:border-[#C28E3A]/40 transition-colors cursor-pointer"
-            >
-              <div className="h-44 overflow-hidden relative">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="/images/students/student-laptop-focus.jpg"
-                  alt="Indian university campus courtyard"
-                  className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
-                />
-                <span className="absolute top-3 left-3 px-2.5 py-0.5 rounded-full bg-black/75 backdrop-blur-xs text-[#FEF3C7] text-[9px] font-mono tracking-wider border border-[#C28E3A]/30">
-                  05 // HORIZONS
-                </span>
-              </div>
-              <div className="p-6 space-y-2">
-                <h3 className="text-lg font-serif text-[#0A0A0A] group-hover:text-[#C28E3A] transition-colors">
-                  International Opportunities
-                </h3>
-                <p className="text-xs text-neutral-600 leading-relaxed font-light max-w-xl">
-                  Connecting promising engineering minds across Tamil Nadu with global technology hubs in Singapore and beyond, expanding where your capabilities can take you.
-                </p>
-              </div>
-            </TiltCard>
-          </div>
-        </section>
-
-        {/* =========================================================================
-            SECTION 4: STUDENT PASSPORT CONCEPT
-            Passport-style stamps / milestones in a refined, modern editorial style
-            ========================================================================= */}
-        {/* =========================================================================
-            SECTION 4: STUDENT PASSPORT CONCEPT
-            Passport-style stamps / milestones in a refined, modern editorial style with 3D Tilt
-            ========================================================================= */}
-        <section id="passport" aria-label="Student Passport" className="flex flex-col gap-12 border-t border-[rgba(0,0,0,0.08)] pt-16 scroll-mt-24">
-          <div className="max-w-3xl space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#C28E3A] font-semibold block">
-              The Digital Passport
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-serif font-normal tracking-tight text-[#0A0A0A] leading-tight">
-              Your Passport to the AI World.
-            </h2>
-            <p className="text-base sm:text-lg text-neutral-600 font-light leading-relaxed">
-              Every student gradually collects six dimensions of real capability. Not gamified tokens, but permanent stamps of authentic engineering accomplishment.
-            </p>
-          </div>
-
-          {/* Passport Stamps Grid with Tilt.com 3D perspective and Dual Palette */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {/* Stamp 1: Learning (Forest Green) */}
-            <TiltCard
-              maxTilt={5}
-              scale={1.02}
-              className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#1B7A55]/50 transition-colors cursor-pointer"
-            >
-              <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 01 // LEARNING</span>
-                <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
-              </div>
-              <div className="space-y-1 my-3">
-                <p className="text-base font-serif font-medium text-[#0A0A0A]">27 Systems Workshops</p>
-                <p className="text-xs text-neutral-500 font-light">
-                  POSIX internals, memory allocators, Raft log replication, eBPF & GPU shaders.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400 flex items-center justify-between">
-                <span>AUDITED CURRICULUM</span>
-                <span className="text-[#1B7A55] font-semibold">VERIFIED</span>
-              </div>
-            </TiltCard>
-
-            {/* Stamp 2: Projects (Forest Green) */}
-            <TiltCard
-              maxTilt={5}
-              scale={1.02}
-              className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#1B7A55]/50 transition-colors cursor-pointer"
-            >
-              <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 02 // PROJECTS</span>
-                <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
-              </div>
-              <div className="space-y-1 my-3">
-                <p className="text-base font-serif font-medium text-[#0A0A0A]">Production Code Repositories</p>
-                <p className="text-xs text-neutral-500 font-light">
-                  Hermetic container builds, clean concurrency, and working distributed primitives.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400 flex items-center justify-between">
-                <span>COMMITS STAMPED</span>
-                <span className="text-[#1B7A55] font-semibold">ARCHIVED</span>
-              </div>
-            </TiltCard>
-
-            {/* Stamp 3: Credentials (Warm Ochre / Gold Accent) */}
-            <TiltCard
-              maxTilt={5}
-              scale={1.02}
-              className="bg-[#FAF8F2] p-6 rounded-2xl border border-[#C28E3A]/30 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#C28E3A] transition-colors cursor-pointer"
-            >
-              <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#9A6C23]">STAMP 03 // CREDENTIALS</span>
-                <span className="w-2 h-2 rounded-full bg-[#C28E3A]" />
-              </div>
-              <div className="space-y-1 my-3">
-                <p className="text-base font-serif font-medium text-[#0A0A0A]">Verified Industry Certifications</p>
-                <p className="text-xs text-neutral-600 font-light">
-                  Integrated validation from Linux Foundation, AWS, and accredited registries.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-dashed border-[#C28E3A]/30 text-[10px] font-mono text-[#9A6C23] flex items-center justify-between font-semibold">
-                <span>REGISTRY ATTESTED</span>
-                <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23]">OFFICIAL</span>
-              </div>
-            </TiltCard>
-
-            {/* Stamp 4: Recognition (Warm Ochre / Gold Accent) */}
-            <TiltCard
-              maxTilt={5}
-              scale={1.02}
-              className="bg-[#FAF8F2] p-6 rounded-2xl border border-[#C28E3A]/30 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#C28E3A] transition-colors cursor-pointer"
-            >
-              <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#9A6C23]">STAMP 04 // RECOGNITION</span>
-                <span className="w-2 h-2 rounded-full bg-[#C28E3A]" />
-              </div>
-              <div className="space-y-1 my-3">
-                <p className="text-base font-serif font-medium text-[#0A0A0A]">Staff Engineer Standouts</p>
-                <p className="text-xs text-neutral-600 font-light">
-                  Independent citations honoring architectural clarity, grit, and peer mentorship.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-dashed border-[#C28E3A]/30 text-[10px] font-mono text-[#9A6C23] flex items-center justify-between font-semibold">
-                <span>MERIT ENDORSEMENT</span>
-                <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23]">HONOUR</span>
-              </div>
-            </TiltCard>
-
-            {/* Stamp 5: Evidence (Forest Green) */}
-            <TiltCard
-              maxTilt={5}
-              scale={1.02}
-              className="bg-white p-6 rounded-2xl border border-neutral-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#1B7A55]/50 transition-colors cursor-pointer"
-            >
-              <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-neutral-400">STAMP 05 // EVIDENCE</span>
-                <span className="w-2 h-2 rounded-full bg-[#1B7A55]" />
-              </div>
-              <div className="space-y-1 my-3">
-                <p className="text-base font-serif font-medium text-[#0A0A0A]">Zero-Grace Attendance Logs</p>
-                <p className="text-xs text-neutral-500 font-light">
-                  Geofenced physical presence proving punctuality, discipline, and stamina.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-dashed border-neutral-200 text-[10px] font-mono text-neutral-400 flex items-center justify-between">
-                <span>IMMUTABLE TIMESTAMPS</span>
-                <span className="text-[#1B7A55] font-semibold">AUDITED</span>
-              </div>
-            </TiltCard>
-
-            {/* Stamp 6: Exposure (Warm Ochre / Gold Accent) */}
-            <TiltCard
-              maxTilt={5}
-              scale={1.02}
-              className="bg-[#FAF8F2] p-6 rounded-2xl border border-[#C28E3A]/30 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#C28E3A] transition-colors cursor-pointer"
-            >
-              <div className="flex items-start justify-between">
-                <span className="text-[11px] font-mono uppercase tracking-wider text-[#9A6C23]">STAMP 06 // EXPOSURE</span>
-                <span className="w-2 h-2 rounded-full bg-[#C28E3A]" />
-              </div>
-              <div className="space-y-1 my-3">
-                <p className="text-base font-serif font-medium text-[#0A0A0A]">Industry Fellow Defenses</p>
-                <p className="text-xs text-neutral-600 font-light">
-                  Defending systems architectures directly in front of engineering leadership.
-                </p>
-              </div>
-              <div className="pt-3 border-t border-dashed border-[#C28E3A]/30 text-[10px] font-mono text-[#9A6C23] flex items-center justify-between font-semibold">
-                <span>PEER VALIDATED</span>
-                <span className="px-1.5 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23]">DEFENDED</span>
-              </div>
-            </TiltCard>
-          </div>
-
-          <div className="pt-2 flex items-center gap-3">
-            <span className="w-1.5 h-6 rounded-full bg-[#C28E3A]" />
-            <p className="text-lg font-serif text-[#0A0A0A] italic">
-              &ldquo;Graduate with evidence, not just eligibility.&rdquo;
-            </p>
-          </div>
-        </section>
-
-        {/* =========================================================================
-            SECTION 5: INDUSTRY SECTION - Small, punchy, proof over resume
-            "Industry doesn't need another résumé. It needs proof."
-            ========================================================================= */}
-        <section aria-label="Industry Perspective" className="flex flex-col gap-6 border-t border-[rgba(0,0,0,0.08)] pt-16">
-          <div className="max-w-2xl space-y-3">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55] font-semibold block">
-              The Industry Shift
-            </span>
-            <h2 className="text-3xl sm:text-4xl font-serif font-normal tracking-tight text-[#0A0A0A]">
-              Industry doesn&apos;t need another résumé. It needs proof.
-            </h2>
-            <p className="text-base text-neutral-600 font-light leading-relaxed">
-              TalentOS helps DOS Club students build that proof over time.
-            </p>
-          </div>
-
-          {/* Minimalist Fragment Pills */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs hover:border-[#1B7A55]/40 transition-colors">
-              27 Workshops
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs hover:border-[#1B7A55]/40 transition-colors">
-              Projects
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-[#C28E3A]/30 bg-[#FAF8F2] text-xs font-medium text-[#9A6C23] shadow-2xs hover:border-[#C28E3A] transition-colors">
-              Credentials
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-[#C28E3A]/30 bg-[#FAF8F2] text-xs font-medium text-[#9A6C23] shadow-2xs hover:border-[#C28E3A] transition-colors">
-              Mentor Observations
-            </span>
-            <span className="px-4 py-2 rounded-full bg-white border border-neutral-200 text-xs font-medium text-neutral-800 shadow-2xs hover:border-[#1B7A55]/40 transition-colors">
-              Learning Evidence
-            </span>
-          </div>
-        </section>
-
-        {/* =========================================================================
-            SECTION 6: COMMITMENT AND HONOUR
-            "Commitment should be visible."
-            Growth, not grading.
-            ========================================================================= */}
-        <section id="recognition" aria-label="Commitment and Honour" className="flex flex-col gap-10 border-t border-[rgba(0,0,0,0.08)] pt-16 scroll-mt-24">
-          <div className="max-w-3xl space-y-4">
-            <span className="text-xs font-mono uppercase tracking-widest text-[#C28E3A] font-semibold block">
-              Growth, Not Grading
-            </span>
-            <h2 className="text-3xl sm:text-5xl font-serif font-normal tracking-tight text-[#0A0A0A] leading-tight">
-              Commitment should be visible.
-            </h2>
-            <p className="text-base sm:text-lg text-neutral-600 font-light leading-relaxed">
-              Students who consistently attend, build, learn, submit, improve, and contribute deserve visible recognition. Not just a certificate at the end.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-            {[
-              { num: "01", title: "Consistency", desc: "Punctual presence across every milestone." },
-              { num: "02", title: "Contribution", desc: "Writing code that strengthens the commons." },
-              { num: "03", title: "Improvement", desc: "Closing gaps through relentless iteration." },
-              { num: "04", title: "Initiative", desc: "Tackling hard bugs beyond assignments." },
-              { num: "05", title: "Completion", desc: "Delivering working systems to the finish line." },
-              { num: "06", title: "Execution", desc: "Real code performing in real environments." },
-            ].map((dim) => (
+            {cms.lounge.pillars.map((pillar) => (
               <TiltCard
-                key={dim.num}
-                maxTilt={6}
-                scale={1.02}
-                glare={false}
-                className="bg-white p-5 rounded-xl border border-[rgba(0,0,0,0.06)] flex flex-col gap-2 hover:border-[#C28E3A]/40 transition-colors cursor-pointer shadow-2xs"
+                key={pillar.id}
+                maxTilt={4}
+                scale={1.01}
+                className={`bg-white rounded-2xl border border-slate-200/90 overflow-hidden flex flex-col justify-between shadow-sm group hover:border-[#4caf50] transition-colors cursor-pointer ${
+                  pillar.id === "lounge-5" ? "sm:col-span-2 lg:col-span-2" : ""
+                }`}
               >
-                <span className="text-xs font-mono text-[#C28E3A] font-semibold">{dim.num}</span>
-                <span className="font-serif text-sm text-[#0A0A0A]">{dim.title}</span>
-                <p className="text-[11px] text-neutral-500 font-light">{dim.desc}</p>
+                <div className="h-44 overflow-hidden relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={pillar.image}
+                    alt={pillar.title}
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-[#0c3346]/85 backdrop-blur-xs text-[#8bd08e] text-[9px] font-mono tracking-wider border border-[#4caf50]/40">
+                    {pillar.tag}
+                  </span>
+                </div>
+                <div className="p-6 space-y-2">
+                  <h3 className="text-lg font-['Space_Grotesk'] font-bold text-[#10222b] group-hover:text-[#2f8a36] transition-colors">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-xs text-slate-600 leading-relaxed font-light">
+                    {pillar.desc}
+                  </p>
+                </div>
               </TiltCard>
             ))}
           </div>
         </section>
 
         {/* =========================================================================
-            SECTION 7: MINIMALIST ENQUIRY & CALL TO ACTION
-            Only two major CTAs: Become a Member & Enquire
-            Enquiry asks only: Name, Email/Mobile, I am a (Student/Parent/College/Industry), Message.
+            SECTION 4: STUDENT PASSPORT CONCEPT
             ========================================================================= */}
-        <section id="enquire" aria-label="Admissions and Enquiry" className="border-t border-[rgba(0,0,0,0.08)] pt-16 scroll-mt-24">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            {/* Left: Primary CTA Card */}
+        <section id="passport" aria-label="Student Passport" className="flex flex-col gap-12 border-t border-black/[0.08] pt-16 scroll-mt-24">
+          <div className="max-w-3xl space-y-4">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#2f8a36] font-semibold block">
+              {cms.passport.eyebrow}
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-['Space_Grotesk'] font-bold tracking-tight text-[#10222b] leading-tight">
+              {cms.passport.title}
+            </h2>
+            <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
+              {cms.passport.description}
+            </p>
+          </div>
+
+          {/* Passport Stamps Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {cms.passport.stamps.map((stamp, idx) => (
+              <TiltCard
+                key={stamp.id}
+                maxTilt={5}
+                scale={1.02}
+                className="bg-white p-6 rounded-2xl border border-slate-200/80 relative overflow-hidden flex flex-col justify-between min-h-[190px] shadow-sm hover:border-[#4caf50] transition-colors cursor-pointer"
+              >
+                <div className="flex items-start justify-between">
+                  <span className="text-[11px] font-mono uppercase tracking-wider text-slate-400">
+                    STAMP {stamp.num}
+                  </span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#4caf50]" />
+                </div>
+                <div className="space-y-1 my-3">
+                  <p className="text-base font-['Space_Grotesk'] font-bold text-[#10222b]">
+                    {stamp.title}
+                  </p>
+                  <p className="text-xs text-slate-500 font-light">
+                    {stamp.desc}
+                  </p>
+                </div>
+                <div className="pt-3 border-t border-dashed border-slate-200 text-[10px] font-mono text-slate-500 flex items-center justify-between">
+                  <span>{stamp.footerLeft}</span>
+                  <span className="text-[#2f8a36] font-semibold">{stamp.footerRight}</span>
+                </div>
+              </TiltCard>
+            ))}
+          </div>
+
+          <div className="pt-2 flex items-center gap-3">
+            <span className="w-1.5 h-6 rounded-full bg-[#4caf50]" />
+            <p className="text-lg font-['Space_Grotesk'] text-[#10222b] font-medium italic">
+              &ldquo;{cms.passport.quote}&rdquo;
+            </p>
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 5: INDUSTRY SHIFT - PROOF OVER RESUME
+            ========================================================================= */}
+        <section aria-label="Industry Perspective" className="flex flex-col gap-8 border-t border-black/[0.08] pt-16">
+          <div className="max-w-2xl space-y-3">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#1593c3] font-semibold block">
+              {cms.industry.eyebrow}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-bold tracking-tight text-[#10222b]">
+              {cms.industry.title}
+            </h2>
+            <p className="text-base text-slate-600 font-light leading-relaxed">
+              {cms.industry.description}
+            </p>
+          </div>
+
+          {/* Industry Metrics with Terminal Tone */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+            <div className="bg-white p-6 rounded-xl border border-slate-200/90 shadow-sm flex flex-col gap-1">
+              <span className="text-3xl font-['Space_Grotesk'] font-bold text-[#4caf50]">
+                27
+              </span>
+              <span className="text-xs font-mono uppercase tracking-wider text-[#10222b] font-semibold">
+                Workshops
+              </span>
+              <p className="text-[11px] text-slate-500 font-light pt-1">
+                Rigorous systems curriculum with direct code execution
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-xl border border-slate-200/90 shadow-sm flex flex-col gap-1">
+              <span className="text-3xl font-['Space_Grotesk'] font-bold text-[#1593c3]">
+                06
+              </span>
+              <span className="text-xs font-mono uppercase tracking-wider text-[#10222b] font-semibold">
+                Verification Gates
+              </span>
+              <p className="text-[11px] text-slate-500 font-light pt-1">
+                From attendance logs to live staff engineer defenses
+              </p>
+            </div>
+            <div className="bg-white p-6 rounded-xl border border-slate-200/90 shadow-sm flex flex-col gap-1">
+              <span className="text-3xl font-['Space_Grotesk'] font-bold text-[#4caf50]">
+                100%
+              </span>
+              <span className="text-xs font-mono uppercase tracking-wider text-[#10222b] font-semibold">
+                Real Execution
+              </span>
+              <p className="text-[11px] text-slate-500 font-light pt-1">
+                Zero fresh-graduate discount in technical evaluations
+              </p>
+            </div>
+          </div>
+
+          {/* Minimalist Fragment Pills from CMS */}
+          <div className="flex flex-wrap items-center gap-3 pt-2">
+            {cms.industry.tags.map((tag) => (
+              <span
+                key={tag}
+                className="px-4 py-2 rounded-full bg-white border border-slate-200 text-xs font-medium text-slate-800 shadow-sm hover:border-[#4caf50] transition-colors"
+              >
+                {tag}
+              </span>
+            ))}
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 6: COMMITMENT & HONOUR (ELEVATED ENGINE ROOM)
+            ========================================================================= */}
+        <section id="recognition" aria-label="Commitment and Honour" className="flex flex-col gap-10 border-t border-black/[0.08] pt-16 scroll-mt-24">
+          <div className="max-w-3xl space-y-4">
+            <span className="text-xs font-mono uppercase tracking-widest text-[#2f8a36] font-semibold block">
+              {cms.honour.eyebrow}
+            </span>
+            <h2 className="text-3xl sm:text-5xl font-['Space_Grotesk'] font-bold tracking-tight text-[#10222b] leading-tight">
+              {cms.honour.title}
+            </h2>
+            <p className="text-base sm:text-lg text-slate-600 font-normal leading-relaxed">
+              {cms.honour.description}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {cms.honour.dimensions.map((dim) => (
+              <TiltCard
+                key={dim.num}
+                maxTilt={6}
+                scale={1.02}
+                glare={false}
+                className="bg-white p-5 rounded-xl border border-slate-200/90 flex flex-col gap-2 hover:border-[#4caf50] transition-colors cursor-pointer shadow-sm"
+              >
+                <span className="text-xs font-mono text-[#1593c3] font-semibold">{dim.num}</span>
+                <span className="font-['Space_Grotesk'] text-sm font-bold text-[#10222b]">{dim.title}</span>
+                <p className="text-[11px] text-slate-500 font-light leading-relaxed">{dim.desc}</p>
+              </TiltCard>
+            ))}
+          </div>
+        </section>
+
+        {/* =========================================================================
+            SECTION 7: COMMAND CONSOLE ADMISSIONS & ENQUIRY (WORLD-CLASS PORTAL)
+            ========================================================================= */}
+        <section id="enquire" aria-label="Admissions and Enquiry" className="border-t border-black/[0.08] pt-16 scroll-mt-24">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            {/* Left: Deep Slate Command Console for Members */}
             <div className="lg:col-span-5 space-y-6">
               <div className="space-y-3">
-                <span className="text-xs font-mono uppercase tracking-widest text-[#1B7A55] font-semibold block">
-                  Next Step
+                <span className="text-xs font-mono uppercase tracking-widest text-[#2f8a36] font-semibold block">
+                  {cms.enquiry.eyebrow}
                 </span>
-                <h2 className="text-3xl sm:text-4xl font-serif font-normal text-[#0A0A0A] leading-tight">
-                  Enter the journey.
+                <h2 className="text-3xl sm:text-4xl font-['Space_Grotesk'] font-bold text-[#10222b] leading-tight">
+                  {cms.enquiry.title}
                 </h2>
-                <p className="text-sm text-neutral-600 font-light leading-relaxed">
-                  Join the cohort directly through the membership portal, or send us a brief enquiry if you are exploring for yourself, your institution, or your company.
+                <p className="text-sm text-slate-600 font-normal leading-relaxed">
+                  {cms.enquiry.description}
                 </p>
               </div>
 
-              {/* Become a Member Primary Action Block with 3D Tilt */}
+              {/* High-End Member Console Block */}
               <TiltCard
                 maxTilt={3}
                 scale={1.01}
-                className="bg-white p-7 rounded-2xl border border-neutral-200/90 shadow-sm space-y-4 cursor-pointer"
+                className="bg-[#0c3346] text-white p-7 rounded-2xl border border-slate-700/80 shadow-xl space-y-5 cursor-pointer relative overflow-hidden"
               >
+                {/* Glow accent */}
+                <div className="absolute top-0 right-0 w-48 h-48 bg-[#4caf50]/15 rounded-full blur-2xl pointer-events-none" />
+
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-neutral-900 block">
-                    Immediate Member Enrollment
-                  </span>
-                  <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#FEF3C7] text-[#9A6C23] font-medium">
-                    PRIORITY
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#4caf50] animate-pulse" />
+                    <span className="text-xs font-mono font-semibold text-slate-200 tracking-wider">
+                      MEMBER PRIVILEGE PASS
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-mono px-2.5 py-1 rounded bg-[#4caf50]/20 text-[#8bd08e] font-semibold border border-[#4caf50]/40">
+                    PRIORITY ONBOARDING
                   </span>
                 </div>
-                <p className="text-xs text-neutral-500 leading-relaxed font-light">
-                  Access the complete 27-workshop curriculum, passport credentialing, and live engineering hub sessions.
-                </p>
+
+                <div className="space-y-2.5 text-xs text-slate-300">
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="w-4 h-4 text-[#4caf50] shrink-0" />
+                    <span>27-Workshop Intensive Systems Track</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="w-4 h-4 text-[#4caf50] shrink-0" />
+                    <span>Cryptographic Student Passport & Dossier</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <CheckIcon className="w-4 h-4 text-[#4caf50] shrink-0" />
+                    <span>Direct Access to Staff Engineer Defense Panels</span>
+                  </div>
+                </div>
+
                 <a
                   href="https://membership.descienceosclub.com/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-3 rounded-xl bg-[#0A0A0A] hover:bg-[#1B7A55] text-white text-xs font-semibold tracking-wide transition-all shadow-sm flex items-center justify-center gap-2 group cursor-pointer"
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-[#4caf50] to-[#2f8a36] hover:brightness-110 text-white text-xs font-semibold tracking-wide transition-all shadow-md flex items-center justify-center gap-2 group cursor-pointer"
                 >
                   <span>Become a Member</span>
-                  <ArrowRightIcon className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRightIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </a>
               </TiltCard>
             </div>
 
-            {/* Right: Short Enquiry Form */}
-            <div className="lg:col-span-7 bg-white p-8 sm:p-10 rounded-2xl border border-neutral-200/90 shadow-sm">
+            {/* Right: Bespoke Enquiry Form */}
+            <div className="lg:col-span-7 bg-white p-8 sm:p-10 rounded-2xl border border-slate-200/90 shadow-sm">
               {enquiryStatus === "success" ? (
                 <div className="text-center py-8 space-y-3">
-                  <div className="w-10 h-10 rounded-full bg-[#EBF7F2] text-[#1B7A55] flex items-center justify-center mx-auto">
-                    <CheckIcon className="w-5 h-5" />
+                  <div className="w-12 h-12 rounded-full bg-[#e8f5e9] text-[#2f8a36] flex items-center justify-center mx-auto border border-[#4caf50]/30">
+                    <CheckIcon className="w-6 h-6" />
                   </div>
-                  <h3 className="text-xl font-serif text-[#0A0A0A]">Enquiry Received</h3>
-                  <p className="text-xs text-neutral-600 font-mono">Reference: {enquiryRef}</p>
-                  <p className="text-xs text-neutral-500 max-w-sm mx-auto font-light">
-                    Thank you. A member of our team will review your message and reach out shortly.
+                  <h3 className="text-2xl font-['Space_Grotesk'] font-bold text-[#10222b]">Enquiry Received</h3>
+                  <p className="text-xs text-slate-600 font-mono">Reference: {enquiryRef}</p>
+                  <p className="text-xs text-slate-500 max-w-sm mx-auto font-light leading-relaxed">
+                    Thank you. A member of the Touchmark Descience engineering council will review your query and get back within 24 hours.
                   </p>
                 </div>
               ) : (
                 <form onSubmit={handleEnquirySubmit} className="space-y-4">
                   <div className="space-y-1">
-                    <h3 className="text-lg font-serif text-[#0A0A0A]">Enquire</h3>
-                    <p className="text-xs text-neutral-500 font-light">
-                      For students, parents, colleges, and industry partners.
+                    <h3 className="text-xl font-['Space_Grotesk'] font-bold text-[#10222b]">Submit Enquiry</h3>
+                    <p className="text-xs text-slate-500 font-light">
+                      For engineering aspirants, college partners, and industry talent scouts.
                     </p>
                   </div>
 
@@ -898,42 +756,42 @@ export default function Home() {
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-neutral-700 block">Name</label>
+                      <label className="text-xs font-medium text-slate-700 block">Full Name</label>
                       <input
                         type="text"
                         required
                         value={enquiry.name}
                         onChange={(e) => setEnquiry({ ...enquiry, name: e.target.value })}
-                        placeholder="Your full name"
-                        className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-neutral-300 rounded-xl text-xs text-[#0A0A0A] placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#1B7A55]"
+                        placeholder="e.g. Senthil Kumar"
+                        className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-slate-300 rounded-xl text-xs text-[#10222b] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#4caf50]/40 focus:border-[#4caf50]"
                       />
                     </div>
 
                     <div className="space-y-1">
-                      <label className="text-xs font-medium text-neutral-700 block">Email or Mobile</label>
+                      <label className="text-xs font-medium text-slate-700 block">Email or Phone</label>
                       <input
                         type="text"
                         required
                         value={enquiry.contact}
                         onChange={(e) => setEnquiry({ ...enquiry, contact: e.target.value })}
-                        placeholder="name@domain.com or +91..."
-                        className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-neutral-300 rounded-xl text-xs text-[#0A0A0A] placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#1B7A55]"
+                        placeholder="name@college.edu or +91..."
+                        className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-slate-300 rounded-xl text-xs text-[#10222b] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#4caf50]/40 focus:border-[#4caf50]"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-neutral-700 block">I am a</label>
+                    <label className="text-xs font-medium text-slate-700 block">I am inquiring as</label>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                       {["Student", "Parent", "College", "Industry"].map((cat) => (
                         <button
                           key={cat}
                           type="button"
                           onClick={() => setEnquiry({ ...enquiry, category: cat })}
-                          className={`py-2 px-3 rounded-lg text-xs font-medium transition-all border cursor-pointer ${
+                          className={`py-2 px-3 rounded-lg text-xs font-semibold transition-all border cursor-pointer ${
                             enquiry.category === cat
-                              ? "bg-[#0A0A0A] text-white border-[#0A0A0A]"
-                              : "bg-[#FAF9F5] text-neutral-700 border-neutral-200 hover:border-neutral-300"
+                              ? "bg-[#0c3346] text-[#8bd08e] border-[#0c3346] shadow-sm"
+                              : "bg-[#FAF9F5] text-slate-700 border-slate-200 hover:border-slate-300"
                           }`}
                         >
                           {cat}
@@ -943,20 +801,20 @@ export default function Home() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-xs font-medium text-neutral-700 block">Message</label>
+                    <label className="text-xs font-medium text-slate-700 block">Your Note or Question</label>
                     <textarea
                       rows={3}
                       value={enquiry.message}
                       onChange={(e) => setEnquiry({ ...enquiry, message: e.target.value })}
-                      placeholder="Your question or ambition..."
-                      className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-neutral-300 rounded-xl text-xs text-[#0A0A0A] placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-[#1B7A55] resize-none"
+                      placeholder="Share your goals, batch preference, or institutional collaboration query..."
+                      className="w-full px-3.5 py-2.5 bg-[#FAF9F5] border border-slate-300 rounded-xl text-xs text-[#10222b] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#4caf50]/40 focus:border-[#4caf50] resize-none"
                     />
                   </div>
 
                   <button
                     type="submit"
                     disabled={enquiryStatus === "loading"}
-                    className="w-full py-3 rounded-xl bg-[#0A0A0A] hover:bg-[#1B7A55] disabled:opacity-50 text-white text-xs font-semibold tracking-wide transition-all shadow-sm cursor-pointer"
+                    className="w-full py-3.5 rounded-xl bg-[#10222b] hover:bg-[#2f8a36] disabled:opacity-50 text-white text-xs font-semibold tracking-wide transition-all shadow-sm cursor-pointer"
                   >
                     {enquiryStatus === "loading" ? "Submitting..." : "Send Enquiry →"}
                   </button>
@@ -967,8 +825,8 @@ export default function Home() {
         </section>
       </main>
 
-      {/* 8. Footer (Equals-inspired light footer with Touchmark Descience initiative) */}
-      <footer className="border-t border-[rgba(0,0,0,0.08)] bg-white py-14 px-5 sm:px-8 mt-20">
+      {/* 8. Footer */}
+      <footer className="border-t border-black/[0.08] bg-white py-14 px-5 sm:px-8 mt-20">
         <div className="max-w-6xl mx-auto flex flex-col gap-10">
           {/* Main Footer Row */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8">
@@ -979,16 +837,16 @@ export default function Home() {
                 <img
                   src="/dos-club-logo.png"
                   alt="DeScience Open Source Club"
-                  className="h-8 w-8 rounded-full object-cover ring-1 ring-black/10"
+                  className="h-9 w-9 rounded-full object-cover ring-1 ring-black/10"
                 />
-                <span className="font-serif text-lg text-[#0A0A0A]">
+                <span className="font-['Space_Grotesk'] text-lg font-bold text-[#10222b]">
                   TalentOS by DeScience Open Source Club
                 </span>
               </div>
 
               {/* An initiative of Touchmark Descience */}
               <div className="flex items-center gap-2.5 pt-1">
-                <span className="text-xs text-neutral-500 font-light">An initiative of</span>
+                <span className="text-xs text-slate-500 font-light">An initiative of</span>
                 <a
                   href="https://touchmarkdes.com/"
                   target="_blank"
@@ -1007,12 +865,12 @@ export default function Home() {
             </div>
 
             {/* Right: Quick Links */}
-            <div className="flex flex-wrap items-center gap-6 text-xs text-neutral-600">
+            <div className="flex flex-wrap items-center gap-6 text-xs text-slate-600">
               <a
                 href="https://membership.descienceosclub.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="font-medium text-[#1B7A55] hover:underline"
+                className="font-medium text-[#2f8a36] hover:underline"
               >
                 Become a Member
               </a>
@@ -1026,15 +884,16 @@ export default function Home() {
                 href="https://touchmarkdes.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hover:text-black transition-colors"
+                className="hover:text-black transition-colors inline-flex items-center gap-1"
               >
-                touchmarkdes.com &rarr;
+                <span>touchmarkdes.com</span>
+                <ExternalLinkIcon className="w-3.5 h-3.5" />
               </a>
             </div>
           </div>
 
           {/* Bottom Copyright Row */}
-          <div className="pt-6 border-t border-[rgba(0,0,0,0.06)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[11px] text-neutral-400 font-light">
+          <div className="pt-6 border-t border-black/[0.06] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-[11px] text-slate-400 font-light">
             <span>
               &copy; {new Date().getFullYear()} DeScience Open Source Club. An initiative of Touchmark Descience. All rights reserved.
             </span>
