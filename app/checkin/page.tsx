@@ -48,6 +48,7 @@ const VENUE = {
 function CheckInContent() {
   const searchParams = useSearchParams();
   const initialStudentId = searchParams.get("dos_id") || "DOS-B3-001";
+  const initialToken = searchParams.get("token") || "";
 
   const [mode, setMode] = useState<"CHECK_IN" | "CHECK_OUT">("CHECK_IN");
   const [dosId, setDosId] = useState(initialStudentId);
@@ -56,6 +57,13 @@ function CheckInContent() {
   useEffect(() => {
     setCurrentUser(getClientSession());
   }, []);
+
+  useEffect(() => {
+    const urlToken = searchParams.get("token");
+    if (urlToken) {
+      setTokenInput(urlToken);
+    }
+  }, [searchParams]);
 
   const getDashboardReturn = () => {
     if (!currentUser) return null;
@@ -66,7 +74,7 @@ function CheckInContent() {
   };
   const dashboardReturn = getDashboardReturn();
 
-  const [tokenInput, setTokenInput] = useState("");
+  const [tokenInput, setTokenInput] = useState(initialToken);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [distance, setDistance] = useState<number | null>(null);
   const [geoStatus, setGeoStatus] = useState<"ACQUIRING" | "IN_BOUNDS" | "OUT_OF_BOUNDS" | "ERROR">("ACQUIRING");

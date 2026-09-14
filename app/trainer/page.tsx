@@ -38,6 +38,14 @@ export default function TrainerDashboardPage() {
   const [notification, setNotification] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("session");
   const [searchQuery, setSearchQuery] = useState("");
+  const [origin, setOrigin] = useState<string>("");
+
+  // Detect current hostname/origin for optical QR generation
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setOrigin(window.location.origin);
+    }
+  }, []);
 
   // Load students for today's session
   useEffect(() => {
@@ -285,40 +293,39 @@ export default function TrainerDashboardPage() {
                 </span>
               </div>
 
-              {/* High-Contrast QR visualization */}
-              <div className="p-4 bg-slate-900 rounded-2xl shadow-inner flex flex-col items-center justify-center border-4 border-slate-100">
-                <div className="w-48 h-48 bg-slate-950 p-2.5 rounded-lg flex flex-col justify-between">
-                  <div className="flex justify-between">
-                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center rounded-sm">
-                      <div className="w-6 h-6 bg-slate-950" />
-                    </div>
-                    <div className="w-8 h-8 bg-white/20 rounded-sm" />
-                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center rounded-sm">
-                      <div className="w-6 h-6 bg-slate-950" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-6 gap-1.5 p-2">
-                    {Array.from({ length: 18 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className={`h-2.5 rounded-xs transition-colors ${
-                          (i + secondsLeft) % 2 === 0 ? "bg-white" : "bg-slate-800"
-                        }`}
+              {/* High-Contrast Optical QR Code (100% Scannable by Mobile Cameras) */}
+              {(() => {
+                const effectiveOrigin = origin || "http://localhost:3000";
+                const checkInUrl = `${effectiveOrigin}/checkin?token=${qrToken}&workshop=WS-07`;
+                const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
+                  checkInUrl
+                )}&margin=1`;
+
+                return (
+                  <div className="p-4 bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center border-2 border-slate-200 w-full">
+                    <div className="w-52 h-52 bg-white p-2 rounded-xl flex items-center justify-center border border-slate-100 shadow-2xs">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={qrApiUrl}
+                        alt={`Live Workshop Attendance QR - Token ${qrToken}`}
+                        className="w-48 h-48 rounded-lg object-contain"
                       />
-                    ))}
-                  </div>
-                  <div className="flex justify-between">
-                    <div className="w-12 h-12 bg-white p-2 flex items-center justify-center rounded-sm">
-                      <div className="w-6 h-6 bg-slate-950" />
                     </div>
-                    <div className="w-6 h-6 bg-white/20 rounded-sm" />
-                    <div className="w-8 h-8 bg-white rounded-sm" />
+                    <div className="font-mono text-xs text-slate-800 mt-3 font-bold tracking-wider flex items-center gap-2">
+                      <span className="text-slate-400">TOKEN:</span>
+                      <span
+                        className="px-2.5 py-0.5 rounded bg-slate-100 border border-slate-300 text-slate-900 font-bold"
+                        suppressHydrationWarning
+                      >
+                        {mounted ? qrToken : "TKN-ACTIVE-SYNC"}
+                      </span>
+                    </div>
+                    <div className="mt-2 text-[10px] text-slate-400 font-mono break-all max-w-[220px]">
+                      {effectiveOrigin}/checkin
+                    </div>
                   </div>
-                </div>
-                <div className="font-mono text-[11px] text-slate-300 mt-2.5 font-bold tracking-wider">
-                  TOKEN: <span suppressHydrationWarning>{mounted ? qrToken : "TKN-ACTIVE-SYNC"}</span>
-                </div>
-              </div>
+                );
+              })()}
 
               <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
                 Students scan using the mobile PWA inside the geofence perimeter. Token refreshes every 30s to eliminate unauthorized forwarding.
