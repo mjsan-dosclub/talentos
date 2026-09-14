@@ -124,6 +124,7 @@ export default function Home() {
   const [requestForm, setRequestForm] = useState({
     fullName: "",
     email: "",
+    phone: "",
     organization: "",
     role: "Engineering Student (Year 3-4)",
     referralSource: "LinkedIn / Social Media",
@@ -183,7 +184,7 @@ export default function Home() {
         body: JSON.stringify({
           name: requestForm.fullName,
           email: requestForm.email,
-          phone: "N/A",
+          phone: requestForm.phone.trim() || "N/A",
           current_role: `${requestForm.role} • ${requestForm.organization}`,
           referral_source: requestForm.referralSource,
           message: `Cohort Access Request from ${requestForm.organization}`,
@@ -1042,6 +1043,17 @@ export default function Home() {
                     placeholder="Email Address"
                     value={requestForm.email}
                     onChange={(e) => setRequestForm({ ...requestForm, email: e.target.value })}
+                    className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
+                  />
+                </div>
+
+                <div>
+                  <input
+                    type="tel"
+                    required
+                    placeholder="Mobile / WhatsApp Number (e.g. +91 98401 23456)"
+                    value={requestForm.phone}
+                    onChange={(e) => setRequestForm({ ...requestForm, phone: e.target.value })}
                     className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
                   />
                 </div>

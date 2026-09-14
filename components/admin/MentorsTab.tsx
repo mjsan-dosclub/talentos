@@ -9,6 +9,7 @@ import {
   TrashIcon,
   EditIcon,
   ExternalLinkIcon,
+  MoreVerticalIcon,
   XIcon,
 } from "@/components/Icons";
 
@@ -35,6 +36,7 @@ export default function MentorsTab({
   const [domainFilter, setDomainFilter] = useState("ALL");
   const [viewMode, setViewMode] = useState<"CARD" | "TABLE">("CARD");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
@@ -533,21 +535,87 @@ export default function MentorsTab({
                           {exp.status}
                         </span>
                       </td>
-                      <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setEditingExpert(exp)}
-                            className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                          >
-                            <EditIcon className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(exp.id, exp.fullName)}
-                            className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
-                          >
-                            <TrashIcon className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                      {/* Minimalist 3-dot Kebab Menu */}
+                      <td className="p-3 text-right relative">
+                        <button
+                          onClick={() => setOpenKebabId(openKebabId === exp.id ? null : exp.id)}
+                          className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                          aria-label="Actions"
+                        >
+                          <MoreVerticalIcon className="w-4 h-4" />
+                        </button>
+
+                        {openKebabId === exp.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setOpenKebabId(null)}
+                            />
+                            <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
+                              <button
+                                onClick={() => {
+                                  setEditingExpert(exp);
+                                  setOpenKebabId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                              >
+                                <span>Edit Expert Profile</span>
+                              </button>
+                              <Link
+                                href="/trainer"
+                                target="_blank"
+                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                onClick={() => setOpenKebabId(null)}
+                              >
+                                <span>View Trainer Cockpit</span>
+                                <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
+                              </Link>
+                              {exp.linkedinUrl && (
+                                <a
+                                  href={exp.linkedinUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                  onClick={() => setOpenKebabId(null)}
+                                >
+                                  <span>LinkedIn Profile</span>
+                                  <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
+                                </a>
+                              )}
+                              <div className="border-t border-slate-100 my-1" />
+                              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Set Status
+                              </div>
+                              {(["ACTIVE", "STANDBY", "INACTIVE"] as const).map((st) => (
+                                <button
+                                  key={st}
+                                  onClick={() => {
+                                    handleToggleStatus(exp.id, st, exp.fullName);
+                                    setOpenKebabId(null);
+                                  }}
+                                  className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
+                                    exp.status === st
+                                      ? "text-[#E25C38] font-bold bg-orange-50/50"
+                                      : "text-slate-600 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span>{st}</span>
+                                  {exp.status === st && <span className="text-xs">&bull;</span>}
+                                </button>
+                              ))}
+                              <div className="border-t border-slate-100 my-1" />
+                              <button
+                                onClick={() => {
+                                  setOpenKebabId(null);
+                                  handleDelete(exp.id, exp.fullName);
+                                }}
+                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                              >
+                                <span>Delete Expert</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))

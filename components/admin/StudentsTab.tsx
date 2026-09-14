@@ -9,6 +9,7 @@ import {
   TrashIcon,
   EditIcon,
   ExternalLinkIcon,
+  MoreVerticalIcon,
   XIcon,
 } from "@/components/Icons";
 
@@ -38,6 +39,7 @@ export default function StudentsTab({
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentMember | null>(null);
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
   // New Student Form State
   const [newStudent, setNewStudent] = useState({
@@ -389,39 +391,75 @@ export default function StudentsTab({
                           {s.status}
                         </span>
                       </td>
-                      <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => setEditingStudent(s)}
-                            className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                            title="Edit student"
-                          >
-                            <EditIcon className="w-3.5 h-3.5" />
-                          </button>
-                          <select
-                            value={s.status}
-                            onChange={(e) =>
-                              handleStatusChange(
-                                s.id,
-                                e.target.value as StudentMember["status"],
-                                s.fullName
-                              )
-                            }
-                            className="border border-slate-200 rounded px-1.5 py-0.5 text-[10px] text-slate-700 bg-white cursor-pointer"
-                          >
-                            <option value="ACTIVE">ACTIVE</option>
-                            <option value="DEFENSE_READY">DEFENSE_READY</option>
-                            <option value="ON_LEAVE">ON_LEAVE</option>
-                            <option value="INACTIVE">INACTIVE</option>
-                          </select>
-                          <button
-                            onClick={() => handleDelete(s.id, s.fullName)}
-                            className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
-                            title="Delete student"
-                          >
-                            <TrashIcon className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                      {/* Minimalist 3-dot Kebab Menu */}
+                      <td className="p-3 text-right relative">
+                        <button
+                          onClick={() => setOpenKebabId(openKebabId === s.id ? null : s.id)}
+                          className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                          aria-label="Actions"
+                        >
+                          <MoreVerticalIcon className="w-4 h-4" />
+                        </button>
+
+                        {openKebabId === s.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setOpenKebabId(null)}
+                            />
+                            <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
+                              <Link
+                                href={`/record/${s.dosId}`}
+                                target="_blank"
+                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                onClick={() => setOpenKebabId(null)}
+                              >
+                                <span>View Verified Dossier</span>
+                                <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
+                              </Link>
+                              <button
+                                onClick={() => {
+                                  setEditingStudent(s);
+                                  setOpenKebabId(null);
+                                }}
+                                className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                              >
+                                <span>Edit Candidate</span>
+                              </button>
+                              <div className="border-t border-slate-100 my-1" />
+                              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Set Status
+                              </div>
+                              {(["ACTIVE", "DEFENSE_READY", "ON_LEAVE", "INACTIVE"] as const).map((st) => (
+                                <button
+                                  key={st}
+                                  onClick={() => {
+                                    handleStatusChange(s.id, st, s.fullName);
+                                    setOpenKebabId(null);
+                                  }}
+                                  className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
+                                    s.status === st
+                                      ? "text-[#E25C38] font-bold bg-orange-50/50"
+                                      : "text-slate-600 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span>{st.replace("_", " ")}</span>
+                                  {s.status === st && <span className="text-xs">&bull;</span>}
+                                </button>
+                              ))}
+                              <div className="border-t border-slate-100 my-1" />
+                              <button
+                                onClick={() => {
+                                  setOpenKebabId(null);
+                                  handleDelete(s.id, s.fullName);
+                                }}
+                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                              >
+                                <span>Delete Candidate</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </td>
                     </tr>
                   );

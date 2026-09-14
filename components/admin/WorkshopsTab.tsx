@@ -11,6 +11,7 @@ import {
   TrashIcon,
   EditIcon,
   CalendarIcon,
+  MoreVerticalIcon,
   XIcon,
   CheckIcon,
 } from "@/components/Icons";
@@ -61,6 +62,7 @@ export default function WorkshopsTab({
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingWorkshop, setEditingWorkshop] = useState<WorkshopItem | null>(null);
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
   // Autosuggest State for Add Workshop Form
   const [autosuggestQuery, setAutosuggestQuery] = useState("");
@@ -160,6 +162,19 @@ export default function WorkshopsTab({
   };
 
   // Single actions
+  const handleStatusChange = (code: string, status: WorkshopItem["status"], title: string) => {
+    setWorkshops((prev) =>
+      prev.map((w) => (w.code === code ? { ...w, status } : w))
+    );
+    onAuditLog?.(
+      "Curriculum",
+      "Status Management",
+      "Update",
+      `Changed status of ${code}: ${title} to ${status}`
+    );
+    onToast(`Workshop ${code} is now ${status}`);
+  };
+
   const handleDelete = (code: string, title: string) => {
     if (!confirm(`Delete workshop "${code}: ${title}"?`)) return;
     setWorkshops((prev) => prev.filter((w) => w.code !== code));
@@ -425,21 +440,76 @@ export default function WorkshopsTab({
                               {ws.status}
                             </span>
                           </td>
-                          <td className="p-3 text-right">
-                            <div className="flex items-center justify-end gap-1.5">
-                              <button
-                                onClick={() => setEditingWorkshop(ws)}
-                                className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
-                              >
-                                <EditIcon className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDelete(ws.code, ws.title)}
-                                className="p-1 text-slate-400 hover:text-red-600 cursor-pointer"
-                              >
-                                <TrashIcon className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
+                          {/* Minimalist 3-dot Kebab Menu */}
+                          <td className="p-3 text-right relative">
+                            <button
+                              onClick={() => setOpenKebabId(openKebabId === ws.code ? null : ws.code)}
+                              className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                              aria-label="Actions"
+                            >
+                              <MoreVerticalIcon className="w-4 h-4" />
+                            </button>
+
+                            {openKebabId === ws.code && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-40"
+                                  onClick={() => setOpenKebabId(null)}
+                                />
+                                <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
+                                  <button
+                                    onClick={() => {
+                                      setEditingWorkshop(ws);
+                                      setOpenKebabId(null);
+                                    }}
+                                    className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
+                                  >
+                                    <span>Edit Topic</span>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setSubView("SCHEDULE");
+                                      setOpenKebabId(null);
+                                    }}
+                                    className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                  >
+                                    <span>Schedule Deliveries</span>
+                                    <CalendarIcon className="w-3 h-3 text-slate-400" />
+                                  </button>
+                                  <div className="border-t border-slate-100 my-1" />
+                                  <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    Set Status
+                                  </div>
+                                  {(["SCHEDULED", "ACTIVE_IN_SESSION", "COMPLETED", "INACTIVE"] as const).map((st) => (
+                                    <button
+                                      key={st}
+                                      onClick={() => {
+                                        handleStatusChange(ws.code, st, ws.title);
+                                        setOpenKebabId(null);
+                                      }}
+                                      className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
+                                        ws.status === st
+                                          ? "text-[#E25C38] font-bold bg-orange-50/50"
+                                          : "text-slate-600 hover:bg-slate-50"
+                                      }`}
+                                    >
+                                      <span>{st.replace(/_/g, " ")}</span>
+                                      {ws.status === st && <span className="text-xs">&bull;</span>}
+                                    </button>
+                                  ))}
+                                  <div className="border-t border-slate-100 my-1" />
+                                  <button
+                                    onClick={() => {
+                                      setOpenKebabId(null);
+                                      handleDelete(ws.code, ws.title);
+                                    }}
+                                    className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                                  >
+                                    <span>Delete Workshop</span>
+                                  </button>
+                                </div>
+                              </>
+                            )}
                           </td>
                         </tr>
                       );

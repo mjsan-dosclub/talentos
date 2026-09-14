@@ -8,6 +8,7 @@ import {
   ExternalLinkIcon,
   SearchIcon,
   SparklesIcon,
+  MoreVerticalIcon,
   TrashIcon,
 } from "@/components/Icons";
 
@@ -29,6 +30,7 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [bulkProcessing, setBulkProcessing] = useState(false);
+  const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
   const fetchEnquiries = async () => {
     setLoading(true);
@@ -470,61 +472,85 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
                         </div>
                       </td>
 
-                      <td className="py-3 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                          {/* 1-Click WhatsApp Button */}
-                          {enq.phone && (
-                            <a
-                              href={`https://wa.me/${cleanPhoneForWhatsApp(enq.phone)}?text=${encodeURIComponent(
-                                `Hi ${enq.full_name}, thank you for your enquiry regarding TalentOS & CodeZap 3.0 at DeScience Open Source Club!`
-                              )}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#25D366]/10 text-[#128C7E] hover:bg-[#25D366]/20 border border-[#25D366]/30 text-[11px] font-bold transition-colors"
-                              title="Open WhatsApp Chat"
-                            >
-                              <span>WhatsApp</span>
-                            </a>
-                          )}
+                      {/* Minimalist 3-dot Kebab Menu */}
+                      <td className="py-3 px-4 text-right relative">
+                        <button
+                          onClick={() => setOpenKebabId(openKebabId === enq.id ? null : enq.id)}
+                          className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
+                          aria-label="Actions"
+                        >
+                          <MoreVerticalIcon className="w-4 h-4" />
+                        </button>
 
-                          {/* 1-Click Email Button */}
-                          {enq.email && (
-                            <a
-                              href={`mailto:${enq.email}?subject=${encodeURIComponent(
-                                "DOS Club Admissions: Your TalentOS Enquiry"
-                              )}&body=${encodeURIComponent(
-                                `Hi ${enq.full_name},\n\nWe received your enquiry for Batch 3 Systems Engineering at DOS Club.`
-                              )}`}
-                              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-[11px] font-bold transition-colors"
-                              title="Send Email"
-                            >
-                              <span>Email</span>
-                            </a>
-                          )}
-
-                          {/* Quick Status Dropdown */}
-                          <select
-                            value={enq.status || "NEW"}
-                            onChange={(e) =>
-                              handleStatusChangeSingle(enq.id, enq.full_name, e.target.value as any)
-                            }
-                            className="text-[10px] bg-slate-100 border border-slate-200 rounded-lg px-2 py-1 font-semibold text-slate-700 focus:outline-none"
-                          >
-                            <option value="NEW">New</option>
-                            <option value="CONTACTED">Contacted</option>
-                            <option value="ACCEPTED">Accepted</option>
-                            <option value="INACTIVE">Inactive</option>
-                          </select>
-
-                          {/* Delete Button */}
-                          <button
-                            onClick={() => handleDeleteSingle(enq.id, enq.full_name)}
-                            className="p-1 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
-                            title="Delete Enquiry"
-                          >
-                            <TrashIcon className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        {openKebabId === enq.id && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-40"
+                              onClick={() => setOpenKebabId(null)}
+                            />
+                            <div className="absolute right-3 top-10 w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100">
+                              {enq.phone && (
+                                <a
+                                  href={`https://wa.me/${cleanPhoneForWhatsApp(enq.phone)}?text=${encodeURIComponent(
+                                    `Hi ${enq.full_name}, thank you for your enquiry regarding TalentOS & CodeZap 3.0 at DeScience Open Source Club!`
+                                  )}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="w-full px-3 py-1.5 text-emerald-700 hover:bg-emerald-50 flex items-center justify-between cursor-pointer font-medium"
+                                  onClick={() => setOpenKebabId(null)}
+                                >
+                                  <span>WhatsApp Candidate</span>
+                                  <ExternalLinkIcon className="w-3 h-3 text-emerald-600" />
+                                </a>
+                              )}
+                              {enq.email && (
+                                <a
+                                  href={`mailto:${enq.email}?subject=${encodeURIComponent(
+                                    "DOS Club Admissions: Your TalentOS Enquiry"
+                                  )}&body=${encodeURIComponent(
+                                    `Hi ${enq.full_name},\n\nWe received your enquiry for Batch 3 Systems Engineering at DOS Club.`
+                                  )}`}
+                                  className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                                  onClick={() => setOpenKebabId(null)}
+                                >
+                                  <span>Send Direct Email</span>
+                                  <ExternalLinkIcon className="w-3 h-3 text-slate-400" />
+                                </a>
+                              )}
+                              <div className="border-t border-slate-100 my-1" />
+                              <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Set Status
+                              </div>
+                              {(["NEW", "CONTACTED", "ACCEPTED", "INACTIVE"] as const).map((st) => (
+                                <button
+                                  key={st}
+                                  onClick={() => {
+                                    handleStatusChangeSingle(enq.id, enq.full_name, st);
+                                    setOpenKebabId(null);
+                                  }}
+                                  className={`w-full px-3 py-1 text-left flex items-center justify-between cursor-pointer ${
+                                    enq.status === st
+                                      ? "text-[#E25C38] font-bold bg-orange-50/50"
+                                      : "text-slate-600 hover:bg-slate-50"
+                                  }`}
+                                >
+                                  <span>{st}</span>
+                                  {enq.status === st && <span className="text-xs">&bull;</span>}
+                                </button>
+                              ))}
+                              <div className="border-t border-slate-100 my-1" />
+                              <button
+                                onClick={() => {
+                                  setOpenKebabId(null);
+                                  handleDeleteSingle(enq.id, enq.full_name);
+                                }}
+                                className="w-full px-3 py-1.5 text-rose-600 hover:bg-rose-50 flex items-center gap-2 cursor-pointer font-semibold"
+                              >
+                                <span>Delete Enquiry</span>
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </td>
                     </tr>
                   );
