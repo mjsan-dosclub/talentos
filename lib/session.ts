@@ -19,7 +19,7 @@ export const SESSION_COOKIE_NAME = "talentos_session";
 export const DEMO_ACCOUNTS: Record<string, TalentosUser> = {
   student: {
     id: "a0000001-0000-0000-0000-000000000001",
-    email: "arun@student.dosclub.org",
+    email: "arun.systems@annauniv.edu",
     name: "Arunachalam S.",
     role: "STUDENT",
     dos_id: "DOS-B3-001",
@@ -47,52 +47,40 @@ export const DEMO_ACCOUNTS: Record<string, TalentosUser> = {
 };
 
 /**
- * Encodes session payload to JSON string
+ * Encodes session payload to URL-safe JSON string
  */
 export function serializeSession(user: TalentosUser): string {
   const payload = {
     ...user,
     loginTime: user.loginTime || new Date().toISOString(),
   };
-  return JSON.stringify(payload);
+  return encodeURIComponent(JSON.stringify(payload));
 }
 
 /**
- * Decodes session payload from raw JSON, single/double URL-encoded string, or base64
+ * Decodes session payload from URL-safe string, with base64 and JSON fallbacks
  */
 export function deserializeSession(serialized: string | null | undefined): TalentosUser | null {
   if (!serialized) return null;
 
-  let str = serialized.trim();
-  // Strip surrounding quotes if present (cookies often have quotes)
-  if (str.startsWith('"') && str.endsWith('"')) {
-    str = str.slice(1, -1).trim();
-  }
-
-  // Handle unencoded, single-encoded (%7B), and double-encoded (%257B) JSON
-  for (let i = 0; i < 3; i++) {
-    if (str.startsWith("{") && str.endsWith("}")) {
-      try {
-        const parsed = JSON.parse(str);
-        if (parsed && typeof parsed === "object" && parsed.role) {
-          return parsed as TalentosUser;
-        }
-      } catch (e) {}
-    }
-    if (str.includes("%")) {
-      try {
-        str = decodeURIComponent(str).trim();
-      } catch (e) {
-        break;
-      }
-    } else {
-      break;
-    }
-  }
-
-  // Fallback: Base64 decode
+  // 1. Try URL-encoded JSON
   try {
-    let b64Str = str;
+    const trimmed = decodeURIComponent(serialized.trim());
+    if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+      return JSON.parse(trimmed) as TalentosUser;
+    }
+  } catch (e) {}
+
+  // 2. Try raw JSON
+  try {
+    if (serialized.startsWith("{") && serialized.endsWith("}")) {
+      return JSON.parse(serialized) as TalentosUser;
+    }
+  } catch (e) {}
+
+  // 3. Fallback: Base64 decode
+  try {
+    let b64Str = serialized.trim();
     if (b64Str.includes("%")) {
       b64Str = decodeURIComponent(b64Str);
     }
@@ -103,10 +91,7 @@ export function deserializeSession(serialized: string | null | undefined): Talen
       decoded = Buffer.from(b64Str, "base64").toString("utf-8");
     }
     if (decoded.startsWith("{") && decoded.endsWith("}")) {
-      const parsed = JSON.parse(decoded);
-      if (parsed && typeof parsed === "object" && parsed.role) {
-        return parsed as TalentosUser;
-      }
+      return JSON.parse(decoded) as TalentosUser;
     }
   } catch (e) {}
 
@@ -118,7 +103,7 @@ export function deserializeSession(serialized: string | null | undefined): Talen
  */
 export function setClientSession(user: TalentosUser) {
   if (typeof document === "undefined") return;
-  const val = encodeURIComponent(JSON.stringify(user));
+  const val = serializeSession(user);
   // 7 days cookie
   document.cookie = `${SESSION_COOKIE_NAME}=${val}; path=/; max-age=604800; SameSite=Lax`;
   localStorage.setItem(SESSION_COOKIE_NAME, JSON.stringify(user));
@@ -142,9 +127,8 @@ export function getClientSession(): TalentosUser | null {
     .split("; ")
     .find((row) => row.startsWith(`${SESSION_COOKIE_NAME}=`));
   if (match) {
-    const val = match.split("=").slice(1).join("=");
-    const res = deserializeSession(val);
-    if (res) return res;
+    const val = match.split("=")[1];
+    return deserializeSession(val);
   }
   const local = localStorage.getItem(SESSION_COOKIE_NAME);
   if (local) {
