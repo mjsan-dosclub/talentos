@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getClientSession, TalentosUser } from "@/lib/session";
@@ -32,27 +32,19 @@ export default function Home() {
   const [user, setUser] = useState<TalentosUser | null>(null);
   const [cms, setCms] = useState<LandingCmsData>(DEFAULT_LANDING_CMS);
 
-  // Case Studies & Student Achievements (Zenler-Inspired API Mesh)
-  const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
-  const [caseStudyCategory, setCaseStudyCategory] = useState<string>("all");
-  const [copiedApi, setCopiedApi] = useState(false);
+  // Compact Navigation Dropdown State
+  const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false);
 
-  const copyApiUrl = () => {
-    if (typeof window !== "undefined") {
-      navigator.clipboard.writeText(`${window.location.origin}/api/casestudies`);
-      setCopiedApi(true);
-      setTimeout(() => setCopiedApi(false), 2500);
+  // Student Case Studies & Articles (Single Line Horizontal Scroll)
+  const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
+  const caseStudyScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollCaseStudies = (direction: "left" | "right") => {
+    if (caseStudyScrollRef.current) {
+      const offset = direction === "left" ? -390 : 390;
+      caseStudyScrollRef.current.scrollBy({ left: offset, behavior: "smooth" });
     }
   };
-
-  const filteredCaseStudies =
-    caseStudyCategory === "all"
-      ? INITIAL_CASE_STUDIES
-      : INITIAL_CASE_STUDIES.filter(
-          (cs) =>
-            cs.category.toLowerCase().includes(caseStudyCategory.toLowerCase()) ||
-            cs.student.track.toLowerCase().includes(caseStudyCategory.toLowerCase())
-        );
 
   // Active Cohort / Team Filter Tabs
   const [activeTab, setActiveTab] = useState<"all" | "systems" | "ai" | "commons">("all");
@@ -219,24 +211,80 @@ export default function Home() {
             </div>
           </Link>
 
-          {/* Navigation Links — Strict Single Line */}
-          <nav className="hidden lg:flex items-center gap-7 text-sm font-semibold text-[#777E90] whitespace-nowrap">
-            <a href="#how-it-works" className="hover:text-[#23262F] transition-colors py-1">
-              How It Works
+          {/* Navigation Links — Strict Single Line & Compact (3 Menus Max) */}
+          <nav className="hidden md:flex items-center gap-7 text-sm font-semibold text-[#777E90] whitespace-nowrap">
+            {/* 1. Explore Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setExploreDropdownOpen(true)}
+              onMouseLeave={() => setExploreDropdownOpen(false)}
+            >
+              <button
+                type="button"
+                onClick={() => setExploreDropdownOpen(!exploreDropdownOpen)}
+                className="hover:text-[#23262F] transition-colors py-1 flex items-center gap-1.5 cursor-pointer font-semibold"
+              >
+                <span>Explore</span>
+                <svg
+                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
+                    exploreDropdownOpen ? "rotate-180 text-[#FF592C]" : ""
+                  }`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              {/* Dropdown Menu */}
+              {exploreDropdownOpen && (
+                <div className="absolute top-full left-0 pt-2 w-64 z-50 animate-fadeIn">
+                  <div className="p-2.5 bg-white rounded-2xl border border-[#E6E8EC] shadow-xl space-y-1">
+                    <a
+                      href="#how-it-works"
+                      onClick={() => setExploreDropdownOpen(false)}
+                      className="block p-2.5 rounded-xl hover:bg-[#F4F5F6] transition-colors"
+                    >
+                      <div className="text-xs font-bold text-[#23262F]">How It Works</div>
+                      <div className="text-[11px] text-[#777E90]">The 4 dimensions of engineering rigor</div>
+                    </a>
+                    <a
+                      href="#evidence"
+                      onClick={() => setExploreDropdownOpen(false)}
+                      className="block p-2.5 rounded-xl hover:bg-[#F4F5F6] transition-colors"
+                    >
+                      <div className="text-xs font-bold text-[#23262F]">The Evidence</div>
+                      <div className="text-[11px] text-[#777E90]">Cryptographic git proofs & telemetry</div>
+                    </a>
+                    <a
+                      href="#lounge"
+                      onClick={() => setExploreDropdownOpen(false)}
+                      className="block p-2.5 rounded-xl hover:bg-[#F4F5F6] transition-colors"
+                    >
+                      <div className="text-xs font-bold text-[#23262F]">Lounge Access</div>
+                      <div className="text-[11px] text-[#777E90]">Priority industry standing</div>
+                    </a>
+                    <a
+                      href="#roster"
+                      onClick={() => setExploreDropdownOpen(false)}
+                      className="block p-2.5 rounded-xl hover:bg-[#F4F5F6] transition-colors"
+                    >
+                      <div className="text-xs font-bold text-[#23262F]">Student Roster</div>
+                      <div className="text-[11px] text-[#777E90]">Active Batch 3 systems builders</div>
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 2. Case Studies (Direct Link) */}
+            <a href="#case-studies" className="hover:text-[#23262F] transition-colors py-1">
+              Case Studies
             </a>
-            <a href="#evidence" className="hover:text-[#23262F] transition-colors py-1">
-              The Evidence
-            </a>
-            <a href="#lounge" className="hover:text-[#23262F] transition-colors py-1">
-              Lounge Access
-            </a>
-            <a href="#case-studies" className="hover:text-[#23262F] transition-colors py-1 flex items-center gap-1.5">
-              <span>Case Studies</span>
-              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold bg-[#FF592C]/10 text-[#FF592C] leading-none">API</span>
-            </a>
-            <a href="#roster" className="hover:text-[#23262F] transition-colors py-1">
-              Student Roster
-            </a>
+
+            {/* 3. Admissions (Direct Link) */}
             <a href="#enquire" className="hover:text-[#23262F] transition-colors py-1">
               Admissions
             </a>
@@ -275,10 +323,12 @@ export default function Home() {
               href="https://membership.descienceosclub.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="h-10 px-5 sm:px-6 rounded-full bg-[#FF592C] hover:bg-[#E04F26] text-white text-xs sm:text-sm font-semibold flex items-center gap-2 shadow-sm transition-all whitespace-nowrap"
+              className="h-10 px-5 sm:px-6 rounded-full bg-[#FF592C] hover:bg-[#E04F26] text-white text-xs sm:text-sm font-semibold flex items-center gap-2.5 shadow-sm transition-all whitespace-nowrap group"
             >
               <span>Become a Member</span>
-              <ArrowRightIcon className="w-3.5 h-3.5" />
+              <span className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 transition-transform">
+                <ArrowRightIcon className="w-3 h-3" />
+              </span>
             </a>
           </div>
         </div>
@@ -876,182 +926,147 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          SECTION: ZENLER-INSPIRED CASE STUDIES & STUDENT ACHIEVEMENTS (#case-studies)
+          SECTION: STUDENT CASE STUDIES & ARTICLES (SINGLE-LINE HORIZONTAL SCROLL)
           ========================================================================= */}
-      <section id="case-studies" className="py-24 border-b border-[#E6E8EC] scroll-mt-20 bg-white">
+      <section id="case-studies" className="py-24 border-b border-[#E6E8EC] scroll-mt-20 bg-white overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
+          {/* Block Header with Carousel Navigation */}
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
             <div className="max-w-2xl">
-              <span className="ui8-stage">AUTHENTIC TECHNICAL IMPACT</span>
+              <span className="ui8-stage">STUDENT BLOG &amp; CASE STUDIES</span>
               <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#23262F]">
-                Case Studies &amp; Student Achievements
+                Real builders, real systems.
               </h2>
               <p className="mt-3 text-base sm:text-lg text-[#777E90] leading-relaxed">
-                Real students, 27 production systems, zero whiteboard fluff. See how our builders authored distributed consensus, engineered AI runtimes, and passed zero-grace peer defense.
+                Technical articles and architecture breakdowns authored by student engineers in Batch 3. Peer-audited before publication and shared across the engineering commons.
               </p>
             </div>
 
-            {/* Quick Actions (View All & API Link) */}
+            {/* Scroll Navigation Arrows */}
             <div className="flex items-center gap-3 shrink-0">
-              <a
-                href="/api/casestudies"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-10 px-4.5 rounded-full border border-[#E6E8EC] hover:border-[#23262F] bg-[#F4F5F6] hover:bg-white text-xs font-bold text-[#23262F] inline-flex items-center gap-2 transition-all whitespace-nowrap"
-                title="View JSON endpoint for DeScience OS Club website"
-              >
-                <TerminalIcon className="w-3.5 h-3.5 text-[#FF592C]" />
-                <span>REST API (JSON)</span>
-                <ExternalLinkIcon className="w-3 h-3 text-[#777E90]" />
-              </a>
               <button
-                onClick={copyApiUrl}
-                className="h-10 px-4.5 rounded-full bg-[#23262F] hover:bg-[#FF592C] text-white text-xs font-bold transition-colors whitespace-nowrap"
+                type="button"
+                onClick={() => scrollCaseStudies("left")}
+                aria-label="Scroll previous articles"
+                className="w-11 h-11 rounded-full border border-[#E6E8EC] hover:border-[#23262F] bg-[#FCFCFD] hover:bg-white text-[#23262F] flex items-center justify-center transition-all shadow-2xs cursor-pointer active:scale-95"
               >
-                {copiedApi ? "✓ URL Copied!" : "Copy API URL"}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollCaseStudies("right")}
+                aria-label="Scroll next articles"
+                className="w-11 h-11 rounded-full border border-[#E6E8EC] hover:border-[#23262F] bg-[#FCFCFD] hover:bg-white text-[#23262F] flex items-center justify-center transition-all shadow-2xs cursor-pointer active:scale-95"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           </div>
 
-          {/* Zenler-Style Category Filter Buttons */}
-          <div className="flex items-center gap-2 p-1.5 rounded-full bg-[#F4F5F6] border border-[#E6E8EC] overflow-x-auto mb-12 max-w-max">
-            {[
-              { id: "all", label: "All Achievements" },
-              { id: "distributed", label: "Distributed Systems" },
-              { id: "ai", label: "AI & Runtimes" },
-              { id: "storage", label: "Storage & Compaction" },
-              { id: "security", label: "Security & Protocols" },
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setCaseStudyCategory(tab.id)}
-                className={`px-4 py-2 rounded-full text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  caseStudyCategory === tab.id
-                    ? "bg-[#23262F] text-white shadow-sm"
-                    : "text-[#777E90] hover:text-[#23262F]"
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Case Studies Cards Grid (Zenler Card Design with Author Row & Performance Metrics) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredCaseStudies.map((study) => (
+          {/* Single-Line Horizontal Scroll Track (Scrolls from Right to Left / Left to Right) */}
+          <div
+            ref={caseStudyScrollRef}
+            className="flex gap-6 overflow-x-auto pb-6 pt-2 scrollbar-none snap-x snap-mandatory scroll-smooth"
+          >
+            {INITIAL_CASE_STUDIES.map((study) => (
               <div
                 key={study.id}
-                className="bg-white rounded-3xl border border-[#E6E8EC] shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden group cursor-pointer"
+                className="w-[340px] sm:w-[390px] shrink-0 snap-start bg-white rounded-3xl border border-[#E6E8EC] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
                 onClick={() => setSelectedCaseStudy(study)}
               >
-                {/* Cover Image Container */}
-                <div className="aspect-16/10 overflow-hidden relative bg-[#F4F5F6]">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={study.coverImage}
-                    alt={study.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
-                  {/* Floating Badges */}
-                  <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[#23262F] text-[10px] font-bold uppercase tracking-wider border border-[#E6E8EC] shadow-xs">
-                    {study.category}
+                <div>
+                  {/* Article Cover Image with Category & Read Time Pill */}
+                  <div className="aspect-16/10 rounded-2xl overflow-hidden relative mb-4 bg-[#F4F5F6]">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={study.coverImage}
+                      alt={study.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                    <div className="absolute top-3 left-3 px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[#23262F] text-[10px] font-bold uppercase tracking-wider border border-[#E6E8EC] shadow-xs">
+                      {study.category}
+                    </div>
+                    <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-full bg-[#23262F]/80 backdrop-blur-md text-white text-[10px] font-medium shadow-xs">
+                      {study.readTime} &bull; {study.publishedAt}
+                    </div>
                   </div>
-                  <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-[#45B26B] text-white text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 shadow-xs">
-                    <CheckIcon className="w-3 h-3" />
-                    <span>{study.defenseStatus === "PASSED_WITH_DISTINCTION" ? "DISTINCTION" : "VERIFIED"}</span>
+
+                  {/* Metrics highlight snippet */}
+                  <div className="flex items-center gap-1.5 mb-2.5">
+                    {study.metrics.slice(0, 2).map((m, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 rounded-md bg-[#F4F5F6] border border-[#E6E8EC] text-[10px] font-bold text-[#23262F]"
+                      >
+                        <strong className="text-[#FF592C]">{m.value}</strong> {m.label}
+                      </span>
+                    ))}
                   </div>
+
+                  {/* Title */}
+                  <h3 className="text-base font-bold text-[#23262F] group-hover:text-[#FF592C] transition-colors leading-snug line-clamp-2">
+                    {study.title}
+                  </h3>
+
+                  {/* Excerpt */}
+                  <p className="mt-2 text-xs text-[#777E90] leading-relaxed line-clamp-3">
+                    {study.summary}
+                  </p>
                 </div>
 
-                {/* Card Body */}
-                <div className="p-6 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    {/* Key Telemetry Metric Bar */}
-                    <div className="flex items-center gap-2 mb-3">
-                      {study.metrics.slice(0, 2).map((m, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2.5 py-1 rounded-lg bg-[#F4F5F6] border border-[#E6E8EC] text-[11px] font-bold text-[#23262F]"
-                        >
-                          <strong className="text-[#FF592C]">{m.value}</strong> {m.label}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Case Study Title */}
-                    <h3 className="text-lg font-bold text-[#23262F] group-hover:text-[#FF592C] transition-colors leading-snug">
-                      {study.title}
-                    </h3>
-
-                    {/* Excerpt */}
-                    <p className="mt-2 text-xs sm:text-sm text-[#777E90] leading-relaxed line-clamp-3">
-                      {study.summary}
-                    </p>
-                  </div>
-
-                  {/* Author / Student Row (Zenler zen-case-author layout) */}
-                  <div className="pt-4 border-t border-[#E6E8EC]">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={study.student.avatar}
-                          alt={study.student.name}
-                          className="w-10 h-10 rounded-full object-cover border border-[#E6E8EC]"
-                        />
-                        <div>
-                          <div className="text-xs font-bold text-[#23262F]">
-                            {study.student.name}
-                          </div>
-                          <div className="text-[11px] text-[#777E90]">
-                            {study.student.college} &bull; {study.publishedAt}
-                          </div>
-                        </div>
+                {/* Author Row & Share Action */}
+                <div className="pt-4 mt-4 border-t border-[#E6E8EC] flex items-center justify-between gap-3">
+                  <div className="flex items-center gap-2.5">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={study.student.avatar}
+                      alt={study.student.name}
+                      className="w-9 h-9 rounded-full object-cover border border-[#E6E8EC]"
+                    />
+                    <div>
+                      <div className="text-xs font-bold text-[#23262F]">
+                        {study.student.name}
                       </div>
-
-                      <span className="text-xs font-bold text-[#FF592C] group-hover:translate-x-1 transition-transform inline-flex items-center gap-1">
-                        <span>Read</span>
-                        <ArrowRightIcon className="w-3.5 h-3.5" />
-                      </span>
+                      <div className="text-[10px] text-[#777E90]">
+                        {study.student.college}
+                      </div>
                     </div>
                   </div>
+
+                  {/* Read story pill */}
+                  <span className="text-xs font-bold text-[#FF592C] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
+                    <span>Read</span>
+                    <ArrowRightIcon className="w-3.5 h-3.5" />
+                  </span>
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Zenler-Inspired Headless API Sharing Callout Banner */}
-          <div className="mt-16 p-8 rounded-3xl bg-gradient-to-r from-[#23262F] to-[#141416] text-white flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
-            <div className="space-y-2 max-w-xl text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white text-[10px] font-bold uppercase tracking-wider">
-                <span className="w-2 h-2 rounded-full bg-[#45B26B] animate-pulse" />
-                <span>DE-SCIENCE OS CLUB SYNDICATION MESH</span>
+          {/* Student Author Engagement Banner (Student Article Publishing Vision) */}
+          <div className="mt-12 p-6 sm:p-8 rounded-3xl bg-[#F4F5F6] border border-[#E6E8EC] flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="space-y-1.5 text-center md:text-left">
+              <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#FF592C]">
+                <span>Student Publisher Program</span>
               </div>
-              <h3 className="text-2xl font-bold tracking-tight">
-                Live Case Study API for descienceosclub.com
+              <h3 className="text-xl sm:text-2xl font-bold text-[#23262F]">
+                Are you a builder in Batch 3? Publish your engineering breakdown.
               </h3>
-              <p className="text-sm text-[#777E90] leading-relaxed">
-                All student achievements, verified benchmark numbers, and peer defense dossiers are exposed via our secure headless API. Effortlessly query, syndicate, and display student records across partner platforms.
+              <p className="text-xs sm:text-sm text-[#777E90] max-w-xl">
+                Defend your architecture, pass zero-grace review, and submit your case study. Published articles are showcased on the DeScience OS Club website and shared with tech recruiters.
               </p>
             </div>
-
-            <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
-              <a
-                href="/api/casestudies"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-11 px-6 rounded-full bg-[#FF592C] hover:bg-[#E04F26] text-white text-xs font-bold flex items-center justify-center gap-2 shadow-sm transition-all whitespace-nowrap"
-              >
-                <span>Inspect API Endpoint</span>
-                <ExternalLinkIcon className="w-3.5 h-3.5" />
-              </a>
-              <button
-                onClick={copyApiUrl}
-                className="h-11 px-6 rounded-full border border-white/20 hover:border-white bg-white/5 hover:bg-white/10 text-white text-xs font-bold transition-all whitespace-nowrap"
-              >
-                {copiedApi ? "✓ Copied Endpoint" : "Copy cURL / URL"}
-              </button>
-            </div>
+            <a
+              href="#enquire"
+              className="h-11 px-6 rounded-full bg-[#23262F] hover:bg-[#FF592C] text-white text-xs font-bold transition-colors whitespace-nowrap flex items-center gap-2 shrink-0"
+            >
+              <span>Submit Your Article</span>
+              <ArrowRightIcon className="w-3.5 h-3.5" />
+            </a>
           </div>
         </div>
       </section>
@@ -1156,69 +1171,92 @@ export default function Home() {
       {/* =========================================================================
           SECTION 10: UI8 QUALITY COUNTERS (.quality)
           ========================================================================= */}
+      {/* =========================================================================
+          SECTION 10: ZENLER-INSPIRED QUALITY COUNTERS (.quality)
+          ========================================================================= */}
       <section className="py-20 border-b border-[#E6E8EC] bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            {/* Stat 1 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-2xl bg-[#45B26B]/15 text-[#45B26B] flex items-center justify-center mb-4">
-                <TerminalIcon className="w-6 h-6" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Stat 1 - Green Pastel */}
+            <div className="bg-[#E8F8EE] border border-[#45B26B]/25 rounded-3xl p-6 sm:p-8 flex flex-col items-start text-left shadow-2xs transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              <div className="flex items-center justify-between w-full mb-6">
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-[#45B26B]/20 text-[#2B8A4A]">
+                  CURRICULUM DEPTH
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-white/80 text-[#45B26B] flex items-center justify-center shadow-xs">
+                  <TerminalIcon className="w-5 h-5" />
+                </div>
               </div>
-              <div className="text-4xl sm:text-5xl font-bold text-[#23262F]">
+              <div className="text-4xl sm:text-5xl font-extrabold text-[#23262F] tracking-tight">
                 27
               </div>
-              <div className="text-sm font-bold text-[#23262F] mt-2">
+              <div className="text-base font-bold text-[#23262F] mt-2">
                 Production Systems
               </div>
-              <div className="text-xs text-[#777E90] mt-1 max-w-[200px]">
+              <div className="text-xs text-[#777E90] mt-1.5 leading-relaxed">
                 Built from scratch with zero high-level shortcuts
               </div>
             </div>
 
-            {/* Stat 2 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-2xl bg-[#3772FF]/15 text-[#3772FF] flex items-center justify-center mb-4">
-                <LayersIcon className="w-6 h-6" />
+            {/* Stat 2 - Purple Pastel */}
+            <div className="bg-[#F3EEFC] border border-[#9757D7]/25 rounded-3xl p-6 sm:p-8 flex flex-col items-start text-left shadow-2xs transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              <div className="flex items-center justify-between w-full mb-6">
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-[#9757D7]/20 text-[#6E2BB1]">
+                  COMMONS COMMITS
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-white/80 text-[#9757D7] flex items-center justify-center shadow-xs">
+                  <LayersIcon className="w-5 h-5" />
+                </div>
               </div>
-              <div className="text-4xl sm:text-5xl font-bold text-[#23262F]">
+              <div className="text-4xl sm:text-5xl font-extrabold text-[#23262F] tracking-tight">
                 1,420+
               </div>
-              <div className="text-sm font-bold text-[#23262F] mt-2">
+              <div className="text-base font-bold text-[#23262F] mt-2">
                 Merged Pull Requests
               </div>
-              <div className="text-xs text-[#777E90] mt-1 max-w-[200px]">
+              <div className="text-xs text-[#777E90] mt-1.5 leading-relaxed">
                 Peer reviewed across the shared code commons
               </div>
             </div>
 
-            {/* Stat 3 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-2xl bg-[#EF466F]/15 text-[#EF466F] flex items-center justify-center mb-4">
-                <UsersIcon className="w-6 h-6" />
+            {/* Stat 3 - Amber Pastel */}
+            <div className="bg-[#FFF9E6] border border-[#FFB800]/25 rounded-3xl p-6 sm:p-8 flex flex-col items-start text-left shadow-2xs transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              <div className="flex items-center justify-between w-full mb-6">
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-[#FFB800]/20 text-[#B87B00]">
+                  BATCH 3 BUILDERS
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-white/80 text-[#FFB800] flex items-center justify-center shadow-xs">
+                  <UsersIcon className="w-5 h-5" />
+                </div>
               </div>
-              <div className="text-4xl sm:text-5xl font-bold text-[#23262F]">
+              <div className="text-4xl sm:text-5xl font-extrabold text-[#23262F] tracking-tight">
                 42
               </div>
-              <div className="text-sm font-bold text-[#23262F] mt-2">
+              <div className="text-base font-bold text-[#23262F] mt-2">
                 Engineers in Batch 3
               </div>
-              <div className="text-xs text-[#777E90] mt-1 max-w-[200px]">
+              <div className="text-xs text-[#777E90] mt-1.5 leading-relaxed">
                 Actively in collaborative defense sessions
               </div>
             </div>
 
-            {/* Stat 4 */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-12 rounded-2xl bg-[#9757D7]/15 text-[#9757D7] flex items-center justify-center mb-4">
-                <ShieldCheckIcon className="w-6 h-6" />
+            {/* Stat 4 - Cyan Pastel */}
+            <div className="bg-[#E6F8FA] border border-[#00B2FE]/25 rounded-3xl p-6 sm:p-8 flex flex-col items-start text-left shadow-2xs transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+              <div className="flex items-center justify-between w-full mb-6">
+                <span className="px-3 py-1 rounded-full text-[11px] font-bold tracking-wider uppercase bg-[#00B2FE]/20 text-[#007EA7]">
+                  DEFENSE RIGOR
+                </span>
+                <div className="w-10 h-10 rounded-xl bg-white/80 text-[#00B2FE] flex items-center justify-center shadow-xs">
+                  <ShieldCheckIcon className="w-5 h-5" />
+                </div>
               </div>
-              <div className="text-4xl sm:text-5xl font-bold text-[#23262F]">
+              <div className="text-4xl sm:text-5xl font-extrabold text-[#23262F] tracking-tight">
                 100%
               </div>
-              <div className="text-sm font-bold text-[#23262F] mt-2">
+              <div className="text-base font-bold text-[#23262F] mt-2">
                 Peer Code Audited
               </div>
-              <div className="text-xs text-[#777E90] mt-1 max-w-[200px]">
+              <div className="text-xs text-[#777E90] mt-1.5 leading-relaxed">
                 Zero unverified commits merged into main
               </div>
             </div>

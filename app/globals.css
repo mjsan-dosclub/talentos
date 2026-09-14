@@ -263,4 +263,29 @@ body {
   display: inline-block;
 }
 
+/* Zenler-Inspired Utilities */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.zen-btn-icon-circle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 9999px;
+  background-color: rgba(255, 255, 255, 0.22);
+  transition: transform 0.2s ease;
+}
+
+.group:hover .zen-btn-icon-circle {
+  transform: translateX(2px);
+}
+
+
 

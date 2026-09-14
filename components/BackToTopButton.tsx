@@ -7,13 +7,12 @@ export default function BackToTopButton() {
 
   useEffect(() => {
     const handleScroll = () => {
-      if (typeof window !== "undefined" && window.scrollY > 350) {
-        setVisible(true);
-      } else {
-        setVisible(false);
+      if (typeof window !== "undefined") {
+        setVisible(window.scrollY > 200);
       }
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -23,18 +22,21 @@ export default function BackToTopButton() {
     }
   };
 
-  if (!visible) return null;
-
   return (
     <button
       type="button"
       onClick={scrollToTop}
       aria-label="Back to Top"
-      className="fixed bottom-6 right-6 z-50 p-3 rounded-full bg-white/95 text-[#23262F] hover:text-[#FF592C] hover:scale-110 active:scale-95 shadow-[0_10px_30px_rgba(0,0,0,0.12)] border border-[#E6E8EC] backdrop-blur-md transition-all duration-300 flex items-center justify-center group cursor-pointer"
-      title="Back to Top"
+      className={`fixed bottom-6 right-6 z-[9999] px-4 py-2.5 rounded-full bg-[#23262F] hover:bg-[#FF592C] text-white shadow-[0_10px_30px_rgba(0,0,0,0.25)] border border-white/20 backdrop-blur-md transition-all duration-300 flex items-center gap-2 group cursor-pointer text-xs font-bold tracking-wide ${
+        visible
+          ? "opacity-100 translate-y-0 scale-100 pointer-events-auto"
+          : "opacity-0 translate-y-4 scale-95 pointer-events-none"
+      }`}
+      title="Scroll Back to Top"
     >
+      <span>Back to Top</span>
       <svg
-        className="w-4 h-4 transition-transform group-hover:-translate-y-0.5"
+        className="w-3.5 h-3.5 transition-transform group-hover:-translate-y-1"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
