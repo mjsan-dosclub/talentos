@@ -93,10 +93,10 @@ export default function CaseStudyModal({ study, onClose }: CaseStudyModalProps) 
             </div>
 
             <Link
-              href={`/record/${encodeURIComponent(study.student.dos_id)}`}
+              href={`/casestudies/${encodeURIComponent(study.slug)}`}
               className="px-4 py-2 rounded-full bg-white hover:bg-[#23262F] text-[#23262F] hover:text-white border border-[#E6E8EC] text-xs font-bold transition-colors inline-flex items-center gap-1.5 whitespace-nowrap shadow-xs"
             >
-              <span>View Talent Dossier</span>
+              <span>Read Full Case Study</span>
               <ExternalLinkIcon className="w-3.5 h-3.5" />
             </Link>
           </div>

@@ -23,8 +23,7 @@ import {
 } from "@/components/Icons";
 import WelcomePopupModal from "@/components/WelcomePopupModal";
 import BackToTopButton from "@/components/BackToTopButton";
-import CaseStudyModal from "@/components/CaseStudyModal";
-import { INITIAL_CASE_STUDIES, CaseStudy } from "@/lib/casestudies";
+import { INITIAL_CASE_STUDIES } from "@/lib/casestudies";
 import { DEFAULT_LANDING_CMS, LandingCmsData } from "@/lib/cms-defaults";
 
 export default function Home() {
@@ -36,7 +35,6 @@ export default function Home() {
   const [exploreDropdownOpen, setExploreDropdownOpen] = useState(false);
 
   // Student Case Studies & Articles (Single Line Horizontal Scroll)
-  const [selectedCaseStudy, setSelectedCaseStudy] = useState<CaseStudy | null>(null);
   const caseStudyScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollCaseStudies = (direction: "left" | "right") => {
@@ -488,34 +486,76 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          SECTION 2: UI8 CLIENTS / ENGINEERING DISCIPLINES BAR (.clients)
+          SECTION 2: THE RUNWAY // 27 SESSIONS TO CODEZAP 3.0
           ========================================================================= */}
-      <section className="bg-[#F4F5F6] py-12 border-y border-[#E6E8EC]">
+      <section id="runway" className="bg-[#F4F5F6] py-20 border-y border-[#E6E8EC] scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center text-xs font-bold uppercase tracking-widest text-[#777E90] mb-8">
-            Core Engineering Disciplines Mastered Across 27 Systems
+          <div className="max-w-3xl mb-12">
+            <span className="ui8-stage">THE 27-DAY SPRINT // THE RUNWAY</span>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#23262F]">
+              The Runway: 27 Days to CodeZap 3.0
+            </h2>
+            <p className="mt-3 text-base sm:text-lg text-[#777E90] leading-relaxed">
+              Ten tactical phases designed to forge autonomous engineering pods. A high-velocity crucible preparing builders for the national 36-hour hackathon.
+            </p>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             {[
-              { label: "Distributed Consensus", badge: "RAFT / PAXOS" },
-              { label: "Kernel Internals", badge: "MEMORY SAFETY" },
-              { label: "Compiler ASTs", badge: "JIT RUNTIMES" },
-              { label: "Streaming Engines", badge: "HIGH-THROUGHPUT" },
-              { label: "Cryptographic Auth", badge: "ZERO-TRUST" },
-              { label: "Vector Compute", badge: "LLM SERVING" },
-            ].map((disc, idx) => (
+              { phase: "Phase 01", days: "6 Days", title: "The Problem Vault", focus: "Statement Decoding & Council Defense", color: "#3772FF" },
+              { phase: "Phase 02", days: "10 Days", title: "Build Arena", focus: "High-Density Execution & Deep Iteration", color: "#FF592C" },
+              { phase: "Phase 03", days: "1 Day", title: "Stage Craft", focus: "Executive Presentation & Defense Mastery", color: "#9757D7" },
+              { phase: "Phase 04", days: "1 Day", title: "The Panel Round", focus: "Live Cross-Examination & Architecture Audits", color: "#EF466F" },
+              { phase: "Phase 05", days: "1 Day", title: "AI Lab", focus: "Cognitive Amplification & Generative Runtimes", color: "#45B26B" },
+              { phase: "Phase 06", days: "1 Day", title: "Vibe Coding Sprint", focus: "Flow-State Velocity Under Simulated Pressure", color: "#FF592C" },
+              { phase: "Phase 07", days: "1 Day", title: "Startup Launchpad", focus: "Venture Dynamics, Ecosystem & Capital", color: "#3772FF" },
+              { phase: "Phase 08", days: "3 Days", title: "Team Rhythm", focus: "Pod Velocity, Workflow & Delivery Cadence", color: "#9757D7" },
+              { phase: "Phase 09", days: "1 Day", title: "Career Gateway", focus: "Industry Credentialing & Zero-Filter Vetting", color: "#45B26B" },
+              { phase: "Phase 10", days: "2 Days", title: "The Arena Pre-Finals", focus: "Demo Day & Selection for 36-Hr Hackathon", color: "#EF466F" },
+            ].map((p, idx) => (
               <div
                 key={idx}
-                className="bg-white p-4 rounded-2xl border border-[#E6E8EC] shadow-2xs hover:border-[#FF592C] transition-colors text-center flex flex-col items-center justify-center gap-1"
+                className="bg-white p-5 rounded-2xl border border-[#E6E8EC] shadow-2xs hover:shadow-md hover:border-[#23262F] transition-all flex flex-col justify-between group"
               >
-                <span className="text-xs font-bold text-[#23262F]">
-                  {disc.label}
-                </span>
-                <span className="text-[10px] font-bold text-[#FF592C]">
-                  {disc.badge}
-                </span>
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#777E90]">
+                      {p.phase}
+                    </span>
+                    <span
+                      className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase"
+                      style={{ backgroundColor: `${p.color}15`, color: p.color }}
+                    >
+                      {p.days}
+                    </span>
+                  </div>
+                  <h3 className="text-base font-bold text-[#23262F] group-hover:text-[#FF592C] transition-colors leading-snug">
+                    {p.title}
+                  </h3>
+                  <p className="text-xs text-[#777E90] mt-2 leading-relaxed">
+                    {p.focus}
+                  </p>
+                </div>
+                <div className="mt-4 pt-3 border-t border-[#F4F5F6] flex items-center justify-between text-[11px] font-semibold text-[#777E90]">
+                  <span>Offline Immersion</span>
+                  <span className="text-[#23262F] font-bold">Cycle {idx + 1}</span>
+                </div>
               </div>
             ))}
+          </div>
+
+          {/* Runway Summary Metric Strip */}
+          <div className="mt-8 p-4 sm:p-6 rounded-2xl bg-white border border-[#E6E8EC] flex flex-wrap items-center justify-between gap-4 text-xs">
+            <div className="flex items-center gap-3">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#45B26B] animate-pulse" />
+              <span className="font-bold text-[#23262F]">27 Total Days of In-Person Immersion</span>
+              <span className="text-[#777E90]">&bull;</span>
+              <span className="text-[#777E90]">Zero Theoretical Filler</span>
+            </div>
+            <div className="flex items-center gap-2 font-mono text-[11px] text-[#777E90]">
+              <span>Qualifies for:</span>
+              <strong className="text-[#23262F] px-2 py-0.5 rounded bg-[#F4F5F6] border border-[#E6E8EC]">CodeZap 3.0 // 36-Hour Hackathon</strong>
+            </div>
           </div>
         </div>
       </section>
@@ -595,7 +635,7 @@ export default function Home() {
                 Step 4
               </div>
               <h3 className="text-xl font-bold text-[#23262F] mb-2">
-                Verified Talent Dossier
+                Verified Engineering Record
               </h3>
               <p className="text-sm text-[#777E90] leading-relaxed">
                 Graduate with an immutable record of PRs, test suites, and verified telemetry that speaks louder than any resume.
@@ -640,7 +680,7 @@ export default function Home() {
                 Build deeper, defend together.
               </h2>
               <p className="text-base sm:text-lg text-[#777E90] leading-relaxed">
-                When an engineer walks into an industry evaluation backed by a DOS Club dossier, there is no guesswork. Hiring leaders see authentic pull requests, distributed systems benchmarks, and peer review logs.
+                When an engineer walks into an industry evaluation backed by a verified DOS Club record, there is no guesswork. Hiring leaders see authentic pull requests, distributed systems benchmarks, and peer review logs.
               </p>
               <p className="text-base text-[#777E90] leading-relaxed">
                 Our members are not treated like freshers who need retraining. They are welcomed as proven builders who already understand how software actually works in production.
@@ -752,7 +792,7 @@ export default function Home() {
               {/* Callout Note */}
               <div className="p-4 rounded-2xl bg-white border border-[#E6E8EC] text-sm text-[#23262F]">
                 <strong className="text-[#45B26B]">Direct Industry Recognition</strong>:
-                DOS Club dossiers bypass standard junior applicant filters because every commit is cryptographically audited.
+                Verified DOS Club records bypass standard junior applicant filters because every commit is cryptographically audited.
               </div>
 
               {/* Action Button */}
@@ -973,10 +1013,10 @@ export default function Home() {
             className="flex gap-6 overflow-x-auto pb-6 pt-2 scrollbar-none snap-x snap-mandatory scroll-smooth"
           >
             {INITIAL_CASE_STUDIES.map((study) => (
-              <div
+              <Link
                 key={study.id}
+                href={`/casestudies/${study.slug}`}
                 className="w-[340px] sm:w-[390px] shrink-0 snap-start bg-white rounded-3xl border border-[#E6E8EC] p-5 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between group cursor-pointer"
-                onClick={() => setSelectedCaseStudy(study)}
               >
                 <div>
                   {/* Article Cover Image with Category & Read Time Pill */}
@@ -1039,11 +1079,11 @@ export default function Home() {
 
                   {/* Read story pill */}
                   <span className="text-xs font-bold text-[#FF592C] group-hover:translate-x-0.5 transition-transform flex items-center gap-1">
-                    <span>Read</span>
+                    <span>Read Article</span>
                     <ArrowRightIcon className="w-3.5 h-3.5" />
                   </span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
 
@@ -1155,7 +1195,7 @@ export default function Home() {
             <SparklesIcon className="w-7 h-7" />
           </div>
           <blockquote className="text-xl sm:text-2xl lg:text-3xl font-bold text-[#23262F] leading-snug">
-            &ldquo;When an engineer walks into an evaluation with a DOS Club dossier, the conversation fundamentally changes. We don&apos;t ask them to reverse linked lists on a whiteboard. We inspect their 27-system commit history and discuss why they chose Raft over Paxos. They are ready on day zero.&rdquo;
+            &ldquo;When an engineer walks into an evaluation with a verified DOS Club engineering record, the conversation fundamentally changes. We don&apos;t ask them to reverse linked lists on a whiteboard. We inspect their verified commit history and architecture defenses. They are ready on day zero.&rdquo;
           </blockquote>
           <div className="mt-8">
             <div className="font-bold text-base text-[#23262F]">
@@ -1265,12 +1305,12 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          SECTION 11: UI8 WORKOUTS (.workouts) — TALENTOS DOSSIER
+          SECTION 11: UI8 WORKOUTS (.workouts) — VERIFIED ENGINEERING RECORD
           ========================================================================= */}
       <section className="bg-[#F4F5F6] py-24 border-b border-[#E6E8EC]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Dossier Preview Card */}
+            {/* Left Record Preview Card */}
             <div className="lg:col-span-6 bg-white p-6 sm:p-8 rounded-3xl border border-[#E6E8EC] shadow-md">
               <div className="flex items-center justify-between pb-6 border-b border-[#E6E8EC]">
                 <div className="flex items-center gap-3">
@@ -1279,7 +1319,7 @@ export default function Home() {
                   </div>
                   <div>
                     <div className="text-sm font-bold text-[#23262F]">
-                      DOS-B3-009 // AUDIT DOSSIER
+                      DOS-B3-009 // VERIFIED RECORD
                     </div>
                     <div className="text-xs text-[#777E90]">
                       Systems Engineering Cohort Alpha
@@ -1291,11 +1331,11 @@ export default function Home() {
                 </span>
               </div>
 
-              {/* Dossier Matrix */}
+              {/* Record Matrix */}
               <div className="py-6 space-y-4">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-[#777E90] font-medium">Workshop Attendance</span>
-                  <span className="font-bold text-[#23262F]">27 of 27 (100% Physical)</span>
+                  <span className="text-[#777E90] font-medium">Immersion Attendance</span>
+                  <span className="font-bold text-[#23262F]">27 of 27 (100% In-Person)</span>
                 </div>
                 <div className="w-full h-2 rounded-full bg-[#F4F5F6] overflow-hidden">
                   <div className="w-full h-full bg-[#45B26B] rounded-full" />
@@ -1322,14 +1362,14 @@ export default function Home() {
               <form onSubmit={handleVerifySubmit} className="pt-4 border-t border-[#E6E8EC] flex gap-2">
                 <input
                   type="text"
-                  placeholder="Enter Dossier ID e.g. DOS-B3-009"
+                  placeholder="Enter Student ID e.g. DOS-B3-009"
                   value={verifyKey}
                   onChange={(e) => setVerifyKey(e.target.value)}
                   className="flex-1 bg-[#F4F5F6] border border-[#E6E8EC] rounded-full px-4 py-2.5 text-xs text-[#23262F] placeholder-[#777E90] focus:outline-none focus:border-[#23262F]"
                 />
                 <button
                   type="submit"
-                  className="px-5 py-2.5 rounded-full bg-[#23262F] hover:bg-[#FF592C] text-white text-xs font-bold transition-colors"
+                  className="px-5 py-2.5 rounded-full bg-[#23262F] hover:bg-[#FF592C] text-white text-xs font-bold transition-colors cursor-pointer"
                 >
                   Verify
                 </button>
@@ -1343,7 +1383,7 @@ export default function Home() {
                 All your verified evidence, in your pocket.
               </h2>
               <p className="text-base sm:text-lg text-[#777E90] leading-relaxed">
-                TalentOS compiles every single commit, peer review remark, and benchmark record into an immutable digital dossier.
+                TalentOS compiles every single commit, peer review remark, and benchmark record into an immutable verified engineering record.
               </p>
 
               <ul className="space-y-3 font-semibold text-sm text-[#23262F]">
@@ -1365,10 +1405,10 @@ export default function Home() {
 
               <div className="pt-2 flex flex-wrap gap-4">
                 <Link
-                  href="/record/DOS-B3-009"
+                  href="/login?redirect=/record/DOS-B3-001"
                   className="ui8-btn-stroke"
                 >
-                  <span>Explore Sample Dossier</span>
+                  <span>Access Engineering Records</span>
                   <ExternalLinkIcon className="w-4 h-4" />
                 </Link>
                 <a
@@ -1790,12 +1830,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      {/* Interactive Case Study Reader Modal (Zenler Style) */}
-      <CaseStudyModal
-        study={selectedCaseStudy}
-        onClose={() => setSelectedCaseStudy(null)}
-      />
 
       {/* Floating Smooth Back To Top Action Button */}
       <BackToTopButton />

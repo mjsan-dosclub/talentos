@@ -475,16 +475,22 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
   const [currentUser, setCurrentUser] = useState<TalentosUser | null>(null);
 
   useEffect(() => {
-    setCurrentUser(getClientSession());
-  }, []);
+    const session = getClientSession();
+    if (!session) {
+      const redirectUrl = typeof window !== "undefined" ? window.location.pathname : `/record/${identifier}`;
+      window.location.href = `/login?redirect=${encodeURIComponent(redirectUrl)}&error=ERR_AUTH_REQUIRED`;
+      return;
+    }
+    setCurrentUser(session);
+  }, [identifier]);
 
   const getRoleNavigation = () => {
     if (!currentUser) {
       return {
-        parentLabel: "Student Directory",
-        parentUrl: "/",
-        backLabel: "← Back to Home",
-        backUrl: "/",
+        parentLabel: "Candidate Records",
+        parentUrl: "/login",
+        backLabel: "← Back to Login",
+        backUrl: "/login",
       };
     }
     if (currentUser.role === "SUPER_ADMIN") {
@@ -512,7 +518,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
       };
     }
     return {
-      parentLabel: "My Learning Dossier",
+      parentLabel: "My Engineering Record",
       parentUrl: `/record/${encodeURIComponent(currentUser.dos_id || identifier)}`,
       backLabel: "← Back to Dashboard",
       backUrl: `/record/${encodeURIComponent(currentUser.dos_id || identifier)}`,
@@ -705,7 +711,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
     setIsSubmittingFeedback(false);
     if (res.feedback) {
-      setFeedbackStatus("Learning reflection successfully recorded on student dossier.");
+      setFeedbackStatus("Learning reflection successfully recorded on student engineering record.");
       setTimeout(() => {
         setFeedbackWorkshop(null);
         setFeedbackStatus(null);
@@ -723,7 +729,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
   const sidebarGroups: SidebarGroup[] = [
     {
-      title: "Student Dossier",
+      title: "Verified Student Record",
       items: [
         { id: "journey", label: "Curriculum Journey", icon: <AcademicCapIcon className="w-4 h-4" />, count: completedCount },
         { id: "calendar", label: "Workshop Calendar", icon: <CalendarIcon className="w-4 h-4" />, badge: "SCHEDULE" },
@@ -881,7 +887,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                   className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
                 >
                   <ShareIcon className="w-3.5 h-3.5 text-white shrink-0" />
-                  <span>{copyStatus ? "Dossier Link Copied!" : "Share Dossier"}</span>
+                  <span>{copyStatus ? "Record Link Copied!" : "Share Record"}</span>
                 </button>
                 <div className="flex gap-2">
                   <Link
@@ -1467,14 +1473,14 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
               onClick={() => window.print()}
               className="px-4 py-2 bg-slate-900 text-white hover:bg-slate-800 rounded-xl transition-colors text-xs font-semibold shadow-xs cursor-pointer"
             >
-              Print Audit Dossier
+              Print Verified Record
             </button>
           </section>
         </main>
       </div>
 
       {/* ===================================================================== */}
-      {/* DRAWER: WORKSHOP DELIVERABLE & AUDIT DOSSIER */}
+      {/* DRAWER: WORKSHOP DELIVERABLE & VERIFIED AUDIT RECORD */}
       {/* ===================================================================== */}
       {selectedWorkshop && (
         <div className="fixed inset-0 z-50 overflow-hidden">
@@ -1492,7 +1498,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                     <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full border border-slate-200 bg-white text-xs text-slate-700 font-semibold self-start">
                       <span>{selectedWorkshop.code}</span>
                       <span>•</span>
-                      <span>Audit Dossier</span>
+                      <span>Verified Record</span>
                     </div>
                     <h3 className="text-lg font-bold text-slate-900">
                       {selectedWorkshop.title}
@@ -1506,7 +1512,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                     type="button"
                     onClick={() => setSelectedWorkshop(null)}
                     className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-200/60 rounded-lg text-sm transition-colors shrink-0 cursor-pointer"
-                    aria-label="Close dossier"
+                    aria-label="Close record drawer"
                   >
                     <XIcon className="w-4 h-4" />
                   </button>

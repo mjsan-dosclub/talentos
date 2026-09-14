@@ -107,7 +107,7 @@ export default function SessionBar() {
               <div className="text-[11px] text-[#777E90] truncate">{user.email}</div>
               {user.dos_id && (
                 <div className="text-[10px] font-mono text-[#3772FF] mt-1 font-semibold">
-                  Dossier: {user.dos_id}
+                  Record ID: {user.dos_id}
                 </div>
               )}
             </div>

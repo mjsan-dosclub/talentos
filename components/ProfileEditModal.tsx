@@ -236,7 +236,7 @@ export default function ProfileEditModal({
 
               <div>
                 <span className="text-[#777E90] flex items-center gap-1">
-                  <LockClosedIcon className="w-3 h-3" /> Dossier / Role ID
+                  <LockClosedIcon className="w-3 h-3" /> Student / Role ID
                 </span>
                 <span className="font-semibold text-[#23262F] block mt-0.5">
                   {user.dos_id || user.role}
@@ -244,7 +244,7 @@ export default function ProfileEditModal({
               </div>
             </div>
             <p className="text-[10px] text-[#777E90] leading-relaxed">
-              To prevent dossier tampering, your institutional email, mobile number, attendance history, and certifications are cryptographically locked and require administrative sanction to change.
+              To prevent record tampering, your institutional email, mobile number, attendance history, and certifications are cryptographically locked and require administrative sanction to change.
             </p>
           </div>
 
