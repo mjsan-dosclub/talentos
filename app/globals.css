@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&display=swap');
@@ -14,10 +15,24 @@
   font-family: "Gellix", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+.font-poppins {
+  font-family: "Poppins", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
 :root {
-  --background: #FAF9F5;
-  --foreground: #10222b;
+  --background: #FCFCFD;
+  --foreground: #23262F;
+  --ui8-orange: #FF592C;
+  --ui8-orange-hover: #f83500;
+  --ui8-blue: #3772FF;
+  --ui8-purple: #9757D7;
+  --ui8-green: #45B26B;
+  --ui8-pink: #EF466F;
+  --ui8-dark: #23262F;
+  --ui8-grey: #777E90;
+  --ui8-light: #FCFCFD;
+  --ui8-bg: #F4F5F6;
+  --ui8-border: #E6E8EC;
   --brand-primary: #4caf50;
   --brand-primary-dark: #2f8a36;
   --brand-primary-soft: #8bd08e;
@@ -126,4 +141,82 @@ body {
     animation: none !important;
   }
 }
+
+/* UI8 Fitness Pro Animation & Helpers */
+@keyframes arrowsDown {
+  0% {
+    transform: translateY(-22px);
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(12px);
+    opacity: 0;
+  }
+}
+
+.animate-arrows-down {
+  animation: arrowsDown 1.5s ease-out infinite;
+}
+
+.ui8-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.75rem;
+  background-color: #FF592C;
+  color: #FCFCFD;
+  border-radius: 9999px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(255, 89, 44, 0.24);
+}
+
+.ui8-btn-primary:hover {
+  background-color: #f83500;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(255, 89, 44, 0.32);
+}
+
+.ui8-btn-stroke {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1.75rem;
+  background-color: transparent;
+  color: #23262F;
+  border: 2px solid #E6E8EC;
+  border-radius: 9999px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 700;
+  font-size: 1rem;
+  line-height: 1;
+  transition: all 0.2s ease;
+}
+
+.ui8-btn-stroke:hover {
+  border-color: #23262F;
+  background-color: #23262F;
+  color: #FCFCFD;
+}
+
+.ui8-stage {
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #777E90;
+  margin-bottom: 0.75rem;
+  display: inline-block;
+}
+
 
