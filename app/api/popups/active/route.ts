@@ -3,7 +3,7 @@ import { getActivePopup } from "@/lib/popups";
 
 export async function GET() {
   try {
-    const popup = getActivePopup();
+    const popup = await getActivePopup();
     return NextResponse.json({ success: true, popup });
   } catch (err: any) {
     return NextResponse.json(
@@ -12,3 +12,4 @@ export async function GET() {
     );
   }
 }
+

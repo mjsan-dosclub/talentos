@@ -3,7 +3,7 @@ import { getAllPopups, createPopup, updatePopup, deletePopup } from "@/lib/popup
 
 export async function GET() {
   try {
-    const popups = getAllPopups();
+    const popups = await getAllPopups();
     return NextResponse.json({ success: true, popups });
   } catch (err: any) {
     return NextResponse.json(
@@ -22,7 +22,7 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
-    const created = createPopup(body);
+    const created = await createPopup(body);
     return NextResponse.json({ success: true, popup: created }, { status: 201 });
   } catch (err: any) {
     return NextResponse.json(
@@ -41,7 +41,7 @@ export async function PUT(request: Request) {
         { status: 400 }
       );
     }
-    const updated = updatePopup(body.id, body);
+    const updated = await updatePopup(body.id, body);
     if (!updated) {
       return NextResponse.json({ error: "Popup not found" }, { status: 404 });
     }
@@ -64,7 +64,7 @@ export async function DELETE(request: Request) {
         { status: 400 }
       );
     }
-    const ok = deletePopup(id);
+    const ok = await deletePopup(id);
     return NextResponse.json({ success: ok });
   } catch (err: any) {
     return NextResponse.json(
@@ -73,3 +73,4 @@ export async function DELETE(request: Request) {
     );
   }
 }
+

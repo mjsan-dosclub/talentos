@@ -1,35 +1,29 @@
-import fs from "fs";
-import path from "path";
 import { WelcomePopup, PopupContentType } from "./popups-types";
+import { supabaseAdmin } from "./supabase-admin";
 
 export type { WelcomePopup, PopupContentType };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Constants
+// ─────────────────────────────────────────────────────────────────────────────
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const POPUPS_FILE = path.join(DATA_DIR, "popups.json");
-
-function ensureDataDir(): void {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-  } catch {
-    // Ignore error
-  }
-}
+const POPUP_CHANNEL = "POPUP";
+const SYSTEM_ACTOR_UUID = "11111111-1111-1111-1111-111111111111";
 
 export const SEED_POPUPS: WelcomePopup[] = [
   {
     id: "popup-codezap-2026",
     title: "CodeZap 2026: National AI Systems Hackathon",
     contentType: "FLYER",
-    mediaUrl: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80",
+    mediaUrl:
+      "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1200&q=80",
     badge: "FLASH ANNOUNCEMENT // CODEZAP 2026",
-    description: "Touchmark Descience Open Source Club announces CodeZap 2026. 48-hour challenge building real-time distributed inference engines. Registrations open for all verified student members.",
+    description:
+      "Touchmark Descience Open Source Club announces CodeZap 2026. 48-hour challenge building real-time distributed inference engines. Registrations open for all verified student members.",
     actionLabel: "Register for CodeZap 2026",
     actionUrl: "https://membership.descienceosclub.com/",
     startsAt: "2026-09-14T00:00:00.000Z",
-    endsAt: null, // Open-ended until superseded by next scheduled announcement
+    endsAt: null,
     isActive: true,
     isSuperseded: false,
     supersededBy: null,
@@ -40,9 +34,11 @@ export const SEED_POPUPS: WelcomePopup[] = [
     id: "popup-achiever-divya",
     title: "Batch 2 Achiever: Divya Nair joins NeuralScale as AI Engineer",
     contentType: "ACHIEVER",
-    mediaUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
+    mediaUrl:
+      "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=800&q=80",
     badge: "DOS CLUB // RECENT ACHIEVER",
-    description: "Divya completed 6 system defenses, validated 4 production AI pipelines at DOS Club, and secured a direct invite from NeuralScale with zero fresh graduate discount.",
+    description:
+      "Divya completed 6 system defenses, validated 4 production AI pipelines at DOS Club, and secured a direct invite from NeuralScale with zero fresh graduate discount.",
     actionLabel: "Read Systems Story",
     actionUrl: "/casestudies/ananya-paged-kv-cache-runtime",
     startsAt: "2026-09-14T10:00:00.000Z",
@@ -57,9 +53,10 @@ export const SEED_POPUPS: WelcomePopup[] = [
     id: "popup-keynote-video",
     title: "Watch: DOS Club System Architecture Keynote",
     contentType: "YOUTUBE",
-    mediaUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ", // YouTube embed link
+    mediaUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
     badge: "KEYNOTE STREAM // TOUCHMARK DESCIENCE",
-    description: "Deep dive into the 6 verification rings, telemetry validation, and how student engineers deploy autonomous AI agents on edge hardware.",
+    description:
+      "Deep dive into the 6 verification rings, telemetry validation, and how student engineers deploy autonomous AI agents on edge hardware.",
     actionLabel: "Watch on YouTube",
     actionUrl: "https://www.youtube.com",
     startsAt: "2026-09-14T14:00:00.000Z",
@@ -69,69 +66,124 @@ export const SEED_POPUPS: WelcomePopup[] = [
     supersededBy: null,
     createdAt: "2026-09-14T02:00:00.000Z",
     updatedAt: "2026-09-14T02:00:00.000Z",
-  }
+  },
 ];
 
-let inMemoryPopups: WelcomePopup[] | null = null;
+// ─────────────────────────────────────────────────────────────────────────────
+// Supabase helpers
+// ─────────────────────────────────────────────────────────────────────────────
 
-export function getAllPopups(): WelcomePopup[] {
-  if (inMemoryPopups) {
-    return reconcilePrecedence(inMemoryPopups);
-  }
-
-  ensureDataDir();
+async function readFromSupabase(): Promise<WelcomePopup[] | null> {
   try {
-    if (fs.existsSync(POPUPS_FILE)) {
-      const raw = fs.readFileSync(POPUPS_FILE, "utf-8");
-      const list: WelcomePopup[] = JSON.parse(raw);
-      if (Array.isArray(list) && list.length > 0) {
-        inMemoryPopups = reconcilePrecedence(list);
-        return inMemoryPopups;
+    const { data, error } = await supabaseAdmin
+      .from("notification_dispatches")
+      .select("content, created_at")
+      .eq("channel", POPUP_CHANNEL)
+      .order("created_at", { ascending: true });
+
+    if (error || !data || data.length === 0) return null;
+
+    const popups: WelcomePopup[] = [];
+    for (const row of data) {
+      try {
+        const p: WelcomePopup =
+          typeof row.content === "string" ? JSON.parse(row.content) : row.content;
+        if (p && p.id) popups.push(p);
+      } catch {
+        // skip malformed rows
       }
     }
+    return popups.length > 0 ? popups : null;
   } catch {
-    // Fallback to seeds
+    return null;
   }
-
-  inMemoryPopups = reconcilePrecedence(SEED_POPUPS);
-  savePopupsToDisk(inMemoryPopups);
-  return inMemoryPopups;
 }
+
+async function upsertToSupabase(popup: WelcomePopup): Promise<void> {
+  try {
+    const content = JSON.stringify(popup);
+
+    const { data: existing } = await supabaseAdmin
+      .from("notification_dispatches")
+      .select("id")
+      .eq("channel", POPUP_CHANNEL)
+      .eq("title", popup.id)
+      .maybeSingle();
+
+    if (existing?.id) {
+      await supabaseAdmin
+        .from("notification_dispatches")
+        .update({ content, target_filter: { popup: true } })
+        .eq("id", existing.id);
+    } else {
+      await supabaseAdmin.from("notification_dispatches").insert({
+        id: crypto.randomUUID(),
+        channel: POPUP_CHANNEL,
+        title: popup.id,
+        content,
+        target_filter: { popup: true },
+        dispatched_by: SYSTEM_ACTOR_UUID,
+        sent_count: 0,
+      });
+    }
+  } catch {
+    // Non-fatal
+  }
+}
+
+async function deleteFromSupabase(popupId: string): Promise<void> {
+  try {
+    await supabaseAdmin
+      .from("notification_dispatches")
+      .delete()
+      .eq("channel", POPUP_CHANNEL)
+      .eq("title", popupId);
+  } catch {
+    // Non-fatal
+  }
+}
+
+async function persistAllToSupabase(popups: WelcomePopup[]): Promise<void> {
+  for (const p of popups) {
+    await upsertToSupabase(p);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scheduling Precedence
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Scheduling Precedence Rule:
- * "when schedules announcement for morning 8 am. and scheduled another for 10am -
- * the first scheduled must turn inactive 'if i havent given end time'"
+ * "when schedules announcement for morning 8 am and another for 10am —
+ * the first must turn inactive if it has no end time."
  *
- * This function processes popups:
- * For any popup that has no `endsAt`, if there is another popup scheduled to start AFTER it,
- * the earlier open-ended popup is superseded once the newer scheduled popup's start time arrives,
- * and if the newer one is active, the earlier one is marked isSuperseded = true / isActive = false.
+ * NOTE: Manual isActive toggles are source-of-truth — this only adjusts
+ * isSuperseded flags based on scheduling order.
  */
-export function reconcilePrecedence(popups: WelcomePopup[], asOfDate: Date = new Date()): WelcomePopup[] {
+export function reconcilePrecedence(
+  popups: WelcomePopup[],
+  asOfDate: Date = new Date()
+): WelcomePopup[] {
   const nowMs = asOfDate.getTime();
 
-  // Sort by startsAt ascending
-  const sorted = [...popups].map(p => ({ ...p })).sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
+  const sorted = [...popups]
+    .map((p) => ({ ...p }))
+    .sort((a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime());
 
   for (let i = 0; i < sorted.length; i++) {
     const current = sorted[i];
     const currentStartMs = new Date(current.startsAt).getTime();
 
-    // Check if there is a later popup that started after current
     for (let j = i + 1; j < sorted.length; j++) {
       const next = sorted[j];
       const nextStartMs = new Date(next.startsAt).getTime();
 
-      // If next is enabled / active and its start time is after current
       if (next.isActive && nextStartMs > currentStartMs) {
-        // If current had no end time given, or end time is after next starts
         if (!current.endsAt || new Date(current.endsAt).getTime() > nextStartMs) {
-          // If the next popup's start time has arrived relative to now
           if (nowMs >= nextStartMs) {
             current.isSuperseded = true;
             current.supersededBy = next.id;
-            // The first scheduled turns inactive if no end time was given
             if (!current.endsAt) {
               current.isActive = false;
             }
@@ -144,44 +196,51 @@ export function reconcilePrecedence(popups: WelcomePopup[], asOfDate: Date = new
   return sorted;
 }
 
-export function getActivePopup(asOfDate: Date = new Date()): WelcomePopup | null {
-  const popups = getAllPopups();
+// ─────────────────────────────────────────────────────────────────────────────
+// Public API — all async (reads from Supabase)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function getAllPopups(): Promise<WelcomePopup[]> {
+  const fromDb = await readFromSupabase();
+  if (fromDb && fromDb.length > 0) {
+    return reconcilePrecedence(fromDb);
+  }
+
+  // First-run: seed Supabase from defaults
+  const seeded = reconcilePrecedence(SEED_POPUPS);
+  await persistAllToSupabase(seeded);
+  return seeded;
+}
+
+export async function getActivePopup(asOfDate: Date = new Date()): Promise<WelcomePopup | null> {
+  const popups = await getAllPopups();
   const reconciled = reconcilePrecedence(popups, asOfDate);
   const nowMs = asOfDate.getTime();
 
-  // Find all currently valid active popups
-  const activeCandidates = reconciled.filter(p => {
+  const activeCandidates = reconciled.filter((p) => {
     if (!p.isActive) return false;
     if (p.isSuperseded) return false;
     const startMs = new Date(p.startsAt).getTime();
-    if (startMs > nowMs) return false; // not started yet
+    if (startMs > nowMs) return false;
     if (p.endsAt) {
       const endMs = new Date(p.endsAt).getTime();
-      if (endMs <= nowMs) return false; // expired
+      if (endMs <= nowMs) return false;
     }
     return true;
   });
 
-  if (activeCandidates.length === 0) {
-    return null;
-  }
+  if (activeCandidates.length === 0) return null;
 
-  // Return the one with the latest start time (most recently active)
-  activeCandidates.sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+  activeCandidates.sort(
+    (a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime()
+  );
   return activeCandidates[0];
 }
 
-function savePopupsToDisk(popups: WelcomePopup[]): void {
-  try {
-    ensureDataDir();
-    fs.writeFileSync(POPUPS_FILE, JSON.stringify(popups, null, 2), "utf-8");
-  } catch {
-    // Keep in-memory copy
-  }
-}
-
-export function createPopup(data: Omit<WelcomePopup, "id" | "createdAt" | "updatedAt" | "isSuperseded" | "supersededBy">): WelcomePopup {
-  const current = getAllPopups();
+export async function createPopup(
+  data: Omit<WelcomePopup, "id" | "createdAt" | "updatedAt" | "isSuperseded" | "supersededBy">
+): Promise<WelcomePopup> {
+  const current = await getAllPopups();
   const id = `popup-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`;
   const nowIso = new Date().toISOString();
 
@@ -195,49 +254,64 @@ export function createPopup(data: Omit<WelcomePopup, "id" | "createdAt" | "updat
     updatedAt: nowIso,
   };
 
-  const list = [...current, newPopup];
-  const reconciled = reconcilePrecedence(list);
-  inMemoryPopups = reconciled;
-  savePopupsToDisk(reconciled);
+  const list = reconcilePrecedence([...current, newPopup]);
+  await persistAllToSupabase(list);
   return newPopup;
 }
 
-export function updatePopup(id: string, partial: Partial<WelcomePopup>): WelcomePopup | null {
-  const current = getAllPopups();
-  const idx = current.findIndex(p => p.id === id);
+/**
+ * Update a popup.
+ * EXCLUSIVE ACTIVATION: if isActive === true, all other popups are deactivated first.
+ */
+export async function updatePopup(
+  id: string,
+  partial: Partial<WelcomePopup>
+): Promise<WelcomePopup | null> {
+  const current = await getAllPopups();
+  const idx = current.findIndex((p) => p.id === id);
   if (idx === -1) return null;
 
+  let list = [...current];
+
+  // Exclusive activation: deactivate all others when turning this one on
+  if (partial.isActive === true) {
+    list = list.map((p) =>
+      p.id === id
+        ? p
+        : { ...p, isActive: false, isSuperseded: false, supersededBy: null }
+    );
+  }
+
   const updated: WelcomePopup = {
-    ...current[idx],
+    ...list[idx],
     ...partial,
-    id, // protect id
-    isSuperseded: false, // will be recalculated
+    id,
+    isSuperseded: false,
     supersededBy: null,
     updatedAt: new Date().toISOString(),
   };
+  list[list.findIndex((p) => p.id === id)] = updated;
 
-  current[idx] = updated;
-  const reconciled = reconcilePrecedence(current);
-  inMemoryPopups = reconciled;
-  savePopupsToDisk(reconciled);
-  return updated;
+  const reconciled = reconcilePrecedence(list);
+  await persistAllToSupabase(reconciled);
+
+  return reconciled.find((p) => p.id === id) ?? updated;
 }
 
-export function deletePopup(id: string): boolean {
-  const current = getAllPopups();
-  const filtered = current.filter(p => p.id !== id);
+export async function deletePopup(id: string): Promise<boolean> {
+  const current = await getAllPopups();
+  const filtered = current.filter((p) => p.id !== id);
   if (filtered.length === current.length) return false;
 
+  await deleteFromSupabase(id);
   const reconciled = reconcilePrecedence(filtered);
-  inMemoryPopups = reconciled;
-  savePopupsToDisk(reconciled);
+  await persistAllToSupabase(reconciled);
   return true;
 }
 
-export function togglePopupActive(id: string): WelcomePopup | null {
-  const current = getAllPopups();
-  const popup = current.find(p => p.id === id);
+export async function togglePopupActive(id: string): Promise<WelcomePopup | null> {
+  const current = await getAllPopups();
+  const popup = current.find((p) => p.id === id);
   if (!popup) return null;
-
   return updatePopup(id, { isActive: !popup.isActive });
 }
