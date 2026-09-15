@@ -120,14 +120,14 @@ export default function Home() {
     }
   };
 
-  // Request Access Form State
+  // Request Access / Cohort Invitation Form State
   const [requestForm, setRequestForm] = useState({
-    fullName: "",
+    institutionName: "",
+    contactPerson: "",
     email: "",
     phone: "",
-    organization: "",
-    role: "Engineering Student (Year 3-4)",
-    referralSource: "LinkedIn / Social Media",
+    institutionType: "Engineering College / University",
+    cohortScope: "",
   });
   const [requestStatus, setRequestStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [requestRef, setRequestRef] = useState<string | null>(null);
@@ -207,26 +207,27 @@ export default function Home() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: requestForm.fullName,
+          name: requestForm.contactPerson,
+          fullName: requestForm.contactPerson,
           email: requestForm.email,
-          phone: requestForm.phone.trim() || "N/A",
-          current_role: `${requestForm.role} • ${requestForm.organization}`,
-          referral_source: requestForm.referralSource,
-          message: `Cohort Access Request from ${requestForm.organization}`,
+          phone: requestForm.phone.trim() || "+91 00000 00000",
+          current_role: `${requestForm.institutionType} • ${requestForm.institutionName}`,
+          referral_source: "Institutional Cohort Intake",
+          message: `[Institution: ${requestForm.institutionName}] [Contact: ${requestForm.contactPerson}] [Type: ${requestForm.institutionType}] ${requestForm.cohortScope ? `[Requirements: ${requestForm.cohortScope}]` : ""}`,
         }),
       });
 
       const data = await res.json();
       if (res.ok && data.success) {
         setRequestStatus("success");
-        setRequestRef(data.enquiryId || "REQ-CLEARANCE-LOGGED");
+        setRequestRef(data.enquiryId || "REQ-INVITATION-LOGGED");
       } else {
         setRequestStatus("error");
-        setRequestError(data.error || "Unable to submit request. Please apply via the membership portal.");
+        setRequestError(data.error || "Unable to submit invitation request. Please try again.");
       }
     } catch {
       setRequestStatus("error");
-      setRequestError("Network communication error. Please try again or apply directly.");
+      setRequestError("Network communication error. Please try again.");
     }
   };
 
@@ -1014,146 +1015,170 @@ export default function Home() {
       </section>
 
       {/* =========================================================================
-          MODULE 11: REQUEST ACCESS INTAKE FORM
+          MODULE 11: REQUEST COHORT INVITATION INTAKE FORM
           ========================================================================= */}
-      <section id="request-access" className="py-24 bg-white scroll-mt-20">
-        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Reveal className="bg-white p-8 sm:p-12 rounded-3xl border border-neutral-200 shadow-sm">
-            <div className="mb-8">
-              <span className="font-mono text-xs font-bold text-[#E25C38] uppercase tracking-widest">
-                INSTITUTIONAL &amp; ENTERPRISE CLEARANCE
+      <section id="request-access" className="py-24 bg-[#FAFBFB] border-t border-slate-200/70 scroll-mt-20">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Reveal className="bg-white p-8 sm:p-12 lg:p-14 rounded-3xl border border-slate-200/90 shadow-sm">
+            <div>
+              <span className="font-mono text-xs font-bold text-[#E25C38] uppercase tracking-widest block">
+                PARTNER INTAKE
               </span>
-              <h2 className="text-3xl font-extrabold text-[#14171A] mt-2">
-                Request Access
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-[#14171A] tracking-tight mt-2.5">
+                Request Cohort Invitation
               </h2>
-              <p className="text-sm text-neutral-600 mt-2 leading-relaxed">
-                For engineering colleges, placement cells, and hiring partners seeking dedicated institutional programs.
+              <p className="text-sm sm:text-base text-slate-500 mt-2.5 leading-relaxed max-w-2xl font-normal">
+                For engineering colleges, university departments, and technical institutions looking to allocate closed cohort batches for their students.
               </p>
             </div>
 
             {requestStatus === "success" ? (
-              <div className="p-6 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 space-y-2">
-                <div className="flex items-center gap-2 font-bold">
+              <div className="mt-8 p-8 rounded-2xl bg-emerald-50/80 border border-emerald-200 text-emerald-950 space-y-3 animate-in fade-in zoom-in-95 duration-150">
+                <div className="flex items-center gap-2.5 font-bold text-base text-emerald-900">
                   <CheckIcon className="w-5 h-5 text-emerald-600" />
-                  <span>Access Request Registered</span>
+                  <span>Invitation Request Dispatched Successfully</span>
                 </div>
-                <p className="text-xs leading-relaxed">
-                  Thank you. Your request ID is <strong className="font-mono">{requestRef}</strong>. Our partnerships committee will contact you within 24 hours.
+                <p className="text-xs sm:text-sm text-emerald-800 leading-relaxed">
+                  Thank you. Your request reference is <strong className="font-mono text-emerald-950 bg-emerald-100/70 px-2 py-0.5 rounded font-bold">{requestRef}</strong>. Our partnerships committee has received your institution&apos;s profile and will reach out via phone &amp; official email within 24 hours.
                 </p>
-                <button
-                  type="button"
-                  onClick={() => setRequestStatus("idle")}
-                  className="mt-3 text-xs font-bold text-emerald-700 underline"
-                >
-                  Submit another request
-                </button>
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRequestStatus("idle");
+                      setRequestForm({
+                        institutionName: "",
+                        contactPerson: "",
+                        email: "",
+                        phone: "",
+                        institutionType: "Engineering College / University",
+                        cohortScope: "",
+                      });
+                    }}
+                    className="text-xs font-bold text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
+                  >
+                    &larr; Submit another institutional inquiry
+                  </button>
+                </div>
               </div>
             ) : (
-              <form onSubmit={handleRequestSubmit} className="space-y-4">
-                <div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Full Name"
-                    value={requestForm.fullName}
-                    onChange={(e) => setRequestForm({ ...requestForm, fullName: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
-                  />
+              <form onSubmit={handleRequestSubmit} className="mt-8 sm:mt-10 space-y-5 sm:space-y-6">
+                {/* Row 1: Institution & Contact Person */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
+                      INSTITUTION / COLLEGE NAME *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. CEG Chennai, Anna University"
+                      value={requestForm.institutionName}
+                      onChange={(e) => setRequestForm({ ...requestForm, institutionName: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
+                      CONTACT PERSON &amp; ROLE *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Dr. Rajesh K., Placement Head"
+                      value={requestForm.contactPerson}
+                      onChange={(e) => setRequestForm({ ...requestForm, contactPerson: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <input
-                    type="email"
-                    required
-                    placeholder="Email Address"
-                    value={requestForm.email}
-                    onChange={(e) => setRequestForm({ ...requestForm, email: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
-                  />
+                {/* Row 2: Email & Phone */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
+                      INSTITUTIONAL EMAIL *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g. placements@univ.edu"
+                      value={requestForm.email}
+                      onChange={(e) => setRequestForm({ ...requestForm, email: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
+                      PHONE NUMBER *
+                    </label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="+91 98765 43210"
+                      value={requestForm.phone}
+                      onChange={(e) => setRequestForm({ ...requestForm, phone: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs"
+                    />
+                  </div>
                 </div>
 
+                {/* Row 3: Institution Type */}
                 <div>
-                  <input
-                    type="tel"
-                    required
-                    placeholder="Mobile / WhatsApp Number (e.g. +91 98401 23456)"
-                    value={requestForm.phone}
-                    onChange={(e) => setRequestForm({ ...requestForm, phone: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
-                  />
-                </div>
-
-                <div>
-                  <input
-                    type="text"
-                    required
-                    placeholder="College / Organization Name"
-                    value={requestForm.organization}
-                    onChange={(e) => setRequestForm({ ...requestForm, organization: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
-                  />
-                </div>
-
-                <div>
+                  <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
+                    INSTITUTION TYPE
+                  </label>
                   <select
-                    value={requestForm.role}
-                    onChange={(e) => setRequestForm({ ...requestForm, role: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
+                    value={requestForm.institutionType}
+                    onChange={(e) => setRequestForm({ ...requestForm, institutionType: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs cursor-pointer"
                   >
-                    <option value="Engineering Student (Year 1-2)">Engineering Student (Year 1-2)</option>
-                    <option value="Engineering Student (Year 3-4)">Engineering Student (Year 3-4)</option>
-                    <option value="Recent Engineering Graduate">Recent Engineering Graduate</option>
-                    <option value="Early Professional (0-2 YOE)">Early Professional / Junior Dev (0-2 YOE)</option>
-                    <option value="Senior Engineer (2+ YOE)">Senior Engineer / Lead (2+ YOE)</option>
-                    <option value="Self-Taught Builder">Self-Taught Builder / Open Source</option>
-                    <option value="Other">Other / Non-Traditional</option>
+                    <option value="Engineering College / University">Engineering College / University</option>
+                    <option value="Autonomous Engineering Institute">Autonomous Engineering Institute</option>
+                    <option value="Deemed University / Research Center">Deemed University / Research Center</option>
+                    <option value="Polytechnic & Applied Technology Institute">Polytechnic &amp; Applied Technology Institute</option>
+                    <option value="Campus Innovation Hub / Incubation Cell">Campus Innovation Hub / Incubation Cell</option>
+                    <option value="Enterprise Hiring & Training Partner">Enterprise Hiring &amp; Training Partner</option>
+                    <option value="Other Academic Institution">Other Academic Institution</option>
                   </select>
                 </div>
 
+                {/* Row 4: Cohort Scope / Requirements */}
                 <div>
-                  <select
-                    value={requestForm.referralSource}
-                    onChange={(e) => setRequestForm({ ...requestForm, referralSource: e.target.value })}
-                    className="w-full px-4 py-3 rounded-2xl bg-[#F4F5F6] border border-[#E6E8EC] text-sm text-[#23262F] focus:outline-none focus:border-[#23262F]"
-                  >
-                    <option value="LinkedIn / Social Media">LinkedIn / Social Media</option>
-                    <option value="Campus Workshop / College Event">Campus Workshop / College Event</option>
-                    <option value="DOS Club Member / Alumni Referral">DOS Club Member / Alumni Referral</option>
-                    <option value="WhatsApp Group / Tech Community">WhatsApp Group / Tech Community</option>
-                    <option value="GitHub / Open Source Repository">GitHub / Open Source Repository</option>
-                    <option value="Friend / Peer Recommendation">Friend / Peer Recommendation</option>
-                    <option value="Web Search / Direct Visit">Web Search / Direct Visit</option>
-                    <option value="Other">Other</option>
-                  </select>
+                  <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
+                    COHORT SCOPE OR SPECIFIC REQUIREMENTS
+                  </label>
+                  <textarea
+                    rows={4}
+                    placeholder="Provide department details, target batch size, or preferred timelines..."
+                    value={requestForm.cohortScope}
+                    onChange={(e) => setRequestForm({ ...requestForm, cohortScope: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs resize-none"
+                  />
                 </div>
 
                 {requestError && (
-                  <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs">
+                  <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
                     {requestError}
                   </div>
                 )}
 
-                <div className="pt-3">
+                {/* Footer Bar: Notice & Submit Button */}
+                <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 mt-2">
+                  <span className="font-mono text-xs text-slate-400 tracking-tight text-center sm:text-left">
+                    Official Institutional Inquiries Only
+                  </span>
+
                   <button
                     type="submit"
                     disabled={requestStatus === "submitting"}
-                    className="w-full bg-[#E25C38] text-white py-3.5 px-8 rounded-full font-semibold hover:bg-[#CC4F2E] transition-all shadow-sm active:scale-98 disabled:opacity-50 cursor-pointer"
+                    className="w-full sm:w-auto bg-[#14171A] hover:bg-black text-white text-xs font-bold tracking-wider uppercase px-8 py-3.5 rounded-full transition-all shadow-md hover:shadow-lg active:scale-98 disabled:opacity-50 cursor-pointer"
                   >
-                    {requestStatus === "submitting" ? "Processing..." : "Submit Access Request ->"}
+                    {requestStatus === "submitting" ? "TRANSMITTING..." : "SUBMIT INVITATION REQUEST"}
                   </button>
                 </div>
-
-                <p className="text-xs text-neutral-500 pt-3 text-center">
-                  Individual student builder?{" "}
-                  <a
-                    href="https://membership.descienceosclub.com/"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[#E25C38] hover:underline font-semibold"
-                  >
-                    Apply for Student Pass &rarr;
-                  </a>
-                </p>
               </form>
             )}
           </Reveal>
