@@ -261,7 +261,9 @@ export default function WorkshopsTab({
             Workshops &amp; Curriculum
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            27 core engineering disciplines, defense thresholds, and live session delivery across campus hubs.
+            {workshops.length > 0
+              ? `${workshops.length} core engineering disciplines, defense thresholds, and live session delivery across campus hubs.`
+              : "Core engineering disciplines, defense thresholds, and live session delivery across campus hubs."}
           </p>
         </div>
 
@@ -276,7 +278,7 @@ export default function WorkshopsTab({
                   : "text-slate-600 hover:text-slate-900"
               }`}
             >
-              Master Catalog (27)
+              Master Catalog ({workshops.length})
             </button>
             <button
               onClick={() => setSubView("SCHEDULE")}
