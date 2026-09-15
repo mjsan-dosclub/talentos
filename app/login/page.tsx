@@ -182,7 +182,7 @@ function LoginContent() {
           </div>
 
           {/* Role Selector */}
-          <div className="grid grid-cols-4 bg-slate-100 p-1 rounded-lg gap-1 text-xs">
+          <div className="grid grid-cols-4 bg-slate-100 p-1 rounded-lg gap-1 text-xs relative z-10 select-none">
             {(
               [
                 { id: "student", label: "Student" },
@@ -200,7 +200,7 @@ function LoginContent() {
                   setEmail("");
                   setPassword("");
                 }}
-                className={`py-2 px-1 text-center font-medium rounded-md transition-all cursor-pointer ${
+                className={`py-2 px-1 text-center font-medium rounded-md transition-all cursor-pointer relative z-10 ${
                   role === item.id
                     ? "bg-white text-slate-900 font-semibold shadow-xs"
                     : "text-slate-600 hover:text-slate-900"

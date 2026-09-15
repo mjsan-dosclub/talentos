@@ -21,10 +21,15 @@ export default function FcmNotificationBanner() {
         setToken(savedToken);
       }
 
-      // Check if banner was dismissed in this session
-      const isDismissed = sessionStorage.getItem("talentos_fcm_dismissed");
-      if (isDismissed) {
-        setDismissed(true);
+      // Check 24-hour persistent dismissal timestamp
+      const dismissedUntil = localStorage.getItem("talentos_fcm_dismissed_until");
+      if (dismissedUntil) {
+        const untilMs = parseInt(dismissedUntil, 10);
+        if (Date.now() < untilMs) {
+          setDismissed(true);
+        } else {
+          localStorage.removeItem("talentos_fcm_dismissed_until");
+        }
       }
 
       // Listen for foreground push messages
@@ -50,6 +55,11 @@ export default function FcmNotificationBanner() {
 
   const handleEnableNotifications = async () => {
     setIsLoading(true);
+    // Dismiss banner immediately so user is not disturbed
+    setDismissed(true);
+    const oneDayMs = 24 * 60 * 60 * 1000;
+    localStorage.setItem("talentos_fcm_dismissed_until", (Date.now() + oneDayMs).toString());
+
     try {
       const fcmToken = await requestFcmToken();
       if (fcmToken) {
@@ -73,10 +83,6 @@ export default function FcmNotificationBanner() {
           title: "Push Alerts Activated",
           body: "You will now receive zero-grace attendance and session updates.",
         });
-        setDismissed(true);
-        if (typeof window !== "undefined") {
-          sessionStorage.setItem("talentos_fcm_dismissed", "true");
-        }
         setTimeout(() => setActiveToast(null), 5000);
       } else {
         if (typeof window !== "undefined" && "Notification" in window && Notification.permission === "denied") {
@@ -93,7 +99,8 @@ export default function FcmNotificationBanner() {
   const handleDismissBanner = () => {
     setDismissed(true);
     if (typeof window !== "undefined") {
-      sessionStorage.setItem("talentos_fcm_dismissed", "true");
+      const oneDayMs = 24 * 60 * 60 * 1000;
+      localStorage.setItem("talentos_fcm_dismissed_until", (Date.now() + oneDayMs).toString());
     }
   };
 
