@@ -8,6 +8,8 @@ export async function POST(request: Request) {
     maxAge: 0,
     expires: new Date(0),
   });
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+  response.headers.set("Pragma", "no-cache");
   return response;
 }
 
@@ -19,5 +21,7 @@ export async function GET(request: Request) {
     maxAge: 0,
     expires: new Date(0),
   });
+  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0");
+  response.headers.set("Pragma", "no-cache");
   return response;
 }

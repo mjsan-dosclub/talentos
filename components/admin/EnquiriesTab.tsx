@@ -262,13 +262,13 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs">
           <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block">
-            Total Inquiries
+            New / Unprocessed Enquiries
           </span>
-          <div className="text-2xl font-bold text-slate-900 mt-1">
-            {enquiries.length}
+          <div className="text-2xl font-bold text-[#E25C38] mt-1">
+            {enquiries.filter((e) => e.status === "NEW" || !e.status).length}
           </div>
-          <span className="text-[10px] text-emerald-600 font-medium block mt-1">
-            Active admissions campaign
+          <span className="text-[10px] text-slate-500 font-medium block mt-1">
+            Total overall: {enquiries.length} enquiries
           </span>
         </div>
 

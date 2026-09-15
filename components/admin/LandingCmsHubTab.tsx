@@ -29,12 +29,31 @@ export default function LandingCmsHubTab({
   const [subTab, setSubTab] = useState<"casestudies" | "enquiries" | "passes">(
     initialSubTab
   );
+  const [newEnquiriesCount, setNewEnquiriesCount] = useState<number>(0);
 
   useEffect(() => {
     if (initialSubTab) {
       setSubTab(initialSubTab);
     }
   }, [initialSubTab]);
+
+  useEffect(() => {
+    async function fetchNewEnquiries() {
+      try {
+        const res = await fetch("/api/enquiry");
+        const data = await res.json();
+        if (data.enquiries && Array.isArray(data.enquiries)) {
+          const newCount = data.enquiries.filter(
+            (e: { status?: string }) => e.status === "NEW" || !e.status
+          ).length;
+          setNewEnquiriesCount(newCount);
+        }
+      } catch (err) {
+        console.error("Error fetching enquiries count:", err);
+      }
+    }
+    fetchNewEnquiries();
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -63,6 +82,17 @@ export default function LandingCmsHubTab({
           >
             <UsersIcon className="w-3.5 h-3.5" />
             <span>Partner Inquiries</span>
+            {newEnquiriesCount > 0 && (
+              <span
+                className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                  subTab === "enquiries"
+                    ? "bg-white text-[#E25C38]"
+                    : "bg-[#E25C38] text-white"
+                }`}
+              >
+                {newEnquiriesCount} NEW
+              </span>
+            )}
           </button>
 
           <button

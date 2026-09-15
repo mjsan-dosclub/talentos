@@ -35,7 +35,7 @@ export default function SessionBar() {
     } catch (e) {
       // Fallback local clear
     }
-    router.push("/login");
+    window.location.replace("/login");
   };
 
   if (!user) {

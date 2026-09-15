@@ -56,17 +56,13 @@ export default function SidebarNav({ groups, activeId, onSelect, baseHref }: Sid
                     <span>{item.label}</span>
                   </div>
 
-                  {item.badge && (
-                    <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded">
-                      {item.badge}
-                    </span>
-                  )}
-
+                  {/* Only count tag if item has count */}
                   {item.count !== undefined && (
                     <span className="text-[11px] font-semibold text-slate-400 font-mono">
                       {item.count}
                     </span>
                   )}
+
                 </div>
               );
 
