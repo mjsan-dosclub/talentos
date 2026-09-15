@@ -274,8 +274,8 @@ function AdminDashboardContent() {
           }}
         />
 
-        {/* Right Main Content Area */}
-        <main className="flex-1 p-6 sm:p-8 flex flex-col gap-6 overflow-x-hidden">
+        {/* Right Main Content Area — full width on mobile (sidebar is a drawer) */}
+        <main className="flex-1 min-w-0 p-4 sm:p-6 lg:p-8 flex flex-col gap-6 overflow-x-hidden">
           {toast && (
             <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-medium rounded-lg shadow-sm flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-150">
               <span>{toast}</span>
@@ -288,6 +288,7 @@ function AdminDashboardContent() {
               </button>
             </div>
           )}
+
 
           {/* MODULE 1: STUDENTS */}
           {activeModule === "students" && (

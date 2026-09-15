@@ -400,13 +400,13 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
       </div>
 
       {/* Enquiries Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs">
         {loading ? (
           <div className="p-8 text-center text-xs text-slate-400">Loading admissions enquiries...</div>
         ) : filteredEnquiries.length === 0 ? (
           <div className="p-12 text-center text-xs text-slate-400">No enquiries match your search filter.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-2xl">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50/75 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[10px] font-bold">

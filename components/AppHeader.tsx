@@ -40,27 +40,31 @@ export default function AppHeader() {
 
   return (
     <header className="bg-[#0f172a] text-white border-b border-slate-800 sticky top-0 z-50 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-4">
-        {/* Left: Brand Identity & Active Section Context */}
-        <div className="flex items-center gap-4">
-          <Link href="/" className="flex items-center gap-3 group">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-2 sm:gap-4">
+        {/* Left: Brand Identity */}
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+          <a href="/" className="flex items-center gap-2 sm:gap-3 group shrink-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={config.branding.logoUrl || "/dos-club-logo.png"}
               alt="DeScience Open Source Club"
-              className="h-9 w-9 rounded-full object-cover ring-2 ring-emerald-500/40 shadow-sm"
+              className="h-8 w-8 sm:h-9 sm:w-9 rounded-full object-cover ring-2 ring-emerald-500/40 shadow-sm"
               onError={(e) => {
                 (e.target as HTMLImageElement).src = "/dos-club-logo.png";
               }}
             />
-            <div className="flex flex-col">
-              <span className="font-gellix font-semibold text-sm tracking-tight text-white group-hover:text-emerald-400 transition-colors flex items-center gap-2">
-                {config.branding.siteTitle || "TalentOS by DeScience Open Source Club"}
-                <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+            <div className="flex flex-col min-w-0">
+              <span className="font-gellix font-semibold text-xs sm:text-sm tracking-tight text-white group-hover:text-emerald-400 transition-colors flex items-center gap-1.5 sm:gap-2">
+                {/* Short name on mobile, full name on sm+ */}
+                <span className="sm:hidden truncate max-w-[120px]">TalentOS</span>
+                <span className="hidden sm:inline truncate">
+                  {config.branding.siteTitle || "TalentOS by DeScience Open Source Club"}
+                </span>
+                <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1 sm:px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                   {user ? user.role.replace("_", " ") : "B3 LEDGER"}
                 </span>
               </span>
-              <span className="text-[11px] text-slate-400 font-normal tracking-wide hidden sm:inline">
+              <span className="text-[10px] sm:text-[11px] text-slate-400 font-normal tracking-wide hidden sm:inline truncate">
                 {pathname.startsWith("/admin")
                   ? "Administration & Governance Console"
                   : pathname.startsWith("/college")
@@ -76,28 +80,28 @@ export default function AppHeader() {
                   : "Student Growth & Talent Intelligence Platform"}
               </span>
             </div>
-          </Link>
+          </a>
         </div>
 
-        {/* Center/Right: Navigation Shortcuts & User Session */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Right: Navigation & Session */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {/* Quick Home & Dashboard Navigation */}
-          <div className="flex items-center gap-1.5 mr-1">
+          <div className="flex items-center gap-1 sm:gap-1.5">
             {pathname !== "/" && !pathname.startsWith("/admin") && (
-              <Link
+              <a
                 href="/"
-                className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"
                 title="Return to Public Homepage"
               >
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                 </svg>
                 <span className="hidden md:inline">Home</span>
-              </Link>
+              </a>
             )}
 
             {user ? (
-              <Link
+              <a
                 href={
                   user.role === "SUPER_ADMIN"
                     ? "/admin"
@@ -107,7 +111,7 @@ export default function AppHeader() {
                     ? "/college"
                     : `/record/${encodeURIComponent(user.dos_id || "DOS-B3-001")}`
                 }
-                className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                className={`px-2 sm:px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors flex items-center gap-1 sm:gap-1.5 ${
                   (user.role === "SUPER_ADMIN" && pathname.startsWith("/admin")) ||
                   (user.role === "TRAINER" && pathname.startsWith("/trainer")) ||
                   (user.role === "COLLEGE_ADMIN" && pathname.startsWith("/college")) ||
@@ -121,19 +125,19 @@ export default function AppHeader() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
                 <span>Dashboard</span>
-              </Link>
+              </a>
             ) : (
-              <Link
+              <a
                 href="/login"
-                className="px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5"
+                className="px-2 sm:px-2.5 py-1 rounded-lg text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
                 title="Sign in to TalentOS Portal"
               >
-                <span>Portal Sign In</span>
-              </Link>
+                Portal Sign In
+              </a>
             )}
           </div>
 
-          {/* Live Indian Standard Time Clock */}
+          {/* Live IST Clock — desktop only */}
           <div className="hidden lg:flex items-center gap-2 bg-slate-800/90 px-2.5 py-1 rounded-md border border-slate-700 text-xs">
             <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-slate-400 font-mono text-[10px] uppercase">

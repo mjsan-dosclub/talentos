@@ -281,8 +281,8 @@ export default function InstitutionsTab({
       )}
 
       {/* Minimalist Institutions Table */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-2xs overflow-hidden">
-        <div className="overflow-x-auto">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xs">
+        <div className="overflow-x-auto rounded-xl">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-slate-200 bg-slate-50/75 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">

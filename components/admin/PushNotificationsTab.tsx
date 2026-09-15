@@ -310,7 +310,7 @@ export default function PushNotificationsTab({ onToast }: PushNotificationsTabPr
       </div>
 
       {/* Broadcast History Table */}
-      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
+      <div className="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-x-auto">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700">
             Recent Broadcast Dispatch History
