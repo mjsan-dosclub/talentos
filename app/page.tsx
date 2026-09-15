@@ -128,7 +128,8 @@ export default function Home() {
     email: "",
     phone: "",
     institutionType: "Engineering College / University",
-    cohortScope: "",
+    referralSource: "Campus Workshop / Tech Event",
+    specificRequirements: "",
   };
 
   const [requestForm, setRequestForm] = useState(initialFormState);
@@ -247,8 +248,8 @@ export default function Home() {
           email: requestForm.email,
           phone: requestForm.phone.trim() || "+91 00000 00000",
           current_role: `${requestForm.institutionType} • ${requestForm.institutionName}`,
-          referral_source: "Institutional Cohort Intake",
-          message: `[Institution: ${requestForm.institutionName}] [Contact: ${requestForm.contactPerson}] [Type: ${requestForm.institutionType}] ${requestForm.cohortScope ? `[Requirements: ${requestForm.cohortScope}]` : ""}`,
+          referral_source: requestForm.referralSource || "Campus Workshop / Tech Event",
+          message: `[Institution: ${requestForm.institutionName}] [Contact: ${requestForm.contactPerson}] [Type: ${requestForm.institutionType}] [Referral: ${requestForm.referralSource}] ${requestForm.specificRequirements ? `[Requirements: ${requestForm.specificRequirements}]` : ""}`,
           hp_company_url: honeypot,
           captcha_token: captcha.token,
           captcha_answer: captchaAnswer,
@@ -1174,36 +1175,58 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Row 3: Institution Type */}
-                <div>
-                  <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
-                    INSTITUTION TYPE
-                  </label>
-                  <select
-                    value={requestForm.institutionType}
-                    onChange={(e) => setRequestForm({ ...requestForm, institutionType: e.target.value })}
-                    className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs cursor-pointer"
-                  >
-                    <option value="Engineering College / University">Engineering College / University</option>
-                    <option value="Autonomous Engineering Institute">Autonomous Engineering Institute</option>
-                    <option value="Deemed University / Research Center">Deemed University / Research Center</option>
-                    <option value="Polytechnic & Applied Technology Institute">Polytechnic &amp; Applied Technology Institute</option>
-                    <option value="Campus Innovation Hub / Incubation Cell">Campus Innovation Hub / Incubation Cell</option>
-                    <option value="Enterprise Hiring & Training Partner">Enterprise Hiring &amp; Training Partner</option>
-                    <option value="Other Academic Institution">Other Academic Institution</option>
-                  </select>
+                {/* Row 3: Institution Type & How Do You Know Us */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
+                      INSTITUTION TYPE
+                    </label>
+                    <select
+                      value={requestForm.institutionType}
+                      onChange={(e) => setRequestForm({ ...requestForm, institutionType: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs cursor-pointer"
+                    >
+                      <option value="Engineering College / University">Engineering College / University</option>
+                      <option value="Autonomous Engineering Institute">Autonomous Engineering Institute</option>
+                      <option value="Deemed University / Research Center">Deemed University / Research Center</option>
+                      <option value="Polytechnic & Applied Technology Institute">Polytechnic &amp; Applied Technology Institute</option>
+                      <option value="Campus Innovation Hub / Incubation Cell">Campus Innovation Hub / Incubation Cell</option>
+                      <option value="Enterprise Hiring & Training Partner">Enterprise Hiring &amp; Training Partner</option>
+                      <option value="Other Academic Institution">Other Academic Institution</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
+                      HOW DO YOU KNOW US
+                    </label>
+                    <select
+                      value={requestForm.referralSource}
+                      onChange={(e) => setRequestForm({ ...requestForm, referralSource: e.target.value })}
+                      className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-800 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs cursor-pointer"
+                    >
+                      <option value="Campus Workshop / Tech Event">Campus Workshop / Tech Event</option>
+                      <option value="LinkedIn / Social Media">LinkedIn / Social Media</option>
+                      <option value="DOS Club Member / Faculty Referral">DOS Club Member / Faculty Referral</option>
+                      <option value="Partner College Recommendation">Partner College Recommendation</option>
+                      <option value="WhatsApp Community / Tech Group">WhatsApp Community / Tech Group</option>
+                      <option value="GitHub / Open Source Repository">GitHub / Open Source Repository</option>
+                      <option value="Web Search / Direct Visit">Web Search / Direct Visit</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
                 </div>
 
-                {/* Row 4: Cohort Scope / Requirements */}
+                {/* Row 4: Any Specific Requirements */}
                 <div>
                   <label className="block text-[11px] font-bold tracking-wider text-slate-700 uppercase mb-2 font-sans">
-                    COHORT SCOPE OR SPECIFIC REQUIREMENTS
+                    ANY SPECIFIC REQUIREMENTS
                   </label>
                   <textarea
                     rows={4}
                     placeholder="Provide department details, target batch size, or preferred timelines..."
-                    value={requestForm.cohortScope}
-                    onChange={(e) => setRequestForm({ ...requestForm, cohortScope: e.target.value })}
+                    value={requestForm.specificRequirements}
+                    onChange={(e) => setRequestForm({ ...requestForm, specificRequirements: e.target.value })}
                     className="w-full px-4 py-3 rounded-xl bg-white border border-slate-200 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs resize-none"
                   />
                 </div>

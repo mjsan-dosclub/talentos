@@ -19,15 +19,15 @@
     "canonicalUrl": "http://localhost:3000"
   },
   "email": {
-    "provider": "smtp",
+    "provider": "resend",
     "smtpHost": "smtp.sendgrid.net",
     "smtpPort": 587,
     "smtpUser": "apikey",
     "smtpPass": "",
     "resendApiKey": "",
-    "fromAddress": "notifications@dosclub.org",
-    "fromName": "DOS Club TalentOS",
-    "globalCc": "descienceosclub@gmail.com, admissions@dosclub.org",
+    "fromAddress": "no-reply@descienceosclub.com",
+    "fromName": "Descience Open Source Club",
+    "globalCc": "descienceosclub@gmail.com, mohan@touchmarkdes.com",
     "enabled": true
   },
   "whatsapp": {
