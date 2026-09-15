@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { PartnerInstitution } from "@/lib/admin-data";
 import GlobalTableFilter from "./GlobalTableFilter";
+import TablePagination from "./TablePagination";
 import {
   BuildingIcon,
   MoreVerticalIcon,
@@ -34,6 +35,10 @@ export default function InstitutionsTab({
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [regionFilter, setRegionFilter] = useState("ALL");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Kebab menu state
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
@@ -70,6 +75,12 @@ export default function InstitutionsTab({
       (inst.region && inst.region.toLowerCase().includes(regionFilter.toLowerCase()));
     return matchesSearch && matchesStatus && matchesRegion;
   });
+
+  // Paginated records
+  const paginatedInstitutions = filtered.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   // Bulk actions
   const handleToggleSelect = (id: string) => {
@@ -312,7 +323,7 @@ export default function InstitutionsTab({
                   </td>
                 </tr>
               ) : (
-                filtered.map((inst) => {
+                paginatedInstitutions.map((inst) => {
                   const isSelected = selectedIds.has(inst.id);
                   const isKebabOpen = openKebabId === inst.id;
 
@@ -466,6 +477,18 @@ export default function InstitutionsTab({
             </tbody>
           </table>
         </div>
+
+        {/* Table Pagination */}
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filtered.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
 
       {/* EXPANDED ADD PARTNER MODAL */}
@@ -716,6 +739,36 @@ export default function InstitutionsTab({
                     onChange={(e) => setEditingInst({ ...editingInst, pocRole: e.target.value })}
                     className="border border-slate-300 rounded-lg p-2"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Region:</label>
+                  <input
+                    type="text"
+                    value={editingInst.region || "Tamil Nadu, India"}
+                    onChange={(e) => setEditingInst({ ...editingInst, region: e.target.value })}
+                    className="border border-slate-300 rounded-lg p-2"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Status:</label>
+                  <select
+                    value={editingInst.status}
+                    onChange={(e) =>
+                      setEditingInst({
+                        ...editingInst,
+                        status: e.target.value as PartnerInstitution["status"],
+                      })
+                    }
+                    className="border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-800"
+                  >
+                    <option value="ACTIVE">ACTIVE</option>
+                    <option value="ONBOARDING">ONBOARDING</option>
+                    <option value="INACTIVE">INACTIVE</option>
+                  </select>
                 </div>
               </div>
 
