@@ -296,13 +296,19 @@ export async function POST(req: NextRequest) {
 
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 24px 0;">
           <h4 style="margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; color: #0f172a;">
-            While You Wait &mdash; Connect With Our Builders Community:
+            Connect With Our Official Community Channels:
           </h4>
           <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8; color: #334155;">
-            <li><strong>WhatsApp Community Channel:</strong> <a href="https://whatsapp.com/channel/0029VaDeScienceOSClub" style="color: #2563eb; text-decoration: none;">Join Channel &rarr;</a></li>
-            <li><strong>Discord Builders Server:</strong> <a href="https://discord.gg/descience-osclub" style="color: #2563eb; text-decoration: none;">discord.gg/descience-osclub &rarr;</a></li>
-            <li><strong>GitHub Commons:</strong> <a href="https://github.com/descience-osclub" style="color: #2563eb; text-decoration: none;">github.com/descience-osclub &rarr;</a></li>
-            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/company/touchmark-descience/" style="color: #2563eb; text-decoration: none;">Touchmark DeScience &rarr;</a></li>
+            <li><strong>Official Website:</strong> <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com &rarr;</a></li>
+            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/descience-open-source-club" style="color: #2563eb; text-decoration: none;">linkedin.com/in/descience-open-source-club &rarr;</a></li>
+            <li><strong>YouTube:</strong> <a href="https://www.youtube.com/channel/UCvF5jATxekeLcFvjLrMGjpA" style="color: #2563eb; text-decoration: none;">YouTube Channel &rarr;</a></li>
+            <li><strong>X (Twitter):</strong> <a href="https://x.com/descienceosclub" style="color: #2563eb; text-decoration: none;">x.com/descienceosclub &rarr;</a></li>
+            <li><strong>Instagram:</strong> <a href="https://www.instagram.com/descienceopensourceclub/" style="color: #2563eb; text-decoration: none;">instagram.com/descienceopensourceclub &rarr;</a></li>
+            <li><strong>Facebook:</strong> <a href="https://www.facebook.com/descienceosclub" style="color: #2563eb; text-decoration: none;">facebook.com/descienceosclub &rarr;</a></li>
+            <li><strong>Threads:</strong> <a href="https://www.threads.net/@descienceosclub" style="color: #2563eb; text-decoration: none;">threads.net/@descienceosclub &rarr;</a></li>
+            <li><strong>GitHub:</strong> <a href="https://github.com/descienceosclub" style="color: #2563eb; text-decoration: none;">github.com/descienceosclub &rarr;</a></li>
+            <li><strong>WhatsApp Channel:</strong> <a href="https://whatsapp.com/channel/0029Vb6yhyh5Ui2YyHbIL117" style="color: #2563eb; text-decoration: none;">Join WhatsApp Channel &rarr;</a></li>
+            <li><strong>Discord Server:</strong> <a href="https://discord.com/channels/1503348482218524672/1503348483594129550" style="color: #2563eb; text-decoration: none;">Join Discord Server &rarr;</a></li>
           </ul>
         </div>
 
@@ -312,9 +318,9 @@ export async function POST(req: NextRequest) {
         </div>
 
         <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
-        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0;">
+        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0; line-height: 1.5;">
           DeScience Open Source Club &bull; TalentOS Student Growth Engine<br/>
-          This is an automated transmission dispatched with Global CC logging.
+          Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com</a>
         </p>
       </div>
     `;
@@ -326,11 +332,17 @@ Thank you for your interest in joining DeScience Open Source Club (Ref: ${enquir
 
 Our admissions and cohort allocation pod has received your information. A mentor will reach out via WhatsApp / Email within 24–48 hours to discuss your engineering background and upcoming admissions evaluation rounds.
 
-WHILE YOU WAIT — CONNECT WITH OUR COMMUNITY:
-- WhatsApp Community Channel: https://whatsapp.com/channel/0029VaDeScienceOSClub
-- Discord Builders Server: https://discord.gg/descience-osclub
-- LinkedIn: https://www.linkedin.com/company/touchmark-descience/
-- GitHub Commons: https://github.com/descience-osclub
+WHILE YOU WAIT — CONNECT WITH OUR OFFICIAL COMMUNITY CHANNELS:
+- Official Website: http://descienceosclub.com/
+- LinkedIn: https://www.linkedin.com/in/descience-open-source-club
+- YouTube: https://www.youtube.com/channel/UCvF5jATxekeLcFvjLrMGjpA
+- X (Twitter): https://x.com/descienceosclub
+- Instagram: https://www.instagram.com/descienceopensourceclub/
+- Facebook: https://www.facebook.com/descienceosclub
+- Threads: https://www.threads.net/@descienceosclub
+- GitHub: https://github.com/descienceosclub
+- WhatsApp Channel: https://whatsapp.com/channel/0029Vb6yhyh5Ui2YyHbIL117
+- Discord Server: https://discord.com/channels/1503348482218524672/1503348483594129550
 
 ANTI-SPAM TIP:
 Please save admissions@dosclub.org in your contacts so our interview scheduling invitation does not get delayed in your Spam folder.
@@ -339,6 +351,7 @@ Warm regards,
 Admissions Directorate
 DeScience Open Source Club
     `.trim();
+
 
     const candidateEmailResult = await sendEmail({
       to: email,

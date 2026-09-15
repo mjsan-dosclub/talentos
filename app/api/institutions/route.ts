@@ -133,10 +133,11 @@ export async function POST(req: NextRequest) {
               </a>
             </div>
 
-            <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 24px; font-size: 11px; color: #94a3b8; text-align: center;">
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 24px; font-size: 11px; color: #94a3b8; text-align: center; line-height: 1.5;">
               DeScience Open Source Club &bull; TalentOS Academic Operations<br/>
-              Delivered with Global CC oversight.
+              Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com</a>
             </div>
+
           </div>
         `,
       });

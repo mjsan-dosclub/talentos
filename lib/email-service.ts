@@ -148,9 +148,12 @@ export async function sendEmail(options: OutgoingEmailOptions): Promise<EmailDis
       ? `<div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1e293b; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 8px;">
            <h2 style="color: #0f172a; margin-top: 0;">${options.subject}</h2>
            <div style="white-space: pre-wrap; font-size: 14px;">${options.text}</div>
-           <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
-           <p style="font-size: 11px; color: #64748b;">DeScience Open Source Club &bull; TalentOS Automated Dispatch<br/>This email was automatically routed with Global CC monitoring.</p>
-         </div>`
+            <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
+            <p style="font-size: 11px; color: #64748b; line-height: 1.5; text-align: center;">
+              DeScience Open Source Club &bull; TalentOS Automated Dispatch<br/>
+              Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none; font-weight: 600;">descienceosclub.com</a>
+            </p>
+          </div>`
       : "<p>(Empty email content)</p>");
 
   const finalPlainText = options.text || options.subject;
@@ -466,10 +469,25 @@ notifications@dosclub.org
     </div>
 
     <!-- Footer -->
-    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 16px 32px; font-size: 11px; color: #94a3b8; text-align: center;">
-      DeScience Open Source Club &bull; Touchmark Descience Hub &bull; TalentOS Academic Operations<br/>
-      This communication was delivered with Global CC oversight.
+    <div style="background: #f8fafc; border-top: 1px solid #e2e8f0; padding: 20px 32px; font-size: 11px; color: #64748b; text-align: center; line-height: 1.6;">
+      <div style="font-weight: 700; color: #0f172a; margin-bottom: 6px;">
+        DeScience Open Source Club &bull; TalentOS Academic Operations
+      </div>
+      <div style="margin-bottom: 8px;">
+        Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none; font-weight: 600;">descienceosclub.com</a>
+      </div>
+      <div style="font-size: 10px; color: #94a3b8; margin-top: 8px;">
+        Official Channels: 
+        <a href="https://www.linkedin.com/in/descience-open-source-club" style="color: #64748b; text-decoration: none; margin: 0 4px;">LinkedIn</a> &bull; 
+        <a href="https://www.youtube.com/channel/UCvF5jATxekeLcFvjLrMGjpA" style="color: #64748b; text-decoration: none; margin: 0 4px;">YouTube</a> &bull; 
+        <a href="https://x.com/descienceosclub" style="color: #64748b; text-decoration: none; margin: 0 4px;">X (Twitter)</a> &bull; 
+        <a href="https://www.instagram.com/descienceopensourceclub/" style="color: #64748b; text-decoration: none; margin: 0 4px;">Instagram</a> &bull; 
+        <a href="https://github.com/descienceosclub" style="color: #64748b; text-decoration: none; margin: 0 4px;">GitHub</a> &bull; 
+        <a href="https://whatsapp.com/channel/0029Vb6yhyh5Ui2YyHbIL117" style="color: #64748b; text-decoration: none; margin: 0 4px;">WhatsApp</a> &bull; 
+        <a href="https://discord.com/channels/1503348482218524672/1503348483594129550" style="color: #64748b; text-decoration: none; margin: 0 4px;">Discord</a>
+      </div>
     </div>
+
 
   </div>
 </body>

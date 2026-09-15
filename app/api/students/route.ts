@@ -166,16 +166,19 @@ export async function POST(request: NextRequest) {
               </a>
             </div>
 
-            <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 24px; font-size: 12px; color: #64748b;">
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 24px; font-size: 12px; color: #64748b; line-height: 1.6;">
               <strong>Official Community Channels:</strong><br/>
-              &bull; <a href="https://whatsapp.com/channel/0029VaDeScienceOSClub" style="color: #2563eb;">Join WhatsApp Broadcast Channel</a><br/>
-              &bull; <a href="https://discord.gg/descience-osclub" style="color: #2563eb;">Join Discord Systems Engineering Guild</a>
+              &bull; <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">Official Website (descienceosclub.com)</a><br/>
+              &bull; <a href="https://whatsapp.com/channel/0029Vb6yhyh5Ui2YyHbIL117" style="color: #2563eb; text-decoration: none;">Join WhatsApp Channel</a><br/>
+              &bull; <a href="https://discord.com/channels/1503348482218524672/1503348483594129550" style="color: #2563eb; text-decoration: none;">Join Discord Community</a><br/>
+              &bull; <a href="https://www.linkedin.com/in/descience-open-source-club" style="color: #2563eb; text-decoration: none;">Follow on LinkedIn</a>
             </div>
 
-            <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center;">
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center; line-height: 1.5;">
               DeScience Open Source Club &bull; TalentOS Automated Dispatch<br/>
-              Delivered with Global CC oversight.
+              Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com</a>
             </div>
+
           </div>
         `,
       });

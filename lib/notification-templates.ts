@@ -412,9 +412,11 @@ HOW WE OPERATE IN DOS CLUB:
 3. Student Case Studies & Articles Program:
    As you build systems, you are invited to author architecture case studies. Peer-audited articles are published globally on our engineering portal and syndicated across social media.
 
-JOIN OUR REAL-TIME CHANNELS:
-- WhatsApp Member Channel: https://whatsapp.com/channel/0029VaDeScienceOSClub
-- Discord Builders Community: https://discord.gg/descience-osclub
+JOIN OUR OFFICIAL COMMUNITY CHANNELS:
+- Official Website: http://descienceosclub.com/
+- WhatsApp Channel: https://whatsapp.com/channel/0029Vb6yhyh5Ui2YyHbIL117
+- Discord Server: https://discord.com/channels/1503348482218524672/1503348483594129550
+- LinkedIn: https://www.linkedin.com/in/descience-open-source-club
 
 See you at the terminal!
 
@@ -499,13 +501,17 @@ Thank you for your interest in joining DeScience Open Source Club (Ref: {{enquir
 
 Our admissions and cohort allocation pod has received your information. A mentor will reach out via WhatsApp / Email within 24–48 hours to discuss your engineering background and upcoming admissions evaluation rounds.
 
-WHILE YOU WAIT — CONNECT WITH OUR COMMUNITY:
-- WhatsApp Community Channel: https://whatsapp.com/channel/0029VaDeScienceOSClub
-- Discord Builders Server: https://discord.gg/descience-osclub
-- LinkedIn: https://www.linkedin.com/company/touchmark-descience/
-- GitHub Commons: https://github.com/descience-osclub
-- Twitter / X: https://x.com/descience_club
-- YouTube: https://youtube.com/@descienceosclub
+WHILE YOU WAIT — CONNECT WITH OUR OFFICIAL COMMUNITY CHANNELS:
+- Official Website: http://descienceosclub.com/
+- LinkedIn: https://www.linkedin.com/in/descience-open-source-club
+- YouTube: https://www.youtube.com/channel/UCvF5jATxekeLcFvjLrMGjpA
+- X (Twitter): https://x.com/descienceosclub
+- Instagram: https://www.instagram.com/descienceopensourceclub/
+- Facebook: https://www.facebook.com/descienceosclub
+- Threads: https://www.threads.net/@descienceosclub
+- GitHub: https://github.com/descienceosclub
+- WhatsApp Channel: https://whatsapp.com/channel/0029Vb6yhyh5Ui2YyHbIL117
+- Discord Server: https://discord.com/channels/1503348482218524672/1503348483594129550
 
 ANTI-SPAM TIP:
 Please save admissions@dosclub.org in your contacts so our interview scheduling invitation does not get delayed in your Spam folder.
