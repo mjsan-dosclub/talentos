@@ -74,63 +74,7 @@ export interface AuditLogEntry {
   sourceUrl?: string;
 }
 
-export const INITIAL_STUDENTS: StudentMember[] = [
-  {
-    id: "a0000001",
-    dosId: "DOS-B3-001",
-    fullName: "Arunachalam Sundaram",
-    email: "arun@student.dosclub.org",
-    institution: "Anna University Campus Hub",
-    department: "Computer Technology",
-    batch: "Batch 3 - 2026",
-    completedWorkshops: 14,
-    status: "ACTIVE",
-  },
-  {
-    id: "a0000002",
-    dosId: "DOS-B3-002",
-    fullName: "Kavitha Raman",
-    email: "kavitha@student.dosclub.org",
-    institution: "PSG Tech Innovation Hub",
-    department: "Information Technology",
-    batch: "Batch 3 - 2026",
-    completedWorkshops: 14,
-    status: "ACTIVE",
-  },
-  {
-    id: "a0000003",
-    dosId: "DOS-B3-003",
-    fullName: "Dinesh Kumar V.",
-    email: "dinesh@student.dosclub.org",
-    institution: "NIT Trichy Center",
-    department: "ECE Systems",
-    batch: "Batch 3 - 2026",
-    completedWorkshops: 13,
-    status: "ACTIVE",
-  },
-  {
-    id: "a0000004",
-    dosId: "DOS-B3-004",
-    fullName: "Meera Subramanian",
-    email: "meera@student.dosclub.org",
-    institution: "IIT Madras Research Park",
-    department: "Distributed Systems",
-    batch: "Batch 3 - 2026",
-    completedWorkshops: 14,
-    status: "DEFENSE_READY",
-  },
-  {
-    id: "a0000005",
-    dosId: "DOS-B3-005",
-    fullName: "Siddharth Rajan",
-    email: "siddharth@student.dosclub.org",
-    institution: "Anna University Campus Hub",
-    department: "Computer Applications",
-    batch: "Batch 3 - 2026",
-    completedWorkshops: 12,
-    status: "ACTIVE",
-  },
-];
+export const INITIAL_STUDENTS: StudentMember[] = [];
 
 export const INITIAL_EXPERTS: ExpertMentor[] = [
   {
