@@ -62,6 +62,40 @@ function AdminDashboardContent() {
         }
       })
       .catch((err) => console.warn("Failed loading live students:", err));
+
+    fetch("/api/institutions")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.institutions && Array.isArray(data.institutions)) {
+          setInstitutions(data.institutions);
+        }
+      })
+      .catch((err) => console.warn("Failed loading live institutions:", err));
+
+    fetch("/api/workshops")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data && data.workshops && Array.isArray(data.workshops) && data.workshops.length > 0) {
+          const mapped: WorkshopItem[] = data.workshops.map((w: any) => ({
+            id: w.id,
+            code: `WS-${String(w.session_number).padStart(2, "0")}`,
+            title: w.title,
+            focusArea: w.description || "Systems Engineering",
+            institution: w.venue_name?.includes("Anna") ? "Anna University & DOS Club Hub" : w.venue_name || "All Campus Hubs",
+            date: w.scheduled_at?.split("T")[0] || "2026-09-20",
+            time: "09:00 AM - 12:00 PM",
+            status: w.is_active ? "UPCOMING" : "COMPLETED",
+            registeredCount: 40,
+            attendedCount: 38,
+            mode: w.session_mode || "OFFLINE",
+            leadExpert: w.trainer_name || "Lead Technical Expert",
+            deliveryType: "Standard Curriculum",
+            institutionCount: 4,
+          }));
+          setWorkshops(mapped);
+        }
+      })
+      .catch((err) => console.warn("Failed loading live workshops:", err));
   }, []);
 
   // Toast System

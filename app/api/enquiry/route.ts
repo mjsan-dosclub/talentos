@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
 
 // In-memory fallback ledger for enquiries so admin panel displays submissions even when database is offline
@@ -57,7 +57,7 @@ function ensureEnquiriesFile(): void {
       fs.writeFileSync(ENQUIRIES_FILE, JSON.stringify(INITIAL_ENQUIRIES, null, 2), "utf-8");
     }
   } catch {
-    // Non-blocking fallback
+    // Non-blocking fallback for read-only Vercel lambda
   }
 }
 
@@ -79,26 +79,88 @@ function saveEnquiries(data: EnquiryRecord[]): void {
   try {
     fs.writeFileSync(ENQUIRIES_FILE, JSON.stringify(data, null, 2), "utf-8");
   } catch (e) {
-    console.error("Failed writing enquiries.json:", e);
+    // Read-only filesystem on Vercel is expected; cloud store takes precedence
   }
 }
 
 export async function GET() {
+  const combinedMap = new Map<string, EnquiryRecord>();
+
+  // 1. Primary: Check dedicated aspirant_enquiries table in Supabase
   try {
-    // Try querying Supabase
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from("aspirant_enquiries")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data && data.length > 0) {
-      return NextResponse.json({ enquiries: data });
+    if (!error && data && Array.isArray(data) && data.length > 0) {
+      for (const item of data) {
+        const rec: EnquiryRecord = {
+          id: item.id,
+          enquiry_ref: item.enquiry_ref || item.id,
+          full_name: item.full_name || item.fullName || "Aspirant",
+          email: item.email || "",
+          phone: item.phone || "",
+          current_role: item.institution || item.current_role || "Academic Partner",
+          referral_source: item.statement?.match(/\[Source:\s*([^\]]+)\]/)?.[1] || "Direct Intake",
+          message: item.statement || item.message || "",
+          status: item.status || "NEW",
+          created_at: item.created_at || new Date().toISOString(),
+        };
+        combinedMap.set(rec.enquiry_ref, rec);
+      }
     }
-  } catch (err) {
-    // Fallback to disk
+  } catch (e) {
+    console.warn("[TalentOS] Supabase aspirant_enquiries query notice:", e);
   }
 
-  return NextResponse.json({ enquiries: loadEnquiries() });
+  // 2. Resilient Cloud Store: Query notification_dispatches where channel = 'ENQUIRY'
+  try {
+    const { data: dispatches, error: dispErr } = await supabaseAdmin
+      .from("notification_dispatches")
+      .select("*")
+      .eq("channel", "ENQUIRY")
+      .order("created_at", { ascending: false });
+
+    if (!dispErr && dispatches && Array.isArray(dispatches)) {
+      for (const d of dispatches) {
+        if (d.target_filter && typeof d.target_filter === "object") {
+          const filter = d.target_filter as any;
+          const ref = filter.enquiry_ref || d.title || d.id;
+          if (!combinedMap.has(ref)) {
+            combinedMap.set(ref, {
+              id: d.id,
+              enquiry_ref: ref,
+              full_name: filter.full_name || filter.name || "Aspirant",
+              phone: filter.phone || "",
+              email: filter.email || "",
+              current_role: filter.current_role || "Institutional Partner",
+              referral_source: filter.referral_source || "Campus Workshop",
+              message: filter.message || d.content || "",
+              status: (filter.status as any) || "NEW",
+              created_at: filter.created_at || d.created_at,
+            });
+          }
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("[TalentOS] Supabase notification_dispatches query notice:", e);
+  }
+
+  // 3. Merge initial disk enquiries
+  const diskEnquiries = loadEnquiries();
+  for (const enq of diskEnquiries) {
+    if (!combinedMap.has(enq.enquiry_ref)) {
+      combinedMap.set(enq.enquiry_ref, enq);
+    }
+  }
+
+  const sorted = Array.from(combinedMap.values()).sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
+
+  return NextResponse.json({ enquiries: sorted });
 }
 
 export async function POST(req: NextRequest) {
@@ -177,9 +239,27 @@ export async function POST(req: NextRequest) {
     enquiries.unshift(newRecord);
     saveEnquiries(enquiries);
 
-    // Best-effort insertion into Supabase
+    // 1. Resilient Cloud Persistence in Supabase notification_dispatches (zero-loss on Vercel)
     try {
-      await supabase.from("aspirant_enquiries").insert([
+      await supabaseAdmin.from("notification_dispatches").insert([
+        {
+          id: crypto.randomUUID(),
+          channel: "ENQUIRY",
+          title: enquiryId,
+          content: message || `Enquiry from ${name} (${email})`,
+          target_filter: newRecord,
+          dispatched_by: "11111111-1111-1111-1111-111111111111",
+          sent_count: 1,
+          created_at: timestamp,
+        },
+      ]);
+    } catch (dispErr) {
+      console.warn("Supabase notification_dispatches enquiry save notice:", dispErr);
+    }
+
+    // 2. Best-effort insertion into aspirant_enquiries
+    try {
+      await supabaseAdmin.from("aspirant_enquiries").insert([
         {
           id: crypto.randomUUID(),
           enquiry_ref: enquiryId,
@@ -188,11 +268,12 @@ export async function POST(req: NextRequest) {
           phone,
           institution: currentRole,
           statement: `[Source: ${referralSource}] ${message}`,
+          status: "NEW",
           created_at: timestamp,
         },
       ]);
     } catch (dbErr) {
-      console.warn("Supabase aspirant_enquiries notice:", dbErr);
+      // Table may not be created yet, covered by notification_dispatches above
     }
 
     // 1. Dispatch Candidate Auto-Responder Email (Thank You + Social Channels + Anti-Spam Whitelist)
@@ -328,12 +409,13 @@ TalentOS Automated Dispatch
 
     // 3. Best-effort logging in notification_dispatches
     try {
-      await supabase.from("notification_dispatches").insert([
+      await supabaseAdmin.from("notification_dispatches").insert([
         {
+          id: crypto.randomUUID(),
           channel: "EMAIL",
           title: `Admissions Enquiry Acknowledged (${enquiryId})`,
           content: `Auto-responder sent to ${name} (${email}) with WhatsApp & Discord community onboarding links. Admin alerted with Global CC.`,
-          dispatched_by: "SYSTEM_ADMISSIONS_POD",
+          dispatched_by: "11111111-1111-1111-1111-111111111111",
           sent_count: 2 + (candidateEmailResult.recipients.cc.length || 0),
           created_at: timestamp,
         },
@@ -389,12 +471,12 @@ export async function PATCH(req: NextRequest) {
     });
     saveEnquiries(updated);
 
-    // Best-effort update in Supabase
+    // Update in Supabase aspirant_enquiries
     try {
-      await supabase
+      await supabaseAdmin
         .from("aspirant_enquiries")
         .update({ status })
-        .in("id", targetIds);
+        .in("enquiry_ref", targetIds);
     } catch {
       // Non-blocking
     }
@@ -449,12 +531,17 @@ export async function DELETE(req: NextRequest) {
     const deletedCount = initialLen - filtered.length;
     saveEnquiries(filtered);
 
-    // Best-effort delete in Supabase
+    // Delete in Supabase aspirant_enquiries and notification_dispatches
     try {
-      await supabase
+      await supabaseAdmin
         .from("aspirant_enquiries")
         .delete()
-        .in("id", targetIds);
+        .in("enquiry_ref", targetIds);
+      await supabaseAdmin
+        .from("notification_dispatches")
+        .delete()
+        .eq("channel", "ENQUIRY")
+        .in("title", targetIds);
     } catch {
       // Non-blocking
     }

@@ -53,5 +53,17 @@
     "batch": "Batch 3 - 2026",
     "completedWorkshops": 12,
     "status": "ACTIVE"
+  },
+  {
+    "dosId": "DOS-B3-010",
+    "fullName": "Mohan Test Engineer",
+    "email": "mohaneee88@gmail.com",
+    "phone": "+91 98401 23456",
+    "department": "Computer Science & Engineering",
+    "institution": "Anna University Campus Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a2767742"
   }
 ]

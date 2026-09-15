@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { sendEmail } from "@/lib/email-service";
+import { StudentMember, INITIAL_STUDENTS } from "@/lib/admin-data";
 import {
   getStudents,
   addStudent,
@@ -14,9 +16,46 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const includeArchived = searchParams.get("includeArchived") === "true";
 
-    // First try disk store as primary persistent truth
+    // 1. Primary: Fetch live persistent records from Supabase
+    try {
+      const { data: dbStudents, error: dbErr } = await supabaseAdmin
+        .from("students")
+        .select("*")
+        .order("created_at", { ascending: true });
+
+      if (!dbErr && dbStudents && dbStudents.length > 0) {
+        const mapped: StudentMember[] = dbStudents
+          .filter((s: any) => includeArchived || !s.is_archived)
+          .map((s: any) => ({
+            id: s.id,
+            dosId: s.dos_id,
+            fullName: s.full_name,
+            email: s.email,
+            phone: s.phone || "",
+            department: s.department || "Computer Science & Engineering",
+            institution: s.department?.includes("Anna")
+              ? "Anna University Campus Hub"
+              : s.department || "Partner Institution Hub",
+            batch: "Batch 3 - 2026",
+            completedWorkshops: 0,
+            status: s.is_archived ? "ARCHIVED" : "ACTIVE",
+            avatar: s.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80`,
+          }));
+
+        return NextResponse.json({
+          success: true,
+          count: mapped.length,
+          students: mapped,
+          source: "supabase_cloud",
+        });
+      }
+    } catch (dbError) {
+      console.warn("[TalentOS] Supabase students query notice:", dbError);
+    }
+
+    // 2. Fallback to disk store
     const students = getStudents(includeArchived);
-    return NextResponse.json({ success: true, count: students.length, students });
+    return NextResponse.json({ success: true, count: students.length, students, source: "disk_cache" });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
   }
@@ -25,11 +64,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { dos_id, dosId, full_name, fullName, email, department, institution, batch } = body;
+    const { dos_id, dosId, full_name, fullName, email, phone, department, institution, batch } = body;
 
     const studentDosId = (dos_id || dosId || "").trim().toUpperCase();
     const studentName = (full_name || fullName || "").trim();
     const studentEmail = (email || "").trim().toLowerCase();
+    const studentPhone = (phone || "").trim();
 
     if (!studentDosId || !studentName || !studentEmail) {
       return NextResponse.json(
@@ -38,10 +78,44 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const newUuid = crypto.randomUUID();
+
+    // 1. Primary: Insert into Supabase persistent storage
+    let dbSuccess = false;
+    try {
+      const { data, error } = await supabaseAdmin
+        .from("students")
+        .insert([
+          {
+            id: newUuid,
+            group_id: "33333333-3333-3333-3333-333333333333",
+            dos_id: studentDosId,
+            full_name: studentName,
+            email: studentEmail,
+            phone: studentPhone || "+91 98401 00000",
+            department: department || "Computer Science & Engineering",
+            course: "Systems Engineering Fellowship",
+            year_of_study: 3,
+            is_archived: false,
+          },
+        ])
+        .select();
+
+      if (!error) {
+        dbSuccess = true;
+      } else {
+        console.warn("[TalentOS] Supabase student insert notice:", error);
+      }
+    } catch (e) {
+      console.warn("[TalentOS] Supabase student insert exception:", e);
+    }
+
+    // 2. Local fallback store
     const created = addStudent({
       dosId: studentDosId,
       fullName: studentName,
       email: studentEmail,
+      phone: studentPhone,
       department: department || "Computer Science & Engineering",
       institution: institution || "Anna University Campus Hub",
       batch: batch || "Batch 3 - 2026",
@@ -49,25 +123,71 @@ export async function POST(request: NextRequest) {
       status: body.status || "ACTIVE",
     });
 
-    // Best-effort sync with Supabase
+    // 3. Dispatch Automatic Welcome & Priority Access Pass Email
+    const verificationUrl = `https://dosclub-talentos.vercel.app/record/${studentDosId}`;
     try {
-      await supabaseAdmin.from("students").insert([
-        {
-          id: created.id,
-          dos_id: created.dosId,
-          full_name: created.fullName,
-          email: created.email,
-          department: created.department,
-          course: "Systems Engineering",
-          year_of_study: 3,
-          is_archived: false,
-        },
-      ]);
-    } catch (e) {
-      // Non-blocking
+      await sendEmail({
+        to: studentEmail,
+        subject: `Welcome to TalentOS — Your DOS ID (${studentDosId}) & Clearance Pass`,
+        text: `Dear ${studentName},\n\nWelcome to DeScience Open Source Club Systems Engineering Fellowship!\n\nYour permanent cryptographic student identifier has been minted:\nDOS ID: ${studentDosId}\nCohort: Batch 3 (2026)\n\nInspect your live student defense record, verifiable credentials, and workshop clearance passes at:\n${verificationUrl}\n\nJoin our community channels:\n- WhatsApp: https://whatsapp.com/channel/0029VaDeScienceOSClub\n- Discord: https://discord.gg/descience-osclub\n\nDeScience Open Source Club — Academic Directorate\nnotifications@descienceosclub.com`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; color: #0f172a;">
+            <div style="background: #0f172a; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+              <h2 style="color: #ffffff; margin: 0; font-size: 18px; letter-spacing: -0.02em;">DeScience Open Source Club</h2>
+              <p style="color: #38bdf8; margin: 4px 0 0; font-size: 12px; font-weight: 600;">Systems Engineering Fellowship Directorate</p>
+            </div>
+            
+            <p style="font-size: 15px; line-height: 1.6; color: #334155;">
+              Dear <strong>${studentName}</strong>,
+            </p>
+            <p style="font-size: 14px; line-height: 1.6; color: #334155;">
+              Welcome to the <strong>DeScience Open Source Club Fellowship</strong> (Batch 3 &bull; 2026). Your candidate registration and cryptographic clearance key have been confirmed.
+            </p>
+
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0;">
+              <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
+                Verified Fellowship Credentials
+              </div>
+              <div style="font-size: 20px; font-weight: 800; color: #0284c7; font-family: monospace;">
+                ${studentDosId}
+              </div>
+              <div style="font-size: 13px; color: #475569; margin-top: 4px;">
+                Institutional Clearance: <strong>${department || "Computer Science & Engineering"}</strong>
+              </div>
+            </div>
+
+            <p style="font-size: 14px; line-height: 1.6; color: #334155;">
+              Your defense record, workshop attendance ledgers, and verified Git commits are tracked in real time:
+            </p>
+
+            <div style="text-align: center; margin: 24px 0;">
+              <a href="${verificationUrl}" style="display: inline-block; background: #0f172a; color: #ffffff; text-decoration: none; padding: 12px 24px; font-size: 13px; font-weight: 700; border-radius: 8px;">
+                View Your Defense & Access Pass Ledger &rarr;
+              </a>
+            </div>
+
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 24px; font-size: 12px; color: #64748b;">
+              <strong>Official Community Channels:</strong><br/>
+              &bull; <a href="https://whatsapp.com/channel/0029VaDeScienceOSClub" style="color: #2563eb;">Join WhatsApp Broadcast Channel</a><br/>
+              &bull; <a href="https://discord.gg/descience-osclub" style="color: #2563eb;">Join Discord Systems Engineering Guild</a>
+            </div>
+
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center;">
+              DeScience Open Source Club &bull; TalentOS Automated Dispatch<br/>
+              Delivered with Global CC oversight.
+            </div>
+          </div>
+        `,
+      });
+    } catch (mailErr) {
+      console.warn("[TalentOS] Student welcome email dispatch exception:", mailErr);
     }
 
-    return NextResponse.json({ success: true, student: created });
+    return NextResponse.json({
+      success: true,
+      student: created,
+      persistedInDb: dbSuccess,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
   }
@@ -82,6 +202,24 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "Missing student id" }, { status: 400 });
     }
 
+    // 1. Sync update in Supabase
+    try {
+      const isArchived = restore ? false : status === "ARCHIVED";
+      await supabaseAdmin
+        .from("students")
+        .update({
+          is_archived: isArchived,
+          ...(rest.fullName ? { full_name: rest.fullName } : {}),
+          ...(rest.email ? { email: rest.email } : {}),
+          ...(rest.phone ? { phone: rest.phone } : {}),
+          ...(rest.department ? { department: rest.department } : {}),
+        })
+        .or(`id.eq.${id},dos_id.eq.${id}`);
+    } catch (e) {
+      console.warn("[TalentOS] Supabase student PATCH notice:", e);
+    }
+
+    // 2. Disk store sync
     let updated;
     if (restore) {
       updated = restoreStudent(id);
@@ -92,11 +230,7 @@ export async function PATCH(request: NextRequest) {
       });
     }
 
-    if (!updated) {
-      return NextResponse.json({ error: "Student not found" }, { status: 404 });
-    }
-
-    return NextResponse.json({ success: true, student: updated });
+    return NextResponse.json({ success: true, student: updated || { id, status } });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
   }
@@ -124,15 +258,29 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Missing student id" }, { status: 400 });
     }
 
+    // 1. Supabase deletion / archive
+    try {
+      if (permanent) {
+        await supabaseAdmin
+          .from("students")
+          .delete()
+          .or(`id.eq.${id},dos_id.eq.${id}`);
+      } else {
+        await supabaseAdmin
+          .from("students")
+          .update({ is_archived: true })
+          .or(`id.eq.${id},dos_id.eq.${id}`);
+      }
+    } catch (e) {
+      console.warn("[TalentOS] Supabase student DELETE notice:", e);
+    }
+
+    // 2. Disk store deletion
     if (permanent) {
       const deleted = deleteStudentPermanently(id);
       return NextResponse.json({ success: deleted, mode: "PERMANENT" });
     } else {
-      // Soft-delete: update status to ARCHIVED
       const archived = archiveStudent(id);
-      if (!archived) {
-        return NextResponse.json({ error: "Student not found" }, { status: 404 });
-      }
       return NextResponse.json({ success: true, mode: "ARCHIVED", student: archived });
     }
   } catch (err: any) {

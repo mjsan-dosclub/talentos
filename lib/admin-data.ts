@@ -5,6 +5,8 @@ export interface StudentMember {
   dosId: string;
   fullName: string;
   email: string;
+  phone?: string;
+  avatar?: string;
   institution: string;
   department: string;
   batch: string;
