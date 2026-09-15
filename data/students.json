@@ -77,5 +77,77 @@
     "completedWorkshops": 0,
     "status": "ACTIVE",
     "id": "a8984757"
+  },
+  {
+    "dosId": "DOS-B3-901",
+    "fullName": "DeScience Info Candidate",
+    "email": "info@descienceosclub.com",
+    "phone": "+91 98401 10001",
+    "department": "Computer Science & Engineering",
+    "institution": "Anna University Campus Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a9424911"
+  },
+  {
+    "dosId": "DOS-B3-902",
+    "fullName": "Accounts Touchmark Candidate",
+    "email": "accounts@touchmarkdes.com",
+    "phone": "+91 98401 10002",
+    "department": "Information Technology",
+    "institution": "Anna University Campus Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a9433542"
+  },
+  {
+    "dosId": "DOS-B3-903",
+    "fullName": "Rupini SIT Student",
+    "email": "rupinisit@gmail.com",
+    "phone": "+91 98401 10003",
+    "department": "Electronics & Communication",
+    "institution": "Anna University Campus Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a9626497"
+  },
+  {
+    "dosId": "DOS-B3-904",
+    "fullName": "Promotions Touchmark Lead",
+    "email": "promotions.touchmark@gmail.com",
+    "phone": "+91 98401 10004",
+    "department": "AI & Data Science",
+    "institution": "Anna University Campus Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a9658239"
+  },
+  {
+    "dosId": "DOS-B3-905",
+    "fullName": "Bharathi Simple Student",
+    "email": "thatssimplebharathi@gmail.com",
+    "phone": "+91 98401 10005",
+    "department": "Cyber Security & Defense",
+    "institution": "Anna University Campus Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a9665128"
+  },
+  {
+    "dosId": "DOS-B3-906",
+    "fullName": "Dev Programmer Tester",
+    "email": "tester.developer.programmer@gmail.com",
+    "phone": "+91 98401 10006",
+    "department": "Distributed Systems Engineering",
+    "institution": "Anna University Campus Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a9670571"
   }
 ]

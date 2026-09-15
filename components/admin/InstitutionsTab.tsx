@@ -148,39 +148,69 @@ export default function InstitutionsTab({
     onToast(`${name} is now ${status}`);
   };
 
-  const handleCreatePartner = (e: React.FormEvent) => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleCreatePartner = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.code.trim()) return;
 
-    const created: PartnerInstitution = {
-      id: `inst-${String(institutions.length + 1).padStart(3, "0")}`,
-      code: formData.code.trim().toUpperCase(),
+    setIsSubmitting(true);
+    const payload = {
       name: formData.name.trim(),
+      code: formData.code.trim().toUpperCase(),
+      contact_person: formData.pocName.trim(),
+      contact_email: formData.pocEmail.trim(),
       city: formData.city.trim() || "Chennai",
       state: formData.state.trim() || "Tamil Nadu",
       tier: formData.tier,
       region: formData.region,
-      lat: 13.011,
-      lng: 80.2354,
-      geofenceRadiusMeters: 250,
-      studentCount: 0,
-      status: "ACTIVE",
-      pocName: formData.pocName.trim(),
-      pocRole: formData.pocRole.trim(),
-      pocEmail: formData.pocEmail.trim(),
-      pocPhone: formData.pocPhone.trim(),
     };
 
-    setInstitutions([...institutions, created]);
-    setIsAddOpen(false);
-    setFormData(initialFormState);
-    onAuditLog?.(
-      "Institutions",
-      "Campus Onboarding",
-      "Create",
-      `Added Partner Campus ${created.name} (${created.code})`
-    );
-    onToast(`Added Partner Institution: ${created.name}`);
+    try {
+      const res = await fetch("/api/institutions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const created: PartnerInstitution = {
+          id: data.institution?.id || `inst-${Date.now()}`,
+          code: formData.code.trim().toUpperCase(),
+          name: formData.name.trim(),
+          city: formData.city.trim() || "Chennai",
+          state: formData.state.trim() || "Tamil Nadu",
+          tier: formData.tier,
+          region: formData.region,
+          lat: 13.011,
+          lng: 80.2354,
+          geofenceRadiusMeters: 250,
+          studentCount: 0,
+          status: "ACTIVE",
+          pocName: formData.pocName.trim(),
+          pocRole: formData.pocRole.trim(),
+          pocEmail: formData.pocEmail.trim(),
+          pocPhone: formData.pocPhone.trim(),
+        };
+
+        setInstitutions([created, ...institutions]);
+        setIsAddOpen(false);
+        setFormData(initialFormState);
+        onAuditLog?.(
+          "Institutions",
+          "Campus Onboarding",
+          "Create",
+          `Added Partner Campus ${created.name} (${created.code})`
+        );
+        onToast(`CONFIRMED // Onboarded ${created.name} (${created.code}) in DB`);
+      } else {
+        onToast(`ERROR // ${data.error || "Failed to add institution"}`);
+      }
+    } catch (err: any) {
+      onToast(`ERROR // ${err.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleSaveEdit = (e: React.FormEvent) => {
@@ -648,9 +678,20 @@ export default function InstitutionsTab({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-[#E25C38] hover:bg-[#CC4F2E] text-white font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
+                  disabled={isSubmitting}
+                  className="px-4 py-1.5 bg-[#E25C38] hover:bg-[#CC4F2E] disabled:opacity-75 text-white font-semibold rounded-lg shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  Add Partner Campus
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Onboarding...</span>
+                    </>
+                  ) : (
+                    <span>Add Partner Campus</span>
+                  )}
                 </button>
               </div>
             </form>
