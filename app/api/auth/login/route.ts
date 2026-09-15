@@ -15,39 +15,58 @@ export async function POST(request: Request) {
 
     let user: TalentosUser;
 
-    // 1. If fast-auth demo key provided
+    // 1. Fast-auth 1-Click Demo accounts (Explicitly selected via demo key)
     if (demoKey && DEMO_ACCOUNTS[demoKey]) {
       user = DEMO_ACCOUNTS[demoKey];
-    } else if (role === "trainer" || email?.includes("faculty") || email?.includes("priya")) {
+    } else if (role === "trainer") {
+      if (password !== "dosclub2026" && password !== "trainer@2026") {
+        return NextResponse.json({ error: "Invalid password for Technical Expert role." }, { status: 401 });
+      }
       user = DEMO_ACCOUNTS.trainer;
-    } else if (role === "college" || email?.includes("coordinator") || email?.includes("annauniv")) {
+    } else if (role === "college") {
+      if (password !== "dosclub2026" && password !== "college@2026") {
+        return NextResponse.json({ error: "Invalid password for College Coordinator role." }, { status: 401 });
+      }
       user = DEMO_ACCOUNTS.college;
-    } else if (role === "admin" || email?.includes("admin")) {
+    } else if (role === "admin") {
+      if (password !== "dosclub2026" && password !== "admin@2026") {
+        return NextResponse.json({ error: "Invalid password for Super Admin role." }, { status: 401 });
+      }
       user = DEMO_ACCOUNTS.admin;
     } else {
-      // Student login
+      // Student login - STRICT Credential Validation
       const cleanEmail = (email || "").trim();
-      const { student } = await getStudentByIdOrEmail(cleanEmail);
-      const dosId = student?.dos_id || (cleanEmail.toLowerCase().includes("arumugam") ? "DOS-B3-013" : cleanEmail.includes("002") ? "DOS-B3-002" : "DOS-B3-001");
-      
-      // If student was queried or fallback found, validate password
       const providedPwd = (password || "").trim();
-      if (providedPwd && student) {
-        const validPwds = [student.dos_id, "student@2026", "dosclub2026", "DOS-B3-013"];
-        if (!validPwds.includes(providedPwd)) {
-          return NextResponse.json(
-            { error: "Invalid password. Your default password is your DOS ID (e.g. DOS-B3-013)." },
-            { status: 401 }
-          );
-        }
+
+      const { student } = await getStudentByIdOrEmail(cleanEmail);
+
+      if (!student) {
+        return NextResponse.json(
+          { error: `No registered student record found for email: "${cleanEmail}". Please check your email address.` },
+          { status: 404 }
+        );
+      }
+
+      // Check password: Must match student's dos_id (case-insensitive) OR standard cohort default passwords
+      const validPasswords = [
+        student.dos_id.toLowerCase(),
+        "student@2026",
+        "dosclub2026"
+      ];
+
+      if (!validPasswords.includes(providedPwd.toLowerCase())) {
+        return NextResponse.json(
+          { error: `Invalid password for ${student.full_name}. Your default password is your DOS ID (${student.dos_id}).` },
+          { status: 401 }
+        );
       }
 
       user = {
-        id: student?.id || "a0000001-0000-0000-0000-000000000001",
-        email: student?.email || cleanEmail || "arun@student.dosclub.org",
-        name: student?.full_name || "Arunachalam Sundaram",
+        id: student.id,
+        email: student.email,
+        name: student.full_name,
         role: "STUDENT",
-        dos_id: dosId,
+        dos_id: student.dos_id,
         institution_id: "AU-DOS-01",
       };
     }

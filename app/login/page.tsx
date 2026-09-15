@@ -121,18 +121,9 @@ function LoginContent() {
         setIsAuthenticating(false);
       }
     } catch (err: any) {
-      console.warn("Auth error fallback:", err);
-      const demoUser = DEMO_ACCOUNTS[role as keyof typeof DEMO_ACCOUNTS] || DEMO_ACCOUNTS.student;
-      setClientSession(demoUser);
-      window.location.href =
-        redirectUrl ||
-        (role === "trainer"
-          ? "/trainer"
-          : role === "college"
-          ? "/college"
-          : role === "admin"
-          ? "/admin"
-          : `/record/DOS-B3-001`);
+      console.error("Authentication error:", err);
+      setStatusMessage("Failed to reach authentication server. Please try again.");
+      setIsAuthenticating(false);
     }
   };
 
