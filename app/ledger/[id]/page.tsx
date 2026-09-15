@@ -51,13 +51,13 @@ export default function CertificateVerificationPage({ params }: LedgerPageProps)
 
   // Derived candidate and credential info
   const candidateName =
-    student?.fullName || pass?.candidate_name || "Siddharth Raman";
+    student?.fullName || pass?.candidate_name || "Candidate Record";
   const institutionName =
-    student?.institution || pass?.institution || "Anna University & DOS Club Hub, Chennai";
+    student?.institution || pass?.institution || "Partner Institution";
   const passCode = pass?.pass_code || student?.dosId || identifier;
-  const cohortBatch = pass?.cohort_batch || student?.batch || "Batch 3 Systems Engineering (2026)";
-  const department = student?.department || "Computer Science & Systems Engineering";
-  const clearanceLevel = pass?.clearance_level || "Tier 1 - Priority Clearance";
+  const cohortBatch = pass?.cohort_batch || student?.batch || "Active Cohort";
+  const department = student?.department || "Engineering & Systems";
+  const clearanceLevel = pass?.clearance_level || "Standard Clearance";
   const status = pass?.status || "ACTIVE";
 
   // Deterministic cryptographic SHA-256 style hash for credential

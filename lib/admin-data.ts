@@ -82,47 +82,4 @@ export const INITIAL_INSTITUTIONS: PartnerInstitution[] = [];
 
 export const INITIAL_WORKSHOPS: WorkshopItem[] = [];
 
-export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [
-  {
-    id: "aud-001",
-    category: "Students",
-    subcategory: "Telemetry Pass",
-    action: "Perform",
-    modifiedBy: {
-      name: "Platform Administrator (Live)",
-      email: "admin@dosclub.org",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
-    },
-    dateOfChange: "14 Sep 2026 10:45 AM IST",
-    sourceText: "Verified clearance pass CLR-RAFT-9482 for candidate Meera Subramanian",
-    sourceUrl: "/admin?tab=passes",
-  },
-  {
-    id: "aud-002",
-    category: "Curriculum",
-    subcategory: "Session Schedule",
-    action: "Update",
-    modifiedBy: {
-      name: "Platform Administrator (Live)",
-      email: "admin@dosclub.org",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
-    },
-    dateOfChange: "13 Sep 2026 04:15 PM IST",
-    sourceText: "Scheduled WS-14: Distributed Consensus Workshop at Anna University Hub",
-    sourceUrl: "/admin?tab=workshops",
-  },
-  {
-    id: "aud-003",
-    category: "Institutions",
-    subcategory: "Campus Onboarding",
-    action: "Create",
-    modifiedBy: {
-      name: "Platform Administrator (Live)",
-      email: "admin@dosclub.org",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
-    },
-    dateOfChange: "12 Sep 2026 02:30 PM IST",
-    sourceText: "Onboarded PSG College of Technology Hub (PSG-DOS-02)",
-    sourceUrl: "/admin?tab=institutions",
-  },
-];
+export const INITIAL_AUDIT_LOGS: AuditLogEntry[] = [];

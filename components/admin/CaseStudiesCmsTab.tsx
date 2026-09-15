@@ -794,8 +794,8 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
                 </div>
               </div>
 
-              {/* Author / Student Information */}
-              <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+              {/* Student Author */}
+              <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-3">
                 <div className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
                   <UserIcon className="w-3.5 h-3.5 text-[#3772FF]" />
                   <span>Student Author Information</span>
@@ -809,7 +809,7 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
                       type="text"
                       value={formData.studentName}
                       onChange={(e) => setFormData({ ...formData, studentName: e.target.value })}
-                      placeholder="e.g. Siddharth Raman"
+                      placeholder="e.g. Enter your name"
                       className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-[#3772FF] focus:outline-none"
                       required
                     />
@@ -822,7 +822,7 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
                       type="text"
                       value={formData.studentDosId}
                       onChange={(e) => setFormData({ ...formData, studentDosId: e.target.value })}
-                      placeholder="DOS-B3-001"
+                      placeholder="e.g. Enter DOS ID"
                       className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-mono focus:ring-1 focus:ring-[#3772FF] focus:outline-none"
                     />
                   </div>
@@ -834,7 +834,7 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
                       type="text"
                       value={formData.studentCollege}
                       onChange={(e) => setFormData({ ...formData, studentCollege: e.target.value })}
-                      placeholder="Anna University / CEG"
+                      placeholder="e.g. Enter institution name"
                       className="w-full text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-800 font-medium focus:ring-1 focus:ring-[#3772FF] focus:outline-none"
                     />
                   </div>
@@ -850,7 +850,7 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
                   rows={2}
                   value={formData.summary}
                   onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                  placeholder="Deconstructed the Raft consensus algorithm from academic specification to production Rust code..."
+                  placeholder="e.g. Deconstructed systems algorithm from specification to production code..."
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                   required
                 />
@@ -865,7 +865,7 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
                   rows={5}
                   value={formData.fullStoryText}
                   onChange={(e) => setFormData({ ...formData, fullStoryText: e.target.value })}
-                  placeholder="In distributed consensus, theoretical correctness on paper often fails...&#10;&#10;During the live Zero-Grace Peer Defense, the evaluation lead injected an abrupt leader partition...&#10;&#10;The final benchmark validated continuous throughput of 10,240 write operations per second..."
+                  placeholder="Enter detailed architectural breakdown here...&#10;&#10;Describe system evaluation, peer defense, and test benchmarks..."
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none leading-relaxed font-mono"
                   required
                 />
@@ -881,7 +881,7 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
                     type="text"
                     value={formData.metaTitle}
                     onChange={(e) => setFormData({ ...formData, metaTitle: e.target.value })}
-                    placeholder="Siddharth Raman • Raft Consensus Engine in Rust | TalentOS"
+                    placeholder="e.g. Enter meta title for SEO"
                     className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                   />
                 </div>

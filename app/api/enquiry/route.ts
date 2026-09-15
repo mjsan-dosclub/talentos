@@ -21,32 +21,7 @@ import path from "path";
 const DATA_DIR = path.join(process.cwd(), "data");
 const ENQUIRIES_FILE = path.join(DATA_DIR, "enquiries.json");
 
-const INITIAL_ENQUIRIES: EnquiryRecord[] = [
-  {
-    id: "enq-001",
-    enquiry_ref: "ENQ-2026-4819",
-    full_name: "Siddharth Raman",
-    phone: "+91 98401 23456",
-    email: "siddharth.r@annauniv.edu",
-    current_role: "Engineering Student (Year 3-4)",
-    referral_source: "Campus Workshop / College Event",
-    message: "Interested in Systems Pod Alpha and distributed consensus track for CodeZap 3.0.",
-    status: "NEW",
-    created_at: new Date(Date.now() - 7200000).toISOString(),
-  },
-  {
-    id: "enq-002",
-    enquiry_ref: "ENQ-2026-7291",
-    full_name: "Divya Natesan",
-    phone: "+91 97909 87654",
-    email: "divya.n@mitindia.edu",
-    current_role: "Recent Engineering Graduate",
-    referral_source: "LinkedIn / Social Media",
-    message: "Seeking zero-trust security track and hands-on Linux kernel internals training.",
-    status: "CONTACTED",
-    created_at: new Date(Date.now() - 86400000).toISOString(),
-  },
-];
+const INITIAL_ENQUIRIES: EnquiryRecord[] = [];
 
 function ensureEnquiriesFile(): void {
   try {
