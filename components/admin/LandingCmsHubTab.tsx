@@ -30,6 +30,7 @@ export default function LandingCmsHubTab({
     initialSubTab
   );
   const [newEnquiriesCount, setNewEnquiriesCount] = useState<number>(0);
+  const [caseStudiesCount, setCaseStudiesCount] = useState<number | null>(null);
 
   useEffect(() => {
     if (initialSubTab) {
@@ -38,21 +39,28 @@ export default function LandingCmsHubTab({
   }, [initialSubTab]);
 
   useEffect(() => {
-    async function fetchNewEnquiries() {
+    async function fetchCounts() {
       try {
-        const res = await fetch("/api/enquiry");
-        const data = await res.json();
-        if (data.enquiries && Array.isArray(data.enquiries)) {
-          const newCount = data.enquiries.filter(
+        const [enqRes, csRes] = await Promise.all([
+          fetch("/api/enquiry"),
+          fetch("/api/casestudies"),
+        ]);
+        const enqData = await enqRes.json();
+        if (enqData.enquiries && Array.isArray(enqData.enquiries)) {
+          const newCount = enqData.enquiries.filter(
             (e: { status?: string }) => e.status === "NEW" || !e.status
           ).length;
           setNewEnquiriesCount(newCount);
         }
+        const csData = await csRes.json();
+        if (csData.success && Array.isArray(csData.casestudies)) {
+          setCaseStudiesCount(csData.casestudies.length);
+        }
       } catch (err) {
-        console.error("Error fetching enquiries count:", err);
+        console.error("Error fetching CMS counts:", err);
       }
     }
-    fetchNewEnquiries();
+    fetchCounts();
   }, []);
 
   return (
@@ -69,7 +77,9 @@ export default function LandingCmsHubTab({
             }`}
           >
             <SparklesIcon className="w-3.5 h-3.5" />
-            <span>Case Studies (5 Dossiers)</span>
+            <span>
+              Case Studies {caseStudiesCount !== null ? `(${caseStudiesCount} ${caseStudiesCount === 1 ? 'Dossier' : 'Dossiers'})` : ""}
+            </span>
           </button>
 
           <button
@@ -115,7 +125,7 @@ export default function LandingCmsHubTab({
 
       {/* RENDER SUB-TAB */}
       {subTab === "casestudies" && (
-        <CaseStudiesCmsTab onAuditLog={onAuditLog} />
+        <CaseStudiesCmsTab onCountChange={setCaseStudiesCount} onAuditLog={onAuditLog} />
       )}
 
       {subTab === "enquiries" && (

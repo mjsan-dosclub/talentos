@@ -16,6 +16,7 @@ import {
 } from "@/components/Icons";
 
 interface CaseStudiesCmsTabProps {
+  onCountChange?: (count: number) => void;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
     subcategory: string,
@@ -24,7 +25,7 @@ interface CaseStudiesCmsTabProps {
   ) => void;
 }
 
-export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps = {}) {
+export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStudiesCmsTabProps = {}) {
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -77,7 +78,11 @@ export default function CaseStudiesCmsTab({ onAuditLog }: CaseStudiesCmsTabProps
       const res = await fetch("/api/casestudies");
       const data = await res.json();
       if (data.success) {
-        setCaseStudies(data.casestudies || []);
+        const list = data.casestudies || [];
+        setCaseStudies(list);
+        if (onCountChange) {
+          onCountChange(list.length);
+        }
       }
     } catch (err) {
       console.error(err);
