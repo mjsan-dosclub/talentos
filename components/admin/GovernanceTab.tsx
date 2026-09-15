@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { AuditLogEntry } from "@/lib/admin-data";
 import GlobalTableFilter from "./GlobalTableFilter";
+import TablePagination from "./TablePagination";
 import {
   ClipboardListIcon,
   SettingsIcon,
@@ -26,6 +27,8 @@ export default function GovernanceTab({
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("ALL");
   const [selectedLogIds, setSelectedLogIds] = useState<Set<string>>(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   const categories: AuditLogEntry["category"][] = [
     "Students",
@@ -189,70 +192,82 @@ export default function GovernanceTab({
                   </td>
                 </tr>
               ) : (
-                filteredLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                    <td className="p-3 text-center">
-                      <input
-                        type="checkbox"
-                        checked={selectedLogIds.has(log.id)}
-                        onChange={() => handleToggleSelect(log.id)}
-                        className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
-                      />
-                    </td>
-                    <td className="p-3">
-                      <span className="px-2 py-0.5 rounded bg-slate-100 font-medium text-[10px] text-slate-700">
-                        {log.category}
-                      </span>
-                    </td>
-                    <td className="p-3 font-semibold text-slate-900">
-                      {log.action}
-                    </td>
-                    <td className="p-3">
-                      <div className="flex flex-col">
-                        <span className="font-medium text-slate-800">{log.sourceText}</span>
-                        <span className="text-[10px] text-slate-400">{log.subcategory}</span>
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex items-center gap-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={log.modifiedBy.avatar}
-                          alt=""
-                          className="w-6 h-6 rounded-full border border-slate-200"
+                filteredLogs
+                  .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                  .map((log) => (
+                    <tr key={log.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="p-3 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedLogIds.has(log.id)}
+                          onChange={() => handleToggleSelect(log.id)}
+                          className="w-3.5 h-3.5 rounded text-blue-600 cursor-pointer"
                         />
+                      </td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 font-medium text-[10px] text-slate-700">
+                          {log.category}
+                        </span>
+                      </td>
+                      <td className="p-3 font-semibold text-slate-900">
+                        {log.action}
+                      </td>
+                      <td className="p-3">
                         <div className="flex flex-col">
-                          <span className="font-bold text-slate-800 text-[11px]">
-                            {log.modifiedBy.name}
-                          </span>
-                          <span className="text-[10px] text-slate-400 font-mono">
-                            {log.modifiedBy.email}
-                          </span>
+                          <span className="font-medium text-slate-800">{log.sourceText}</span>
+                          <span className="text-[10px] text-slate-400">{log.subcategory}</span>
                         </div>
-                      </div>
-                    </td>
-                    <td className="p-3 text-slate-500 font-mono text-[11px]">
-                      {log.dateOfChange}
-                    </td>
-                    <td className="p-3 text-right">
-                      {log.sourceUrl ? (
-                        <Link
-                          href={log.sourceUrl}
-                          className="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1"
-                        >
-                          <span>View</span>
-                          <ExternalLinkIcon className="w-2.5 h-2.5" />
-                        </Link>
-                      ) : (
-                        <span className="text-slate-300">-</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={log.modifiedBy.avatar}
+                            alt=""
+                            className="w-6 h-6 rounded-full border border-slate-200"
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-bold text-slate-800 text-[11px]">
+                              {log.modifiedBy.name}
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-mono">
+                              {log.modifiedBy.email}
+                            </span>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 text-slate-500 font-mono text-[11px]">
+                        {log.dateOfChange}
+                      </td>
+                      <td className="p-3 text-right">
+                        {log.sourceUrl ? (
+                          <Link
+                            href={log.sourceUrl}
+                            className="text-blue-600 hover:text-blue-800 font-semibold inline-flex items-center gap-1"
+                          >
+                            <span>View</span>
+                            <ExternalLinkIcon className="w-2.5 h-2.5" />
+                          </Link>
+                        ) : (
+                          <span className="text-slate-300">-</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
               )}
             </tbody>
           </table>
         </div>
+        <TablePagination
+          currentPage={currentPage}
+          totalItems={filteredLogs.length}
+          pageSize={pageSize}
+          onPageChange={setCurrentPage}
+          onPageSizeChange={(newSize) => {
+            setPageSize(newSize);
+            setCurrentPage(1);
+          }}
+        />
       </div>
     </div>
   );
