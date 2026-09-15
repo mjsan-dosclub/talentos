@@ -320,6 +320,7 @@ function AdminDashboardContent() {
               workshops={workshops}
               setWorkshops={setWorkshops}
               institutions={institutions}
+              experts={experts}
               onToast={triggerToast}
               onAuditLog={logAdminAudit}
             />

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
-import { WorkshopItem } from "@/lib/admin-data";
+import { WorkshopItem, ExpertMentor } from "@/lib/admin-data";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 import GlobalTableFilter from "./GlobalTableFilter";
 import WorkshopScheduleTab from "./WorkshopScheduleTab";
@@ -21,6 +21,7 @@ interface WorkshopsTabProps {
   workshops: WorkshopItem[];
   setWorkshops: React.Dispatch<React.SetStateAction<WorkshopItem[]>>;
   institutions?: Array<{ id: string; name: string; city: string }>;
+  experts?: ExpertMentor[];
   onToast: (msg: string) => void;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System" | "Curriculum",
@@ -53,6 +54,7 @@ export default function WorkshopsTab({
   workshops,
   setWorkshops,
   institutions = [],
+  experts = [],
   onToast,
   onAuditLog,
 }: WorkshopsTabProps) {
@@ -77,13 +79,19 @@ export default function WorkshopsTab({
   const initialFormState = {
     code: "",
     title: "",
-    focusArea: "Distributed Systems & Protocols",
-    expertName: "Priya Sundaram",
+    focusArea: "",
+    expertName: experts.length > 0 ? experts[0].fullName : "",
     mode: "IN_PERSON" as WorkshopItem["mode"],
     testPassThreshold: 20,
     date: new Date().toISOString().slice(0, 10),
   };
   const [formData, setFormData] = useState(initialFormState);
+
+  useEffect(() => {
+    if (experts.length > 0 && !formData.expertName) {
+      setFormData((prev) => ({ ...prev, expertName: experts[0].fullName }));
+    }
+  }, [experts]);
 
   // Filter suggestions based on dual-field fuzzy search (Code + Title)
   const suggestions = CURRICULUM_CATALOG_REF.filter((item) => {
@@ -652,12 +660,19 @@ export default function WorkshopsTab({
                   <select
                     value={formData.expertName}
                     onChange={(e) => setFormData({ ...formData, expertName: e.target.value })}
-                    className="border border-slate-300 rounded-lg p-2 bg-white"
+                    className="border border-slate-300 rounded-lg p-2 bg-white text-xs"
                   >
-                    <option value="Priya Sundaram">Priya Sundaram (Distributed Systems)</option>
-                    <option value="Dr. Vikram Sethupathi">Dr. Vikram Sethupathi (Kernel Lead)</option>
-                    <option value="Anandhakrishnan R.">Anandhakrishnan R. (Database Internals)</option>
-                    <option value="Shalini Murugan">Shalini Murugan (Cryptography)</option>
+                    {experts.length > 0 ? (
+                      experts.map((exp) => (
+                        <option key={exp.id} value={exp.fullName}>
+                          {exp.fullName} ({exp.organization || exp.designation || "Faculty"})
+                        </option>
+                      ))
+                    ) : (
+                      <option value="" disabled>
+                        No Faculty Available — Register mentor first
+                      </option>
+                    )}
                   </select>
                 </div>
               </div>
@@ -679,8 +694,10 @@ export default function WorkshopsTab({
                   <label className="font-semibold text-slate-700">Focus Domain:</label>
                   <input
                     type="text"
+                    required
                     value={formData.focusArea}
                     onChange={(e) => setFormData({ ...formData, focusArea: e.target.value })}
+                    placeholder="e.g. Core Systems & Hermetic I/O"
                     className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-900"
                   />
                 </div>
