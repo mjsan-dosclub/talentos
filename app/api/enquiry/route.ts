@@ -314,7 +314,7 @@ export async function POST(req: NextRequest) {
 
         <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 12px 16px; margin: 20px 0; border-radius: 0 8px 8px 0; font-size: 12px; color: #92400e; line-height: 1.5;">
           <strong>CRITICAL ANTI-SPAM NOTICE:</strong><br/>
-          To prevent our evaluation pass invitation from landing in your Spam or Promotions folder, please add <strong>admissions@dosclub.org</strong> and <strong>notifications@dosclub.org</strong> to your email contacts right now.
+          To prevent our evaluation pass invitation from landing in your Spam or Promotions folder, please add <strong>no-reply@descienceosclub.com</strong> and <strong>info@descienceosclub.com</strong> to your email contacts right now.
         </div>
 
         <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
