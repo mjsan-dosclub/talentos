@@ -127,14 +127,15 @@ export async function POST(request: NextRequest) {
     const cleanDisplayName = studentName.replace(/\s+(Verification|Test|Engineer|Lead)$/i, "").trim();
 
     // 3. Dispatch Automatic Welcome & Priority Access Pass Email
-    const loginUrl = `http://descienceosclub.com/login`;
-    const verificationUrl = `http://descienceosclub.com/record/${studentDosId}`;
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dosclub-talentos.vercel.app";
+    const loginUrl = `${baseUrl}/login`;
+    const verificationUrl = `${baseUrl}/record/${studentDosId}`;
 
     try {
       await sendEmail({
         to: studentEmail,
         subject: `Welcome to TalentOS — Your Login Credentials & DOS ID (${studentDosId})`,
-        text: `Dear ${cleanDisplayName},\n\nWelcome to DeScience Open Source Club Systems Engineering Fellowship!\n\nYOUR TALENTOS LOGIN CREDENTIALS:\nPortal Login URL: ${loginUrl}\nRegistered Email: ${studentEmail}\nDefault Password: student@2026 (or use 1-Click Candidate Login)\n\nYour permanent cryptographic student identifier has been minted:\nDOS ID: ${studentDosId}\nCohort: Batch 3 (2026)\n\nInspect your live student defense record, verifiable credentials, and workshop clearance passes at:\n${verificationUrl}\n\nJoin our community channels:\n- WhatsApp: https://whatsapp.com/channel/0029VaDeScienceOSClub\n- Discord: https://discord.gg/descience-osclub\n\nDeScience Open Source Club — Academic Directorate\nno-reply@descienceosclub.com`,
+        text: `Dear ${cleanDisplayName},\n\nWelcome to DeScience Open Source Club Systems Engineering Fellowship!\n\nYOUR TALENTOS LOGIN CREDENTIALS:\nPortal Login URL: ${loginUrl}\nRegistered Email: ${studentEmail}\nDefault Password: ${studentDosId} (Your DOS ID is your default password. You can change it if needed in your portal settings)\n\nYour permanent cryptographic student identifier has been minted:\nDOS ID: ${studentDosId}\nCohort: Batch 3 (2026)\n\nInspect your live student defense record, verifiable credentials, and workshop clearance passes at:\n${verificationUrl}\n\nJoin our community channels:\n- WhatsApp: https://whatsapp.com/channel/0029VaDeScienceOSClub\n- Discord: https://discord.gg/descience-osclub\n\nDeScience Open Source Club — Academic Directorate\nno-reply@descienceosclub.com`,
         html: `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; border: 1px solid #e2e8f0; border-radius: 12px; background: #ffffff; color: #0f172a;">
             <div style="background: #0f172a; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
@@ -154,9 +155,9 @@ export async function POST(request: NextRequest) {
                 🔑 YOUR TALENTOS PORTAL LOGIN CREDENTIALS
               </div>
               <div style="font-size: 13px; color: #1e293b; line-height: 1.8;">
-                &bull; <strong>Portal URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">descienceosclub.com/login &rarr;</a><br/>
+                &bull; <strong>Portal URL:</strong> <a href="${loginUrl}" style="color: #2563eb; text-decoration: none; font-weight: 600;">${loginUrl} &rarr;</a><br/>
                 &bull; <strong>Registered Email:</strong> <code style="background: #ffffff; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1;">${studentEmail}</code><br/>
-                &bull; <strong>Default Password:</strong> <code style="background: #ffffff; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1;">student@2026</code> (or use 1-Click Candidate Login)
+                &bull; <strong>Default Password:</strong> <code style="background: #ffffff; padding: 2px 6px; border-radius: 4px; border: 1px solid #cbd5e1;">${studentDosId}</code> <em>(Your DOS ID is your default password. You can change it if needed in your portal settings.)</em>
               </div>
             </div>
 

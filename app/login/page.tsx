@@ -108,7 +108,7 @@ function LoginContent() {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), role }),
+        body: JSON.stringify({ email: email.trim(), password: password.trim(), role }),
       });
 
       const data = await res.json();
@@ -117,7 +117,7 @@ function LoginContent() {
         const destination = redirectUrl || data.redirect;
         window.location.href = destination;
       } else {
-        setStatusMessage("Invalid email or password. Please verify your credentials.");
+        setStatusMessage(data.error || "Invalid email or password. Please verify your credentials.");
         setIsAuthenticating(false);
       }
     } catch (err: any) {
