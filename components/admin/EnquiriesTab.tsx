@@ -156,7 +156,9 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
       if (data.success) {
         setEnquiries((prev) =>
           prev.map((enq) =>
-            selectedIds.has(enq.id) ? { ...enq, status: newStatus } : enq
+            selectedIds.has(enq.id) || selectedIds.has(enq.enquiry_ref)
+              ? { ...enq, status: newStatus }
+              : enq
           )
         );
         onToast(`Marked ${data.updatedCount} enquiry record(s) as ${newStatus}.`);
@@ -212,7 +214,9 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
       const data = await res.json();
       if (data.success) {
         setEnquiries((prev) =>
-          prev.map((enq) => (enq.id === id ? { ...enq, status } : enq))
+          prev.map((enq) =>
+            enq.id === id || enq.enquiry_ref === id ? { ...enq, status } : enq
+          )
         );
         onToast(`Updated ${name} status to ${status}.`);
         onAuditLog?.(

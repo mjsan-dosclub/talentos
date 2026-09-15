@@ -486,14 +486,33 @@ export async function PATCH(req: NextRequest) {
     });
     saveEnquiries(updated);
 
-    // Update in Supabase aspirant_enquiries
+    // Update in Supabase aspirant_enquiries and notification_dispatches
     try {
       await supabaseAdmin
         .from("aspirant_enquiries")
         .update({ status })
-        .in("enquiry_ref", targetIds);
-    } catch {
-      // Non-blocking
+        .or(`id.in.(${targetIds.join(",")}),enquiry_ref.in.(${targetIds.join(",")})`);
+      
+      // Also update notification_dispatches channel=ENQUIRY records
+      const { data: dispatches } = await supabaseAdmin
+        .from("notification_dispatches")
+        .select("*")
+        .eq("channel", "ENQUIRY");
+
+      if (dispatches && Array.isArray(dispatches)) {
+        for (const d of dispatches) {
+          const filter = d.target_filter as any;
+          if (filter && (targetIds.includes(d.id) || targetIds.includes(d.title) || targetIds.includes(filter.enquiry_ref))) {
+            const updatedFilter = { ...filter, status };
+            await supabaseAdmin
+              .from("notification_dispatches")
+              .update({ target_filter: updatedFilter })
+              .eq("id", d.id);
+          }
+        }
+      }
+    } catch (sbErr) {
+      console.warn("[TalentOS] Supabase enquiry update notice:", sbErr);
     }
 
     return NextResponse.json({
