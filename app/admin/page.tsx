@@ -18,6 +18,7 @@ import {
   XIcon,
 } from "@/components/Icons";
 
+import { getClientSession } from "@/lib/session";
 import {
   StudentMember,
   ExpertMentor,
@@ -45,6 +46,18 @@ function AdminDashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const rawTab = searchParams.get("tab") || "students";
+
+  // Enforce SUPER_ADMIN role clearance client-side
+  useEffect(() => {
+    const session = getClientSession();
+    if (!session || session.role !== "SUPER_ADMIN") {
+      router.replace(
+        `/login?error=ERR_ACCESS_DENIED_ADMIN_ONLY&redirect=${encodeURIComponent(
+          window.location.pathname + window.location.search
+        )}`
+      );
+    }
+  }, [router]);
 
   // Core Data State
   const [students, setStudents] = useState<StudentMember[]>(INITIAL_STUDENTS);

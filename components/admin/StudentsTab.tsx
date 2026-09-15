@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { StudentMember, INITIAL_INSTITUTIONS } from "@/lib/admin-data";
+import { getClientSession } from "@/lib/session";
 import GlobalTableFilter from "./GlobalTableFilter";
 import TablePagination from "./TablePagination";
 import {
@@ -30,6 +31,12 @@ export default function StudentsTab({
   onToast,
   onAuditLog,
 }: StudentsTabProps) {
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const session = getClientSession();
+    setIsAdmin(session?.role === "SUPER_ADMIN");
+  }, []);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [batchFilter, setBatchFilter] = useState("ALL");
@@ -289,14 +296,16 @@ export default function StudentsTab({
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={() => setIsAddOpen(true)}
-            className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
-          >
-            <span>+ Enroll Student</span>
-          </button>
-        </div>
+        {isAdmin && (
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setIsAddOpen(true)}
+              className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
+            >
+              <span>+ Enroll Student</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Reusable Global Datatable Filter */}
