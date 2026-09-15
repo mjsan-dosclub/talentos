@@ -11,10 +11,14 @@ export default function AppHeader() {
   const pathname = usePathname();
   const [user, setUser] = useState<TalentosUser | null>(null);
   const [currentTime, setCurrentTime] = useState<string>("");
+  const [mounted, setMounted] = useState(false);
+  const [siteTitle, setSiteTitle] = useState("DOS Club TalentOS");
   const config = getSystemConfig();
 
   useEffect(() => {
+    setMounted(true);
     setUser(getClientSession());
+    setSiteTitle(config.branding.siteTitle || "DOS Club TalentOS");
 
     const updateClock = () => {
       try {
@@ -57,8 +61,8 @@ export default function AppHeader() {
               <span className="font-gellix font-semibold text-xs sm:text-sm tracking-tight text-white group-hover:text-emerald-400 transition-colors flex items-center gap-1.5 sm:gap-2">
                 {/* Short name on mobile, full name on sm+ */}
                 <span className="sm:hidden font-bold tracking-tight">TalentOS</span>
-                <span className="hidden sm:inline truncate">
-                  {config.branding.siteTitle || "TalentOS by DeScience Open Source Club"}
+                <span className="hidden sm:inline truncate" suppressHydrationWarning>
+                  {mounted ? siteTitle : "DOS Club TalentOS"}
                 </span>
                 <span className="hidden md:inline-block text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1 sm:px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                   {user ? user.role.replace("_", " ") : "B3 LEDGER"}

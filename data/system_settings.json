@@ -2,7 +2,7 @@
   "timezone": "Asia/Kolkata",
   "locale": "en-IN",
   "branding": {
-    "siteTitle": "DOS Club TalentOS QA",
+    "siteTitle": "DOS Club TalentOS",
     "tagline": "Student Growth. Learning Evidence. Talent Intelligence.",
     "organizationName": "DeScience Open Source Club",
     "logoUrl": "/dos-club-logo.png",
@@ -27,7 +27,7 @@
     "resendApiKey": "",
     "fromAddress": "no-reply@descienceosclub.com",
     "fromName": "Descience Open Source Club",
-    "globalCc": "descienceosclub@gmail.com, info@descienceosclub.com",
+    "globalCc": "descienceosclub@gmail.com",
     "enabled": true
   },
   "whatsapp": {
