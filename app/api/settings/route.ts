@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function GET() {
   try {
+    const config = getSystemConfig();
     // Attempt reading from Supabase if table exists
     const { data, error } = await supabaseAdmin
       .from("system_settings")
@@ -12,12 +13,13 @@ export async function GET() {
       .limit(1)
       .maybeSingle();
 
-    if (!error && data?.settings) {
-      updateSystemConfig(data.settings);
+    if (!error && data?.settings && Object.keys(data.settings).length > 0) {
+      // Merge live DB with local config so user updates take precedence
+      const merged = updateSystemConfig(data.settings);
+      return NextResponse.json({ config: merged, isLiveDb: true });
     }
 
-    const config = getSystemConfig();
-    return NextResponse.json({ config, isLiveDb: !error && !!data });
+    return NextResponse.json({ config, isLiveDb: false });
   } catch (err: any) {
     return NextResponse.json({ config: getSystemConfig(), isLiveDb: false });
   }
