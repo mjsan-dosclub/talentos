@@ -61,8 +61,8 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
     workshopCode: "WS-02",
     workshopTitle: "Linux Kernel Primitives & eBPF",
     sessionNumber: 2,
-    institutionName: "Anna University Campus Hub",
-    institutionId: "inst-001",
+    institutionName: institutions.length > 0 ? institutions[0].name : "",
+    institutionId: institutions.length > 0 ? institutions[0].id : "",
     trainerName: "Priya Sundaram",
     trainerId: "exp-001",
     date: "2026-09-16",
@@ -72,6 +72,16 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
     focusTopic: "eBPF probe architecture and hermetic trace verification",
     cohortSize: 42,
   });
+
+  useEffect(() => {
+    if (institutions.length > 0 && !formData.institutionName) {
+      setFormData((prev) => ({
+        ...prev,
+        institutionName: institutions[0].name,
+        institutionId: institutions[0].id,
+      }));
+    }
+  }, [institutions]);
 
   const refreshSessions = async () => {
     setLoading(true);
@@ -543,15 +553,26 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
           </div>
 
           <div className="divide-y divide-slate-100">
-            {sessions.map((session) => {
-              const isSelected = selectedSessionIds.has(session.id);
-              return (
-                <div
-                  key={session.id}
-                  className={`p-5 hover:bg-slate-50/60 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
-                    isSelected ? "bg-blue-50/30" : ""
-                  }`}
-                >
+            {sessions.length === 0 ? (
+              <div className="p-12 text-center flex flex-col items-center justify-center gap-2">
+                <CalendarIcon className="w-8 h-8 text-slate-300" />
+                <p className="text-sm font-bold text-slate-700">No scheduled sessions found</p>
+                <p className="text-xs text-slate-400">
+                  {selectedInstitution !== "ALL" || selectedTrainer !== "ALL"
+                    ? "No sessions match the selected college or trainer filter."
+                    : "No campus sessions scheduled yet. Click '+ Assign Workshop' to schedule a session."}
+                </p>
+              </div>
+            ) : (
+              sessions.map((session) => {
+                const isSelected = selectedSessionIds.has(session.id);
+                return (
+                  <div
+                    key={session.id}
+                    className={`p-5 hover:bg-slate-50/60 transition-colors flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
+                      isSelected ? "bg-blue-50/30" : ""
+                    }`}
+                  >
                   <div className="flex items-start gap-4">
                     <input
                       type="checkbox"
@@ -683,7 +704,7 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
                   </div>
                 </div>
               );
-            })}
+            }))}
           </div>
         </div>
       )}
