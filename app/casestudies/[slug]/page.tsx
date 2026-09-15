@@ -177,6 +177,51 @@ export default function CaseStudyDetailPage({ params }: PageProps) {
               {paragraph}
             </p>
           ))}
+
+          {/* Embedded Media Section */}
+          {study.mediaEmbeds && (study.mediaEmbeds.videoUrl || study.mediaEmbeds.spotifyUrl) && (
+            <div className="my-8 space-y-6">
+              {study.mediaEmbeds.videoUrl && (
+                <div className="rounded-2xl overflow-hidden border border-[#E6E8EC] shadow-sm bg-black">
+                  <div className="p-3 bg-[#181A20] text-white text-xs font-bold font-mono flex items-center justify-between">
+                    <span>📺 DEMO & ARCHITECTURAL PRESENTATION</span>
+                  </div>
+                  {study.mediaEmbeds.videoUrl.includes("youtube.com") || study.mediaEmbeds.videoUrl.includes("youtu.be") ? (
+                    <div className="relative aspect-video w-full">
+                      <iframe
+                        src={study.mediaEmbeds.videoUrl.replace("watch?v=", "embed/")}
+                        title="Video Demo"
+                        className="absolute inset-0 w-full h-full border-0"
+                        allowFullScreen
+                      />
+                    </div>
+                  ) : (
+                    <video
+                      src={study.mediaEmbeds.videoUrl}
+                      controls
+                      className="w-full max-h-[450px] object-contain"
+                    />
+                  )}
+                </div>
+              )}
+
+              {study.mediaEmbeds.spotifyUrl && (
+                <div className="rounded-2xl overflow-hidden border border-[#E6E8EC] shadow-sm bg-[#121212]">
+                  <div className="p-3 bg-[#1DB954]/10 text-[#1DB954] text-xs font-bold font-mono flex items-center gap-2">
+                    <span>🎙️ SPOTIFY DEEP DIVE PODCAST</span>
+                  </div>
+                  <iframe
+                    src={study.mediaEmbeds.spotifyUrl.includes("/embed") ? study.mediaEmbeds.spotifyUrl : study.mediaEmbeds.spotifyUrl.replace("spotify.com/", "spotify.com/embed/")}
+                    width="100%"
+                    height="152"
+                    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                    loading="lazy"
+                    className="border-0 rounded-b-2xl"
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </article>
 
         {/* Cryptographic Proof & Defense Ledger */}

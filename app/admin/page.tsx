@@ -371,6 +371,7 @@ function AdminDashboardContent() {
           {activeModule === "cms" && (
             <LandingCmsHubTab
               initialSubTab={cmsSubTab}
+              students={students}
               onToast={triggerToast}
               onAuditLog={logAdminAudit}
             />

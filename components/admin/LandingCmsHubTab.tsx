@@ -12,8 +12,11 @@ import {
   FileTextIcon,
 } from "@/components/Icons";
 
+import { StudentMember } from "@/lib/admin-data";
+
 interface LandingCmsHubTabProps {
   initialSubTab?: "landing" | "casestudies" | "enquiries" | "passes";
+  students?: StudentMember[];
   onToast: (msg: string) => void;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
@@ -25,6 +28,7 @@ interface LandingCmsHubTabProps {
 
 export default function LandingCmsHubTab({
   initialSubTab = "landing",
+  students = [],
   onToast,
   onAuditLog,
 }: LandingCmsHubTabProps) {
@@ -143,7 +147,7 @@ export default function LandingCmsHubTab({
       )}
 
       {subTab === "casestudies" && (
-        <CaseStudiesCmsTab onCountChange={setCaseStudiesCount} onAuditLog={onAuditLog} />
+        <CaseStudiesCmsTab students={students} onCountChange={setCaseStudiesCount} onAuditLog={onAuditLog} />
       )}
 
       {subTab === "enquiries" && (

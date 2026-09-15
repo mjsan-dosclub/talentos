@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { CaseStudy } from "@/lib/casestudies";
 import TablePagination from "./TablePagination";
 import {
@@ -15,7 +16,10 @@ import {
   MoreVerticalIcon,
 } from "@/components/Icons";
 
+import { StudentMember } from "@/lib/admin-data";
+
 interface CaseStudiesCmsTabProps {
+  students?: StudentMember[];
   onCountChange?: (count: number) => void;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
@@ -25,7 +29,7 @@ interface CaseStudiesCmsTabProps {
   ) => void;
 }
 
-export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStudiesCmsTabProps = {}) {
+export default function CaseStudiesCmsTab({ students = [], onCountChange, onAuditLog }: CaseStudiesCmsTabProps = {}) {
   const [caseStudies, setCaseStudies] = useState<CaseStudy[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -420,13 +424,13 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
             </button>
           </div>
 
-          <button
-            onClick={handleOpenCreate}
+          <Link
+            href="/admin/casestudies/editor"
             className="flex items-center gap-2 px-4 py-2 bg-[#3772FF] hover:bg-[#285cdb] text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow cursor-pointer"
           >
             <SparklesIcon className="w-4 h-4" />
             <span>Write New Case Study</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -588,16 +592,14 @@ export default function CaseStudiesCmsTab({ onCountChange, onAuditLog }: CaseStu
                               isNearBottom ? "bottom-full mb-1" : "top-8"
                             } w-48 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
                           >
-                            <button
-                              onClick={() => {
-                                handleOpenEdit(study);
-                                setOpenKebabId(null);
-                              }}
+                            <Link
+                              href={`/admin/casestudies/editor?id=${study.id}`}
                               className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center justify-between cursor-pointer font-medium"
+                              onClick={() => setOpenKebabId(null)}
                             >
                               <span>Edit Case Study</span>
                               <EditIcon className="w-3.5 h-3.5 text-slate-400" />
-                            </button>
+                            </Link>
 
                             <a
                               href={`/casestudies/${study.slug}`}

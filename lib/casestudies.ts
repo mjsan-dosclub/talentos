@@ -39,6 +39,11 @@ export interface CaseStudy {
   metaTitle?: string;
   metaKeywords?: string;
   status?: "DRAFT" | "PUBLISHED";
+  mediaEmbeds?: {
+    videoUrl?: string;
+    spotifyUrl?: string;
+    githubRepoUrl?: string;
+  };
 }
 
 export const INITIAL_CASE_STUDIES: CaseStudy[] = [];
