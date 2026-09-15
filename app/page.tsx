@@ -10,6 +10,7 @@ import {
   TerminalIcon,
   ExternalLinkIcon,
   ShieldCheckIcon,
+  RefreshIcon,
 } from "@/components/Icons";
 import WelcomePopupModal from "@/components/WelcomePopupModal";
 import BackToTopButton from "@/components/BackToTopButton";
@@ -121,17 +122,44 @@ export default function Home() {
   };
 
   // Request Access / Cohort Invitation Form State
-  const [requestForm, setRequestForm] = useState({
+  const initialFormState = {
     institutionName: "",
     contactPerson: "",
     email: "",
     phone: "",
     institutionType: "Engineering College / University",
     cohortScope: "",
-  });
+  };
+
+  const [requestForm, setRequestForm] = useState(initialFormState);
   const [requestStatus, setRequestStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
   const [requestRef, setRequestRef] = useState<string | null>(null);
   const [requestError, setRequestError] = useState<string | null>(null);
+
+  // Anti-Bot Protection State
+  const [captcha, setCaptcha] = useState<{ a: number; b: number; token: string }>({ a: 11, b: 6, token: "" });
+  const [captchaAnswer, setCaptchaAnswer] = useState("");
+  const [honeypot, setHoneypot] = useState("");
+
+  const generateCaptcha = () => {
+    const a = Math.floor(Math.random() * 14) + 3; // 3 - 16
+    const b = Math.floor(Math.random() * 11) + 2; // 2 - 12
+    const token = typeof window !== "undefined" ? btoa(JSON.stringify({ a, b, ts: Date.now() })) : "";
+    setCaptcha({ a, b, token });
+    setCaptchaAnswer("");
+  };
+
+  const resetForm = () => {
+    setRequestForm(initialFormState);
+    setCaptchaAnswer("");
+    setHoneypot("");
+    setRequestError(null);
+    generateCaptcha();
+  };
+
+  useEffect(() => {
+    generateCaptcha();
+  }, []);
 
   useEffect(() => {
     setUser(getClientSession());
@@ -202,6 +230,13 @@ export default function Home() {
     setRequestStatus("submitting");
     setRequestError(null);
 
+    // Fast client-side anti-bot check
+    if (Number(captchaAnswer) !== captcha.a + captcha.b) {
+      setRequestStatus("error");
+      setRequestError("Anti-bot security check failed. Please solve the math verification problem correctly.");
+      return;
+    }
+
     try {
       const res = await fetch("/api/enquiry", {
         method: "POST",
@@ -214,6 +249,9 @@ export default function Home() {
           current_role: `${requestForm.institutionType} • ${requestForm.institutionName}`,
           referral_source: "Institutional Cohort Intake",
           message: `[Institution: ${requestForm.institutionName}] [Contact: ${requestForm.contactPerson}] [Type: ${requestForm.institutionType}] ${requestForm.cohortScope ? `[Requirements: ${requestForm.cohortScope}]` : ""}`,
+          hp_company_url: honeypot,
+          captcha_token: captcha.token,
+          captcha_answer: captchaAnswer,
         }),
       });
 
@@ -221,13 +259,17 @@ export default function Home() {
       if (res.ok && data.success) {
         setRequestStatus("success");
         setRequestRef(data.enquiryId || "REQ-INVITATION-LOGGED");
+        // Clear inputs immediately so resubmissions always start fresh
+        resetForm();
       } else {
         setRequestStatus("error");
         setRequestError(data.error || "Unable to submit invitation request. Please try again.");
+        generateCaptcha();
       }
     } catch {
       setRequestStatus("error");
       setRequestError("Network communication error. Please try again.");
+      generateCaptcha();
     }
   };
 
@@ -1045,15 +1087,8 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => {
+                      resetForm();
                       setRequestStatus("idle");
-                      setRequestForm({
-                        institutionName: "",
-                        contactPerson: "",
-                        email: "",
-                        phone: "",
-                        institutionType: "Engineering College / University",
-                        cohortScope: "",
-                      });
                     }}
                     className="text-xs font-bold text-emerald-800 hover:text-emerald-950 underline cursor-pointer"
                   >
@@ -1063,6 +1098,20 @@ export default function Home() {
               </div>
             ) : (
               <form onSubmit={handleRequestSubmit} className="mt-8 sm:mt-10 space-y-5 sm:space-y-6">
+                {/* Invisible Anti-Bot Honeypot Trap */}
+                <div style={{ display: "none", position: "absolute", left: "-9999px", opacity: 0 }} aria-hidden="true">
+                  <label htmlFor="hp_company_url">Leave this field blank</label>
+                  <input
+                    id="hp_company_url"
+                    type="text"
+                    name="hp_company_url"
+                    value={honeypot}
+                    onChange={(e) => setHoneypot(e.target.value)}
+                    tabIndex={-1}
+                    autoComplete="off"
+                  />
+                </div>
+
                 {/* Row 1: Institution & Contact Person */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
                   <div>
@@ -1159,17 +1208,67 @@ export default function Home() {
                   />
                 </div>
 
+                {/* Row 5: Anti-Bot Security Verification */}
+                <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs shrink-0">
+                      <ShieldCheckIcon className="w-5 h-5 text-[#E25C38]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-slate-500">
+                          Anti-Bot Verification
+                        </span>
+                        <span className="text-red-500 text-xs font-bold">*</span>
+                      </div>
+                      <div className="text-xs sm:text-sm font-medium text-slate-700 mt-0.5">
+                        Solve challenge: <span className="font-mono font-bold text-slate-900 bg-white px-2 py-0.5 rounded border border-slate-200 inline-block ml-1">{captcha.a} + {captcha.b} = ?</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={generateCaptcha}
+                      title="Reload challenge"
+                      className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 rounded-lg transition-colors cursor-pointer ml-auto sm:ml-2"
+                      aria-label="Reload security challenge"
+                    >
+                      <RefreshIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="w-full sm:w-36 shrink-0">
+                    <input
+                      type="number"
+                      required
+                      placeholder="Sum *"
+                      value={captchaAnswer}
+                      onChange={(e) => setCaptchaAnswer(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-mono font-bold text-center text-slate-900 placeholder:text-slate-400 placeholder:font-normal focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors shadow-2xs"
+                    />
+                  </div>
+                </div>
+
                 {requestError && (
                   <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs font-medium">
                     {requestError}
                   </div>
                 )}
 
-                {/* Footer Bar: Notice & Submit Button */}
+                {/* Footer Bar: Notice, Reset Link & Submit Button */}
                 <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 mt-2">
-                  <span className="font-mono text-xs text-slate-400 tracking-tight text-center sm:text-left">
-                    Official Institutional Inquiries Only
-                  </span>
+                  <div className="flex items-center gap-2.5">
+                    <span className="font-mono text-xs text-slate-400 tracking-tight text-center sm:text-left">
+                      Official Institutional Inquiries Only
+                    </span>
+                    <span className="text-slate-300 hidden sm:inline">&bull;</span>
+                    <button
+                      type="button"
+                      onClick={resetForm}
+                      className="text-[11px] font-medium text-slate-400 hover:text-slate-700 underline cursor-pointer"
+                    >
+                      Clear form
+                    </button>
+                  </div>
 
                   <button
                     type="submit"

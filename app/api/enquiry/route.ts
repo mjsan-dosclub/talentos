@@ -104,6 +104,45 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    // 1. Anti-Bot Honeypot Trap (Drops automated bots filling hidden input)
+    const honeypot = body.hp_company_url || body.honeypot || body.website_url;
+    if (honeypot && String(honeypot).trim().length > 0) {
+      console.warn("[Anti-Bot] Automated spam bot caught via honeypot trap. Aborting email dispatch.");
+      return NextResponse.json({
+        success: true,
+        enquiryId: "ENQ-BOT-FILTERED",
+        message: "Request received.",
+      });
+    }
+
+    // 2. Anti-Bot CAPTCHA Verification
+    const captchaToken = body.captcha_token;
+    const captchaAnswer = body.captcha_answer;
+
+    if (captchaToken !== undefined && captchaToken !== null && String(captchaToken).trim().length > 0) {
+      try {
+        const decoded = JSON.parse(Buffer.from(String(captchaToken), "base64").toString("utf-8"));
+        const expected = Number(decoded.a) + Number(decoded.b);
+        if (Number(captchaAnswer) !== expected) {
+          return NextResponse.json(
+            { error: "Anti-bot verification failed. Please enter the correct answer to the security challenge." },
+            { status: 400 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Security challenge expired or invalid. Please click the refresh icon to try a new challenge." },
+          { status: 400 }
+        );
+      }
+    } else {
+      return NextResponse.json(
+        { error: "Anti-bot security verification is required to submit this form." },
+        { status: 400 }
+      );
+    }
+
     const name = body.name || body.fullName;
     const phone = body.phone || body.whatsapp || body.contact;
     const email = body.email;
@@ -113,7 +152,7 @@ export async function POST(req: NextRequest) {
 
     if (!name || !phone || !email) {
       return NextResponse.json(
-        { error: "Full Name, WhatsApp Mobile Number, and Email Address are all required." },
+        { error: "Institution Contact Person, Phone Number, and Institutional Email are all required." },
         { status: 400 }
       );
     }
