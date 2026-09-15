@@ -53,7 +53,7 @@ export default function InstitutionsTab({
     code: "",
     city: "",
     state: "Tamil Nadu",
-    tier: "Tier 1 Engineering",
+    tier: "Autonomous",
     region: "Tamil Nadu, India",
     pocName: "",
     pocRole: "",
@@ -593,10 +593,9 @@ export default function InstitutionsTab({
                     onChange={(e) => setFormData({ ...formData, tier: e.target.value })}
                     className="border border-slate-300 rounded-lg p-2 bg-white"
                   >
-                    <option value="Tier 1 Engineering">Tier 1 Engineering</option>
-                    <option value="Premier Research">Premier Research</option>
-                    <option value="State University Hub">State University Hub</option>
-                    <option value="Autonomous Tech Campus">Autonomous Tech Campus</option>
+                    <option value="Affiliated">Affiliated</option>
+                    <option value="Autonomous">Autonomous</option>
+                    <option value="University">University</option>
                   </select>
                 </div>
 
@@ -747,14 +746,13 @@ export default function InstitutionsTab({
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-slate-700">Tier / Type:</label>
                   <select
-                    value={editingInst.tier || "Tier 1 Engineering"}
+                    value={editingInst.tier || "Autonomous"}
                     onChange={(e) => setEditingInst({ ...editingInst, tier: e.target.value })}
                     className="border border-slate-300 rounded-lg p-2 bg-white"
                   >
-                    <option value="Tier 1 Engineering">Tier 1 Engineering</option>
-                    <option value="Premier Research">Premier Research</option>
-                    <option value="State University Hub">State University Hub</option>
-                    <option value="Autonomous Tech Campus">Autonomous Tech Campus</option>
+                    <option value="Affiliated">Affiliated</option>
+                    <option value="Autonomous">Autonomous</option>
+                    <option value="University">University</option>
                   </select>
                 </div>
               </div>
