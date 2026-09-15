@@ -95,34 +95,7 @@ export const WORKSHOP_PHASES_27 = [
   "Phase 10: The Arena (Pre-Finals)",
 ];
 
-export const FALLBACK_WORKSHOPS: Workshop[] = WORKSHOP_TOPICS_27.map((topic, idx) => {
-  // Session durations based on curriculum:
-  // Phase 2 (idx 6-15), Phase 4 (idx 17), Phase 10 (idx 25-26): 9AM - 4PM (420 mins)
-  // Others: 10AM - 3PM (300 mins)
-  const isAllDay = (idx >= 6 && idx <= 15) || idx === 17 || idx >= 25;
-  const duration = isAllDay ? 420 : 300;
-  const startHour = isAllDay ? 9 : 10;
-
-  return {
-    id: `w0000000-0000-0000-0000-${String(idx + 1).padStart(12, "0")}`,
-    batch_id: SEED_BATCH_ID,
-    session_number: idx + 1,
-    title: `WS-${String(idx + 1).padStart(2, "0")}: ${topic}`,
-    description: `${WORKSHOP_PHASES_27[idx]} — 27 Days to CodeZap 3.0's 36-Hour Hackathon.`,
-    trainer_name: idx % 2 === 0 ? "Priya (Systems Architect)" : "DeScience Technical Faculty",
-    session_mode: "OFFLINE",
-    scheduled_at: new Date(2026, 2, 1 + idx * 7, startHour, 0).toISOString(),
-    duration_minutes: duration,
-    venue_name: "Anna University Campus / DOS Club Chennai Hub",
-    venue_lat: 13.011,
-    venue_lng: 80.2354,
-    venue_radius_meters: 150,
-    submission_required: idx < 17,
-    submission_type: idx === 18 ? "DOCUMENT" : "GITHUB_REPO",
-    is_active: idx === 6, // WS-07 (Build Arena — Day 1) is active workshop
-    created_at: "2026-03-01T00:00:00Z",
-  };
-});
+export const FALLBACK_WORKSHOPS: Workshop[] = [];
 
 // ============================================================================
 // DATA ACCESS SERVICE WITH LIVE SUPABASE QUERY + FALLBACK RESILIENCE
