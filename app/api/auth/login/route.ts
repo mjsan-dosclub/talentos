@@ -20,35 +20,35 @@ export async function POST(request: Request) {
     const providedPwd = (password || "").trim();
 
     if (role === "trainer") {
-      const isRegisteredExpert = cleanEmail === "faculty@dosclub.org" || cleanEmail === "priya@dosclub.org" || cleanEmail.includes("trainer");
+      const isRegisteredExpert = cleanEmail.toLowerCase() === "faculty@dosclub.org" || cleanEmail.toLowerCase() === "priya@dosclub.org";
       if (!isRegisteredExpert) {
         return NextResponse.json({ error: `No registered Technical Expert account found for email: "${cleanEmail}".` }, { status: 404 });
       }
-      if (providedPwd !== "dosclub2026" && providedPwd !== "trainer@2026") {
-        return NextResponse.json({ error: "Invalid password for Technical Expert role. Check your credentials." }, { status: 401 });
+      if (providedPwd !== "trainer@2026" && providedPwd !== "dosclub2026") {
+        return NextResponse.json({ error: "Invalid password for Technical Expert role." }, { status: 401 });
       }
       user = {
         ...DEMO_ACCOUNTS.trainer,
         email: cleanEmail,
       };
     } else if (role === "college") {
-      const isRegisteredCoordinator = cleanEmail === "coordinator@annauniv.edu" || cleanEmail.includes("coordinator") || cleanEmail.includes("annauniv");
+      const isRegisteredCoordinator = cleanEmail.toLowerCase() === "coordinator@annauniv.edu";
       if (!isRegisteredCoordinator) {
         return NextResponse.json({ error: `No registered College Coordinator account found for email: "${cleanEmail}".` }, { status: 404 });
       }
-      if (providedPwd !== "dosclub2026" && providedPwd !== "college@2026") {
-        return NextResponse.json({ error: "Invalid password for College Coordinator role. Check your credentials." }, { status: 401 });
+      if (providedPwd !== "college@2026" && providedPwd !== "dosclub2026") {
+        return NextResponse.json({ error: "Invalid password for College Coordinator role." }, { status: 401 });
       }
       user = {
         ...DEMO_ACCOUNTS.college,
         email: cleanEmail,
       };
     } else if (role === "admin") {
-      const isSuperAdmin = cleanEmail === "admin@dosclub.org" || cleanEmail.includes("admin");
+      const isSuperAdmin = cleanEmail.toLowerCase() === "admin@dosclub.org";
       if (!isSuperAdmin) {
         return NextResponse.json({ error: `No registered Super Admin account found for email: "${cleanEmail}".` }, { status: 404 });
       }
-      if (providedPwd !== "admin@2026" && providedPwd !== "dosclub2026") {
+      if (providedPwd !== "admin@2026") {
         return NextResponse.json({ error: "Invalid password for Super Admin account." }, { status: 401 });
       }
       user = {
