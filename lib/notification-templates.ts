@@ -416,7 +416,7 @@ JOIN OUR OFFICIAL COMMUNITY CHANNELS:
 - Official Website: http://descienceosclub.com/
 - WhatsApp Channel: https://whatsapp.com/channel/0029Vb6yhyh5Ui2YyHbIL117
 - Discord Server: https://discord.com/channels/1503348482218524672/1503348483594129550
-- LinkedIn: https://www.linkedin.com/in/descience-open-source-club
+- LinkedIn: https://www.linkedin.com/company/descience-open-source-club/
 
 See you at the terminal!
 
@@ -503,7 +503,7 @@ Our admissions and cohort allocation pod has received your information. A mentor
 
 WHILE YOU WAIT — CONNECT WITH OUR OFFICIAL COMMUNITY CHANNELS:
 - Official Website: http://descienceosclub.com/
-- LinkedIn: https://www.linkedin.com/in/descience-open-source-club
+- LinkedIn: https://www.linkedin.com/company/descience-open-source-club/
 - YouTube: https://www.youtube.com/channel/UCvF5jATxekeLcFvjLrMGjpA
 - X (Twitter): https://x.com/descienceosclub
 - Instagram: https://www.instagram.com/descienceopensourceclub/

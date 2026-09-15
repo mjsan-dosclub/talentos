@@ -1352,7 +1352,7 @@ export default function Home() {
             <div className="flex items-center gap-3 flex-wrap justify-center">
               {/* LinkedIn */}
               <a
-                href="https://www.linkedin.com/in/descience-open-source-club"
+                href="https://www.linkedin.com/company/descience-open-source-club/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full bg-[#FAFAF9] border border-neutral-200 hover:border-[#14171A] hover:bg-[#14171A] hover:text-white text-neutral-700 flex items-center justify-center transition-colors"

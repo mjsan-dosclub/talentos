@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
               &bull; <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">Official Website (descienceosclub.com)</a><br/>
               &bull; <a href="https://whatsapp.com/channel/0029Vb6yhyh5Ui2YyHbIL117" style="color: #2563eb; text-decoration: none;">Join WhatsApp Channel</a><br/>
               &bull; <a href="https://discord.com/channels/1503348482218524672/1503348483594129550" style="color: #2563eb; text-decoration: none;">Join Discord Community</a><br/>
-              &bull; <a href="https://www.linkedin.com/in/descience-open-source-club" style="color: #2563eb; text-decoration: none;">Follow on LinkedIn</a>
+              &bull; <a href="https://www.linkedin.com/company/descience-open-source-club/" style="color: #2563eb; text-decoration: none;">Follow on LinkedIn</a>
             </div>
 
             <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 16px; font-size: 11px; color: #64748b; text-align: center; line-height: 1.5;">

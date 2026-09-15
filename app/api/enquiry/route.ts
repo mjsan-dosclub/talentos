@@ -300,7 +300,7 @@ export async function POST(req: NextRequest) {
           </h4>
           <ul style="margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8; color: #334155;">
             <li><strong>Official Website:</strong> <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com &rarr;</a></li>
-            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/in/descience-open-source-club" style="color: #2563eb; text-decoration: none;">linkedin.com/in/descience-open-source-club &rarr;</a></li>
+            <li><strong>LinkedIn:</strong> <a href="https://www.linkedin.com/company/descience-open-source-club/" style="color: #2563eb; text-decoration: none;">linkedin.com/company/descience-open-source-club &rarr;</a></li>
             <li><strong>YouTube:</strong> <a href="https://www.youtube.com/channel/UCvF5jATxekeLcFvjLrMGjpA" style="color: #2563eb; text-decoration: none;">YouTube Channel &rarr;</a></li>
             <li><strong>X (Twitter):</strong> <a href="https://x.com/descienceosclub" style="color: #2563eb; text-decoration: none;">x.com/descienceosclub &rarr;</a></li>
             <li><strong>Instagram:</strong> <a href="https://www.instagram.com/descienceopensourceclub/" style="color: #2563eb; text-decoration: none;">instagram.com/descienceopensourceclub &rarr;</a></li>
@@ -336,7 +336,7 @@ Our admissions and cohort allocation pod has received your information. A mentor
 
 WHILE YOU WAIT — CONNECT WITH OUR OFFICIAL COMMUNITY CHANNELS:
 - Official Website: http://descienceosclub.com/
-- LinkedIn: https://www.linkedin.com/in/descience-open-source-club
+- LinkedIn: https://www.linkedin.com/company/descience-open-source-club/
 - YouTube: https://www.youtube.com/channel/UCvF5jATxekeLcFvjLrMGjpA
 - X (Twitter): https://x.com/descienceosclub
 - Instagram: https://www.instagram.com/descienceopensourceclub/

@@ -483,7 +483,7 @@ notifications@dosclub.org
       </div>
       <div style="font-size: 10px; color: #94a3b8; margin-top: 8px;">
         Official Channels: 
-        <a href="https://www.linkedin.com/in/descience-open-source-club" style="color: #64748b; text-decoration: none; margin: 0 4px;">LinkedIn</a> &bull; 
+        <a href="https://www.linkedin.com/company/descience-open-source-club/" style="color: #64748b; text-decoration: none; margin: 0 4px;">LinkedIn</a> &bull; 
         <a href="https://www.youtube.com/channel/UCvF5jATxekeLcFvjLrMGjpA" style="color: #64748b; text-decoration: none; margin: 0 4px;">YouTube</a> &bull; 
         <a href="https://x.com/descienceosclub" style="color: #64748b; text-decoration: none; margin: 0 4px;">X (Twitter)</a> &bull; 
         <a href="https://www.instagram.com/descienceopensourceclub/" style="color: #64748b; text-decoration: none; margin: 0 4px;">Instagram</a> &bull; 
