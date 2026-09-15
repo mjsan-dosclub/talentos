@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { ExpertMentor } from "@/lib/admin-data";
+import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 import GlobalTableFilter from "./GlobalTableFilter";
 import TablePagination from "./TablePagination";
 import {
@@ -26,6 +27,12 @@ interface MentorsTabProps {
   ) => void;
 }
 
+// Master workshop options with codes and titles for autosuggest
+const ALL_WORKSHOP_OPTIONS = WORKSHOP_TOPICS_27.map((topic, idx) => {
+  const code = `WS-${String(idx + 1).padStart(2, "0")}`;
+  return { code, label: `${code} - ${topic}` };
+});
+
 export default function MentorsTab({
   experts,
   setExperts,
@@ -41,6 +48,26 @@ export default function MentorsTab({
   const [pageSize, setPageSize] = useState(10);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
+  // Upload states
+  const [uploadingAddAvatar, setUploadingAddAvatar] = useState(false);
+  const [uploadingEditAvatar, setUploadingEditAvatar] = useState(false);
+  const addFileInputRef = useRef<HTMLInputElement>(null);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
+
+  // Workshop Autosuggest state
+  const [addWorkshopInput, setAddWorkshopInput] = useState("");
+  const [addWorkshopTags, setAddWorkshopTags] = useState<string[]>(["WS-14"]);
+  const [addWorkshopShowSuggestions, setAddWorkshopShowSuggestions] = useState(false);
+
+  const [editWorkshopInput, setEditWorkshopInput] = useState("");
+  const [editWorkshopTags, setEditWorkshopTags] = useState<string[]>([]);
+  const [editWorkshopShowSuggestions, setEditWorkshopShowSuggestions] = useState(false);
+
+  // Domain Specialties tag state
+  const [addDomainInput, setAddDomainInput] = useState("");
+  const [addDomainTags, setAddDomainTags] = useState<string[]>(["Distributed Systems", "Fault Tolerance"]);
+  const [editDomainInput, setEditDomainInput] = useState("");
+
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingExpert, setEditingExpert] = useState<ExpertMentor | null>(null);
@@ -55,8 +82,6 @@ export default function MentorsTab({
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
     linkedinUrl: "",
     githubUrl: "",
-    domainSpecialties: "Distributed Systems, Fault Tolerance",
-    assignedWorkshops: "WS-14",
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -150,6 +175,54 @@ export default function MentorsTab({
     onToast(`${name} is now ${status}`);
   };
 
+  // File upload handler for Avatar
+  const handleAvatarFileUpload = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+    target: "ADD" | "EDIT"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (target === "ADD") setUploadingAddAvatar(true);
+    else setUploadingEditAvatar(true);
+
+    try {
+      const uploadData = new FormData();
+      uploadData.append("file", file);
+      uploadData.append("type", "avatar");
+
+      const res = await fetch("/api/upload", {
+        method: "POST",
+        body: uploadData,
+      });
+
+      const json = await res.json();
+      if (res.ok && json.url) {
+        if (target === "ADD") {
+          setFormData((prev) => ({ ...prev, avatar: json.url }));
+        } else if (editingExpert) {
+          setEditingExpert((prev) => (prev ? { ...prev, avatar: json.url } : null));
+        }
+        onToast("Profile picture uploaded successfully!");
+      } else {
+        onToast(`Upload failed: ${json.error || "Unknown error"}`);
+      }
+    } catch (err: any) {
+      console.error("Avatar upload error:", err);
+      onToast("Failed to upload profile picture.");
+    } finally {
+      if (target === "ADD") setUploadingAddAvatar(false);
+      else setUploadingEditAvatar(false);
+    }
+  };
+
+  const handleOpenEditModal = (exp: ExpertMentor) => {
+    setEditingExpert(exp);
+    setEditWorkshopTags(exp.assignedWorkshops || []);
+    setEditWorkshopInput("");
+    setOpenKebabId(null);
+  };
+
   const handleCreateMentor = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName.trim() || !formData.email.trim()) return;
@@ -166,20 +239,18 @@ export default function MentorsTab({
         "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
       linkedinUrl: formData.linkedinUrl.trim(),
       githubUrl: formData.githubUrl.trim(),
-      domainSpecialties: formData.domainSpecialties
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
-      assignedWorkshops: formData.assignedWorkshops
-        .split(",")
-        .map((s) => s.trim())
-        .filter(Boolean),
+      domainSpecialties: addDomainTags.length > 0
+        ? addDomainTags
+        : ["Distributed Systems", "Fault Tolerance"],
+      assignedWorkshops: addWorkshopTags,
       status: "ACTIVE",
     };
 
     setExperts([created, ...experts]);
     setIsAddOpen(false);
     setFormData(initialFormState);
+    setAddWorkshopTags(["WS-14"]);
+    setAddDomainTags(["Distributed Systems", "Fault Tolerance"]);
     onAuditLog?.(
       "Experts",
       "Mentor Registration",
@@ -192,16 +263,22 @@ export default function MentorsTab({
   const handleSaveEdit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingExpert) return;
+
+    const updated: ExpertMentor = {
+      ...editingExpert,
+      assignedWorkshops: editWorkshopTags,
+    };
+
     setExperts((prev) =>
-      prev.map((exp) => (exp.id === editingExpert.id ? editingExpert : exp))
+      prev.map((exp) => (exp.id === updated.id ? updated : exp))
     );
     onAuditLog?.(
       "Experts",
       "Mentor Update",
       "Update",
-      `Updated expert profile for ${editingExpert.fullName}`
+      `Updated expert profile for ${updated.fullName}`
     );
-    onToast(`Saved changes for ${editingExpert.fullName}`);
+    onToast(`Saved changes for ${updated.fullName}`);
     setEditingExpert(null);
   };
 
@@ -436,7 +513,7 @@ export default function MentorsTab({
                         </a>
                       )}
                       <button
-                        onClick={() => setEditingExpert(exp)}
+                        onClick={() => handleOpenEditModal(exp)}
                         className="p-1 text-slate-400 hover:text-slate-700 cursor-pointer"
                         title="Edit mentor"
                       >
@@ -577,10 +654,7 @@ export default function MentorsTab({
                                 } w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
                               >
                                 <button
-                                  onClick={() => {
-                                    setEditingExpert(exp);
-                                    setOpenKebabId(null);
-                                  }}
+                                  onClick={() => handleOpenEditModal(exp)}
                                   className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
                                 >
                                   <span>Edit Expert Profile</span>
@@ -773,38 +847,161 @@ export default function MentorsTab({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Domain Specialties Tag Input */}
                 <div className="flex flex-col gap-1">
-                  <label className="font-semibold text-slate-700">Domain Specialties (comma-separated):</label>
-                  <input
-                    type="text"
-                    value={formData.domainSpecialties}
-                    onChange={(e) => setFormData({ ...formData, domainSpecialties: e.target.value })}
-                    placeholder="Distributed Systems, Raft, eBPF"
-                    className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800"
-                  />
+                  <label className="font-semibold text-slate-700">Domain Specialties:</label>
+                  <div className="border border-slate-300 rounded-lg p-1.5 focus-within:ring-1 focus-within:ring-slate-800 bg-white min-h-[38px] flex flex-wrap items-center gap-1.5">
+                    {addDomainTags.map((tag, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 border border-slate-200 text-slate-800 text-[11px] font-medium rounded-md">
+                        <span>{tag}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAddDomainTags(addDomainTags.filter((_, i) => i !== idx))}
+                          className="text-slate-400 hover:text-slate-700"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      type="text"
+                      value={addDomainInput}
+                      onChange={(e) => setAddDomainInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if ((e.key === "Enter" || e.key === ",") && addDomainInput.trim()) {
+                          e.preventDefault();
+                          const val = addDomainInput.replace(/,/g, "").trim();
+                          if (val && !addDomainTags.includes(val)) {
+                            setAddDomainTags([...addDomainTags, val]);
+                          }
+                          setAddDomainInput("");
+                        }
+                      }}
+                      placeholder={addDomainTags.length === 0 ? "Type specialty & hit Enter..." : "Add..."}
+                      className="flex-1 min-w-[80px] bg-transparent outline-none text-xs"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <label className="font-semibold text-slate-700">Assigned Workshops:</label>
-                  <input
-                    type="text"
-                    value={formData.assignedWorkshops}
-                    onChange={(e) => setFormData({ ...formData, assignedWorkshops: e.target.value })}
-                    placeholder="WS-01, WS-02"
-                    className="border border-slate-300 rounded-lg p-2 font-mono focus:ring-1 focus:ring-slate-800"
-                  />
+                {/* Assigned Workshops Tag Input with Autosuggest */}
+                <div className="flex flex-col gap-1 relative">
+                  <label className="font-semibold text-slate-700 flex items-center justify-between">
+                    <span>Assigned Workshops:</span>
+                    <span className="text-[10px] text-slate-400 font-normal">Select or type code</span>
+                  </label>
+                  <div className="border border-slate-300 rounded-lg p-1.5 focus-within:ring-1 focus-within:ring-slate-800 bg-white min-h-[38px] flex flex-wrap items-center gap-1.5">
+                    {addWorkshopTags.map((tag, idx) => (
+                      <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 border border-orange-200 text-[#E25C38] text-[11px] font-mono font-bold rounded-md">
+                        <span>{tag}</span>
+                        <button
+                          type="button"
+                          onClick={() => setAddWorkshopTags(addWorkshopTags.filter((_, i) => i !== idx))}
+                          className="text-orange-400 hover:text-orange-700"
+                        >
+                          &times;
+                        </button>
+                      </span>
+                    ))}
+                    <input
+                      type="text"
+                      value={addWorkshopInput}
+                      onFocus={() => setAddWorkshopShowSuggestions(true)}
+                      onChange={(e) => {
+                        setAddWorkshopInput(e.target.value);
+                        setAddWorkshopShowSuggestions(true);
+                      }}
+                      onKeyDown={(e) => {
+                        if ((e.key === "Enter" || e.key === ",") && addWorkshopInput.trim()) {
+                          e.preventDefault();
+                          const val = addWorkshopInput.replace(/,/g, "").trim().toUpperCase();
+                          if (val && !addWorkshopTags.includes(val)) {
+                            setAddWorkshopTags([...addWorkshopTags, val]);
+                          }
+                          setAddWorkshopInput("");
+                          setAddWorkshopShowSuggestions(false);
+                        }
+                      }}
+                      placeholder={addWorkshopTags.length === 0 ? "Search workshop..." : "+ Add"}
+                      className="flex-1 min-w-[70px] bg-transparent outline-none text-xs font-mono"
+                    />
+                  </div>
+
+                  {/* Autosuggest Dropdown */}
+                  {addWorkshopShowSuggestions && (
+                    <>
+                      <div className="fixed inset-0 z-10" onClick={() => setAddWorkshopShowSuggestions(false)} />
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-44 overflow-y-auto p-1">
+                        {ALL_WORKSHOP_OPTIONS.filter(
+                          (w) =>
+                            w.code.toLowerCase().includes(addWorkshopInput.toLowerCase()) ||
+                            w.label.toLowerCase().includes(addWorkshopInput.toLowerCase())
+                        ).slice(0, 8).map((w) => {
+                          const isSelected = addWorkshopTags.includes(w.code);
+                          return (
+                            <button
+                              key={w.code}
+                              type="button"
+                              onClick={() => {
+                                if (isSelected) {
+                                  setAddWorkshopTags(addWorkshopTags.filter((t) => t !== w.code));
+                                } else {
+                                  setAddWorkshopTags([...addWorkshopTags, w.code]);
+                                }
+                                setAddWorkshopInput("");
+                                setAddWorkshopShowSuggestions(false);
+                              }}
+                              className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                                isSelected ? "bg-orange-50 text-[#E25C38] font-bold" : "hover:bg-slate-50 text-slate-700"
+                              }`}
+                            >
+                              <span className="truncate pr-2">{w.label}</span>
+                              <span className="font-mono text-[10px]">{isSelected ? "✓ Added" : "+ Add"}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="font-semibold text-slate-700">Avatar Image URL:</label>
-                <input
-                  type="url"
-                  value={formData.avatar}
-                  onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
-                  placeholder="https://..."
-                  className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800"
-                />
+              {/* Profile Picture Upload & Preview */}
+              <div className="flex flex-col gap-1.5 pt-1">
+                <label className="font-semibold text-slate-700">Faculty Profile Picture:</label>
+                <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={formData.avatar}
+                    alt="Preview"
+                    className="w-12 h-12 rounded-full object-cover border border-slate-300 shadow-2xs shrink-0"
+                  />
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={addFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleAvatarFileUpload(e, "ADD")}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => addFileInputRef.current?.click()}
+                        disabled={uploadingAddAvatar}
+                        className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                      >
+                        {uploadingAddAvatar ? "Uploading..." : "📷 Upload Profile Picture"}
+                      </button>
+                    </div>
+                    <input
+                      type="url"
+                      value={formData.avatar}
+                      onChange={(e) => setFormData({ ...formData, avatar: e.target.value })}
+                      placeholder="Or paste image URL (https://...)"
+                      className="w-full bg-white border border-slate-200 rounded-md px-2 py-1 text-[11px] text-slate-600 outline-none"
+                    />
+                  </div>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -932,6 +1129,126 @@ export default function MentorsTab({
                     <option value="STANDBY">STANDBY</option>
                     <option value="INACTIVE">INACTIVE</option>
                   </select>
+                </div>
+              </div>
+
+              {/* Assigned Workshops Tag Input with Autosuggest */}
+              <div className="flex flex-col gap-1 relative">
+                <label className="font-semibold text-slate-700 flex items-center justify-between">
+                  <span>Assigned Workshops:</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Select or type code</span>
+                </label>
+                <div className="border border-slate-300 rounded-lg p-1.5 focus-within:ring-1 focus-within:ring-slate-800 bg-white min-h-[38px] flex flex-wrap items-center gap-1.5">
+                  {editWorkshopTags.map((tag, idx) => (
+                    <span key={idx} className="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 border border-orange-200 text-[#E25C38] text-[11px] font-mono font-bold rounded-md">
+                      <span>{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => setEditWorkshopTags(editWorkshopTags.filter((_, i) => i !== idx))}
+                        className="text-orange-400 hover:text-orange-700"
+                      >
+                        &times;
+                      </button>
+                    </span>
+                  ))}
+                  <input
+                    type="text"
+                    value={editWorkshopInput}
+                    onFocus={() => setEditWorkshopShowSuggestions(true)}
+                    onChange={(e) => {
+                      setEditWorkshopInput(e.target.value);
+                      setEditWorkshopShowSuggestions(true);
+                    }}
+                    onKeyDown={(e) => {
+                      if ((e.key === "Enter" || e.key === ",") && editWorkshopInput.trim()) {
+                        e.preventDefault();
+                        const val = editWorkshopInput.replace(/,/g, "").trim().toUpperCase();
+                        if (val && !editWorkshopTags.includes(val)) {
+                          setEditWorkshopTags([...editWorkshopTags, val]);
+                        }
+                        setEditWorkshopInput("");
+                        setEditWorkshopShowSuggestions(false);
+                      }
+                    }}
+                    placeholder={editWorkshopTags.length === 0 ? "Search workshop..." : "+ Add"}
+                    className="flex-1 min-w-[70px] bg-transparent outline-none text-xs font-mono"
+                  />
+                </div>
+
+                {/* Autosuggest Dropdown */}
+                {editWorkshopShowSuggestions && (
+                  <>
+                    <div className="fixed inset-0 z-10" onClick={() => setEditWorkshopShowSuggestions(false)} />
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl z-20 max-h-44 overflow-y-auto p-1">
+                      {ALL_WORKSHOP_OPTIONS.filter(
+                        (w) =>
+                          w.code.toLowerCase().includes(editWorkshopInput.toLowerCase()) ||
+                          w.label.toLowerCase().includes(editWorkshopInput.toLowerCase())
+                      ).slice(0, 8).map((w) => {
+                        const isSelected = editWorkshopTags.includes(w.code);
+                        return (
+                          <button
+                            key={w.code}
+                            type="button"
+                            onClick={() => {
+                              if (isSelected) {
+                                setEditWorkshopTags(editWorkshopTags.filter((t) => t !== w.code));
+                              } else {
+                                setEditWorkshopTags([...editWorkshopTags, w.code]);
+                              }
+                              setEditWorkshopInput("");
+                              setEditWorkshopShowSuggestions(false);
+                            }}
+                            className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition-colors ${
+                              isSelected ? "bg-orange-50 text-[#E25C38] font-bold" : "hover:bg-slate-50 text-slate-700"
+                            }`}
+                          >
+                            <span className="truncate pr-2">{w.label}</span>
+                            <span className="font-mono text-[10px]">{isSelected ? "✓ Added" : "+ Add"}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Profile Picture Upload & Preview */}
+              <div className="flex flex-col gap-1.5 pt-1">
+                <label className="font-semibold text-slate-700">Faculty Profile Picture:</label>
+                <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={editingExpert.avatar}
+                    alt="Preview"
+                    className="w-12 h-12 rounded-full object-cover border border-slate-300 shadow-2xs shrink-0"
+                  />
+                  <div className="flex flex-col gap-1 flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <input
+                        ref={editFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => handleAvatarFileUpload(e, "EDIT")}
+                        className="hidden"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => editFileInputRef.current?.click()}
+                        disabled={uploadingEditAvatar}
+                        className="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 text-slate-800 text-xs font-semibold rounded-lg transition-colors cursor-pointer shadow-2xs flex items-center gap-1.5"
+                      >
+                        {uploadingEditAvatar ? "Uploading..." : "📷 Upload Profile Picture"}
+                      </button>
+                    </div>
+                    <input
+                      type="url"
+                      value={editingExpert.avatar}
+                      onChange={(e) => setEditingExpert({ ...editingExpert, avatar: e.target.value })}
+                      placeholder="Or paste image URL (https://...)"
+                      className="w-full bg-white border border-slate-200 rounded-md px-2 py-1 text-[11px] text-slate-600 outline-none"
+                    />
+                  </div>
                 </div>
               </div>
 
