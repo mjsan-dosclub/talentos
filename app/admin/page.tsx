@@ -158,7 +158,7 @@ function AdminDashboardContent() {
     | "notifications"
     | "cms"
     | "governance" = "students";
-  let cmsSubTab: "casestudies" | "enquiries" | "passes" = "casestudies";
+  let cmsSubTab: "landing" | "casestudies" | "enquiries" | "passes" = "landing";
 
   if (rawTab === "students") {
     activeModule = "students";
@@ -176,13 +176,16 @@ function AdminDashboardContent() {
     activeModule = "notifications";
   } else if (
     rawTab === "cms" ||
+    rawTab === "landing" ||
     rawTab === "casestudies" ||
     rawTab === "enquiries" ||
     rawTab === "passes"
   ) {
     activeModule = "cms";
-    if (rawTab === "enquiries" || rawTab === "passes" || rawTab === "casestudies") {
+    if (rawTab === "enquiries" || rawTab === "passes" || rawTab === "casestudies" || rawTab === "landing") {
       cmsSubTab = rawTab;
+    } else {
+      cmsSubTab = "landing";
     }
   } else if (rawTab === "governance" || rawTab === "audit" || rawTab === "settings") {
     activeModule = "governance";
@@ -226,6 +229,30 @@ function AdminDashboardContent() {
       title: "Content & Broadcast",
       items: [
         {
+          id: "cms",
+          label: "CMS",
+          icon: <SparklesIcon className="w-4 h-4" />,
+          badge: "EDITOR",
+        },
+        {
+          id: "casestudies",
+          label: "Casestudies",
+          icon: <SparklesIcon className="w-4 h-4" />,
+          badge: "DOSSIERS",
+        },
+        {
+          id: "enquiries",
+          label: "Enquiry",
+          icon: <UsersIcon className="w-4 h-4" />,
+          badge: "PARTNERS",
+        },
+        {
+          id: "passes",
+          label: "Access Pass Ledger",
+          icon: <ClipboardListIcon className="w-4 h-4" />,
+          badge: "SECURITY",
+        },
+        {
           id: "popups",
           label: "Welcome Popups & News",
           icon: <RadioIcon className="w-4 h-4" />,
@@ -242,12 +269,6 @@ function AdminDashboardContent() {
           label: "Notification Engine",
           icon: <MailIcon className="w-4 h-4" />,
           badge: "3-WAY",
-        },
-        {
-          id: "cms",
-          label: "Landing & CMS Hub",
-          icon: <SparklesIcon className="w-4 h-4" />,
-          badge: "3 PORTALS",
         },
       ],
     },
@@ -277,7 +298,7 @@ function AdminDashboardContent() {
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
         <SidebarNav
           groups={sidebarGroups}
-          activeId={activeModule}
+          activeId={rawTab || "students"}
           onSelect={(id) => {
             if (id === "settings") {
               router.push("/admin/settings");
