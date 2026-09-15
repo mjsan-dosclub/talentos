@@ -50,6 +50,7 @@ export default function StudentsTab({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<StudentMember | null>(null);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // New Student Form State
   const [newStudent, setNewStudent] = useState({
