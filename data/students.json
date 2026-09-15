@@ -149,5 +149,17 @@
     "completedWorkshops": 0,
     "status": "ACTIVE",
     "id": "a9670571"
+  },
+  {
+    "dosId": "DOS-B3-014",
+    "fullName": "Arumugam Verification",
+    "email": "arumugam@touchmarkdes.com",
+    "phone": "+91 98401 99999",
+    "department": "Computer Science & Engineering",
+    "institution": "Anna University Campus Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a2022803"
   }
 ]

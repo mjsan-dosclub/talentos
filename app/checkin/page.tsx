@@ -55,7 +55,11 @@ function CheckInContent() {
   const [currentUser, setCurrentUser] = useState<TalentosUser | null>(null);
 
   useEffect(() => {
-    setCurrentUser(getClientSession());
+    const session = getClientSession();
+    setCurrentUser(session);
+    if (session && session.dos_id) {
+      setDosId(session.dos_id);
+    }
   }, []);
 
   useEffect(() => {
@@ -154,13 +158,27 @@ function CheckInContent() {
     setIsSubmitting(true);
 
     try {
-      // Look up student UUID if available or map by dos_id
+      // Look up student record to validate campus hub & check-in state
       const studentRes = await fetch("/api/students");
       const { students } = await studentRes.json();
       const matched = students?.find(
-        (s: any) => s.dos_id.toUpperCase() === dosId.trim().toUpperCase()
+        (s: any) => s.dos_id.toUpperCase() === dosId.trim().toUpperCase() || s.email.toLowerCase() === dosId.trim().toLowerCase()
       );
       const studentUuid = matched?.id || "a0000001-0000-0000-0000-000000000001";
+
+      // Institutional Campus Hub Restriction Check
+      const studentCampus = matched?.institution || "Anna University Campus Hub";
+      const isCampusMatch =
+        studentCampus.toLowerCase().includes("anna") ||
+        VENUE.name.toLowerCase().includes(studentCampus.toLowerCase().substring(0, 4));
+
+      if (!isCampusMatch && !matched?.department?.toLowerCase().includes("computer")) {
+        setIsSubmitting(false);
+        setErrorMessage(
+          `CAMPUS ACCESS RESTRICTED // Your registered hub (${studentCampus}) does not match today's venue (${VENUE.name}). Please attend your designated campus workshop.`
+        );
+        return;
+      }
 
       if (mode === "CHECK_IN") {
         const res = await fetch("/api/attendance", {
@@ -180,11 +198,13 @@ function CheckInContent() {
         setIsSubmitting(false);
 
         if (res.ok) {
+          const json = await res.json();
+          const isAlreadyDone = json.alreadyCheckedIn || json.message?.includes("already");
           setReceipt({
             timestamp: new Date().toISOString(),
             digest: "sha256:" + Math.random().toString(16).substring(2) + Math.random().toString(16).substring(2),
             distance: finalDist,
-            status: "CHECKED_IN",
+            status: isAlreadyDone ? "ALREADY CHECKED IN (PRESENT)" : "CHECKED_IN",
             mode: "CHECK_IN",
           });
         } else {

@@ -393,10 +393,10 @@ export default function TrainerDashboardPage() {
                 {filteredParticipants.map((p) => (
                   <div
                     key={p.student.dos_id}
-                    className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hover:bg-slate-50/70 transition-colors"
+                    className="p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 hover:bg-slate-50/70 transition-all min-h-[72px]"
                   >
-                    <div className="flex flex-col gap-1">
-                      <div className="flex items-center gap-2">
+                    <div className="flex flex-col gap-1 flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Link
                           href={`/record/${encodeURIComponent(p.student.dos_id)}`}
                           className="font-semibold text-xs text-slate-900 hover:text-emerald-700 transition-colors"
@@ -407,7 +407,7 @@ export default function TrainerDashboardPage() {
                           {p.student.dos_id}
                         </span>
                         {p.isStandout && (
-                          <span className="text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                          <span className="text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1 animate-in fade-in duration-150">
                             <StarIcon className="w-3 h-3 fill-purple-600" />
                             <span>Standout Lead</span>
                           </span>
@@ -424,7 +424,7 @@ export default function TrainerDashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-2 self-start sm:self-center mt-1 sm:mt-0">
+                    <div className="flex items-center gap-2 shrink-0 self-start sm:self-center mt-1 sm:mt-0">
                       <span
                         className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border ${
                           p.status === "CHECKED_IN" || p.status === "COMPLETED"
@@ -438,9 +438,9 @@ export default function TrainerDashboardPage() {
                       <button
                         type="button"
                         onClick={() => toggleStandout(p.student.dos_id)}
-                        className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer inline-flex items-center gap-1.5 ${
+                        className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer inline-flex items-center gap-1.5 shrink-0 ${
                           p.isStandout
-                            ? "bg-purple-100 text-purple-900 border-purple-300 font-semibold"
+                            ? "bg-purple-100 text-purple-900 border-purple-300 font-semibold shadow-2xs"
                             : "bg-white text-slate-600 border-slate-300 hover:bg-slate-50"
                         }`}
                         title="Award standout engineering recognition"

@@ -569,7 +569,9 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
       ? "Janani Balaji"
       : identifier === "DOS-B3-001"
       ? "Arunachalam Sundaram"
-      : `Cohort Member (${identifier})`);
+      : identifier === "DOS-B3-013" || identifier === "DOS-B3-014"
+      ? "Arumugam"
+      : student?.full_name || `Cohort Member (${identifier})`);
 
   const studentInitials =
     studentName
@@ -583,7 +585,11 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
   const studentEmail =
     student?.email ||
-    (identifier === "DOS-B3-009" ? "janani@student.dosclub.org" : "arun@student.dosclub.org");
+    (identifier === "DOS-B3-009"
+      ? "janani@student.dosclub.org"
+      : identifier === "DOS-B3-013" || identifier === "DOS-B3-014"
+      ? "arumugam@touchmarkdes.com"
+      : `${identifier.toLowerCase()}@student.dosclub.org`);
 
   const studentDept =
     student?.department ||
