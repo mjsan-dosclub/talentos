@@ -308,6 +308,7 @@ function AdminDashboardContent() {
             <StudentsTab
               students={students}
               setStudents={setStudents}
+              institutions={institutions}
               onToast={triggerToast}
               onAuditLog={logAdminAudit}
             />
@@ -318,6 +319,7 @@ function AdminDashboardContent() {
             <WorkshopsTab
               workshops={workshops}
               setWorkshops={setWorkshops}
+              institutions={institutions}
               onToast={triggerToast}
               onAuditLog={logAdminAudit}
             />

@@ -20,6 +20,7 @@ import {
 import { INITIAL_INSTITUTIONS } from "@/lib/admin-data";
 
 interface WorkshopScheduleTabProps {
+  institutions?: Array<{ id: string; name: string; city: string }>;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
     subcategory: string,
@@ -28,7 +29,7 @@ interface WorkshopScheduleTabProps {
   ) => void;
 }
 
-export default function WorkshopScheduleTab({ onAuditLog }: WorkshopScheduleTabProps) {
+export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: WorkshopScheduleTabProps) {
   const [sessions, setSessions] = useState<ScheduledWorkshopSession[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedInstitution, setSelectedInstitution] = useState<string>("ALL");
@@ -505,9 +506,11 @@ export default function WorkshopScheduleTab({ onAuditLog }: WorkshopScheduleTabP
                 className="text-xs bg-white border border-slate-200 rounded-lg px-2.5 py-1.5 font-medium text-slate-700 focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
               >
                 <option value="ALL">All Partner Colleges</option>
-                <option value="Anna University Campus Hub">Anna University Campus Hub</option>
-                <option value="PSG College of Technology Hub">PSG College of Technology Hub</option>
-                <option value="Thiagarajar College of Engineering Hub">Thiagarajar College of Eng Hub</option>
+                {institutions.map((inst) => (
+                  <option key={inst.id} value={inst.name}>
+                    {inst.name}
+                  </option>
+                ))}
               </select>
 
               <span className="text-xs font-bold text-slate-700 ml-2">Trainer:</span>
@@ -734,9 +737,17 @@ export default function WorkshopScheduleTab({ onAuditLog }: WorkshopScheduleTabP
                   }}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                 >
-                  <option value="Anna University Campus Hub">Anna University Campus Hub (Chennai)</option>
-                  <option value="PSG College of Technology Hub">PSG College of Technology Hub (Coimbatore)</option>
-                  <option value="Thiagarajar College of Engineering Hub">Thiagarajar College of Engineering Hub (Madurai)</option>
+                  {institutions.length > 0 ? (
+                    institutions.map((inst) => (
+                      <option key={inst.id} value={inst.name}>
+                        {inst.name} ({inst.city})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      No Campus Hubs Available — Add standard college first
+                    </option>
+                  )}
                 </select>
               </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { StudentMember, INITIAL_INSTITUTIONS } from "@/lib/admin-data";
+import { StudentMember, PartnerInstitution, INITIAL_INSTITUTIONS } from "@/lib/admin-data";
 import { getClientSession } from "@/lib/session";
 import GlobalTableFilter from "./GlobalTableFilter";
 import TablePagination from "./TablePagination";
@@ -16,6 +16,7 @@ import {
 interface StudentsTabProps {
   students: StudentMember[];
   setStudents: React.Dispatch<React.SetStateAction<StudentMember[]>>;
+  institutions?: PartnerInstitution[];
   onToast: (msg: string) => void;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
@@ -28,6 +29,7 @@ interface StudentsTabProps {
 export default function StudentsTab({
   students,
   setStudents,
+  institutions = [],
   onToast,
   onAuditLog,
 }: StudentsTabProps) {
@@ -57,9 +59,15 @@ export default function StudentsTab({
     fullName: "",
     email: "",
     department: "Computer Science & Engineering",
-    institution: "Anna University Campus Hub",
+    institution: institutions.length > 0 ? institutions[0].name : "",
     batch: "Batch 3 - 2026",
   });
+
+  useEffect(() => {
+    if (institutions.length > 0 && !newStudent.institution) {
+      setNewStudent((prev) => ({ ...prev, institution: institutions[0].name }));
+    }
+  }, [institutions]);
 
   // Filter logic
   const filtered = students.filter((s) => {
@@ -236,7 +244,7 @@ export default function StudentsTab({
           fullName: "",
           email: "",
           department: "Computer Science & Engineering",
-          institution: "Anna University Campus Hub",
+          institution: institutions.length > 0 ? institutions[0].name : "",
           batch: "Batch 3 - 2026",
         });
         onAuditLog?.(
@@ -660,13 +668,17 @@ export default function StudentsTab({
                   onChange={(e) => setNewStudent({ ...newStudent, institution: e.target.value })}
                   className="border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
                 >
-                  {INITIAL_INSTITUTIONS.map((inst) => (
-                    <option key={inst.id} value={inst.name}>
-                      {inst.name} ({inst.city})
+                  {institutions.length > 0 ? (
+                    institutions.map((inst) => (
+                      <option key={inst.id} value={inst.name}>
+                        {inst.name} ({inst.city})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      No Campus Hubs Available — Add standard college first
                     </option>
-                  ))}
-                  <option value="Anna University Campus Hub">Anna University Campus Hub</option>
-                  <option value="Other Campus Hub">Other Campus Hub</option>
+                  )}
                 </select>
               </div>
 
@@ -785,13 +797,17 @@ export default function StudentsTab({
                   }
                   className="border border-slate-300 rounded-lg p-2 bg-white"
                 >
-                  {INITIAL_INSTITUTIONS.map((inst) => (
-                    <option key={inst.id} value={inst.name}>
-                      {inst.name} ({inst.city})
+                  {institutions.length > 0 ? (
+                    institutions.map((inst) => (
+                      <option key={inst.id} value={inst.name}>
+                        {inst.name} ({inst.city})
+                      </option>
+                    ))
+                  ) : (
+                    <option value="" disabled>
+                      No Campus Hubs Available — Add standard college first
                     </option>
-                  ))}
-                  <option value="Anna University Campus Hub">Anna University Campus Hub</option>
-                  <option value="Other Campus Hub">Other Campus Hub</option>
+                  )}
                 </select>
               </div>
 

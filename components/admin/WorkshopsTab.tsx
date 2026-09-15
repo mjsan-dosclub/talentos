@@ -20,6 +20,7 @@ import {
 interface WorkshopsTabProps {
   workshops: WorkshopItem[];
   setWorkshops: React.Dispatch<React.SetStateAction<WorkshopItem[]>>;
+  institutions?: Array<{ id: string; name: string; city: string }>;
   onToast: (msg: string) => void;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System" | "Curriculum",
@@ -51,6 +52,7 @@ const CURRICULUM_CATALOG_REF = WORKSHOP_TOPICS_27.map((topic, idx) => {
 export default function WorkshopsTab({
   workshops,
   setWorkshops,
+  institutions = [],
   onToast,
   onAuditLog,
 }: WorkshopsTabProps) {
@@ -560,7 +562,7 @@ export default function WorkshopsTab({
 
       {/* RENDER VIEW 2: LIVE CAMPUS SCHEDULER */}
       {subView === "SCHEDULE" && (
-        <WorkshopScheduleTab onAuditLog={onAuditLog} />
+        <WorkshopScheduleTab institutions={institutions} onAuditLog={onAuditLog} />
       )}
 
       {/* SCHEDULE WORKSHOP MODAL WITH DUAL-FIELD AUTOSUGGEST */}
