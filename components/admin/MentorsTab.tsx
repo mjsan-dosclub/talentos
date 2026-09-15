@@ -864,17 +864,30 @@ export default function MentorsTab({
                 </div>
 
                 <div className="flex flex-col gap-1">
-                  <label className="font-semibold text-slate-700">Designation:</label>
+                  <label className="font-semibold text-slate-700">Email Address:</label>
                   <input
-                    type="text"
+                    type="email"
                     required
-                    value={editingExpert.designation || ""}
+                    value={editingExpert.email}
                     onChange={(e) =>
-                      setEditingExpert({ ...editingExpert, designation: e.target.value })
+                      setEditingExpert({ ...editingExpert, email: e.target.value })
                     }
                     className="border border-slate-300 rounded-lg p-2"
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Designation / Title:</label>
+                <input
+                  type="text"
+                  required
+                  value={editingExpert.designation || ""}
+                  onChange={(e) =>
+                    setEditingExpert({ ...editingExpert, designation: e.target.value })
+                  }
+                  className="border border-slate-300 rounded-lg p-2"
+                />
               </div>
 
               <div className="flex flex-col gap-1">
