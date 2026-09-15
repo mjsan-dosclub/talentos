@@ -174,10 +174,12 @@ export async function POST(request: NextRequest) {
               &bull; <a href="https://www.linkedin.com/in/descience-open-source-club" style="color: #2563eb; text-decoration: none;">Follow on LinkedIn</a>
             </div>
 
-            <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 16px; font-size: 11px; color: #94a3b8; text-align: center; line-height: 1.5;">
+            <div style="border-top: 1px solid #f1f5f9; padding-top: 12px; margin-top: 16px; font-size: 11px; color: #64748b; text-align: center; line-height: 1.5;">
               DeScience Open Source Club &bull; TalentOS Automated Dispatch<br/>
-              Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com</a>
+              Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com</a><br/>
+              <span style="color: #94a3b8; font-size: 10px;">You are receiving this email because you are subscribed to DeScience Open Source Club workshops. To unsubscribe, please reply to this email.</span>
             </div>
+
 
           </div>
         `,

@@ -151,9 +151,11 @@ export async function sendEmail(options: OutgoingEmailOptions): Promise<EmailDis
             <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
             <p style="font-size: 11px; color: #64748b; line-height: 1.5; text-align: center;">
               DeScience Open Source Club &bull; TalentOS Automated Dispatch<br/>
-              Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none; font-weight: 600;">descienceosclub.com</a>
+              Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none; font-weight: 600;">descienceosclub.com</a><br/>
+              <span style="color: #94a3b8; font-size: 10px;">You are receiving this email because you are subscribed to DeScience Open Source Club workshops. To unsubscribe, please reply to this email.</span>
             </p>
           </div>`
+
       : "<p>(Empty email content)</p>");
 
   const finalPlainText = options.text || options.subject;
@@ -476,6 +478,9 @@ notifications@dosclub.org
       <div style="margin-bottom: 8px;">
         Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none; font-weight: 600;">descienceosclub.com</a>
       </div>
+      <div style="font-size: 11px; color: #64748b; margin: 10px 0;">
+        You are receiving this email because you are subscribed to DeScience Open Source Club workshops and academic operations.<br/>To unsubscribe, please reply to this email.
+      </div>
       <div style="font-size: 10px; color: #94a3b8; margin-top: 8px;">
         Official Channels: 
         <a href="https://www.linkedin.com/in/descience-open-source-club" style="color: #64748b; text-decoration: none; margin: 0 4px;">LinkedIn</a> &bull; 
@@ -487,6 +492,7 @@ notifications@dosclub.org
         <a href="https://discord.com/channels/1503348482218524672/1503348483594129550" style="color: #64748b; text-decoration: none; margin: 0 4px;">Discord</a>
       </div>
     </div>
+
 
 
   </div>

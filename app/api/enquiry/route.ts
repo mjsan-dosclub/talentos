@@ -318,11 +318,13 @@ export async function POST(req: NextRequest) {
         </div>
 
         <hr style="border: none; border-top: 1px solid #f1f5f9; margin: 24px 0;" />
-        <p style="font-size: 11px; color: #94a3b8; text-align: center; margin: 0; line-height: 1.5;">
+        <p style="font-size: 11px; color: #64748b; text-align: center; margin: 0; line-height: 1.5;">
           DeScience Open Source Club &bull; TalentOS Student Growth Engine<br/>
-          Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com</a>
+          Official Website: <a href="http://descienceosclub.com/" style="color: #2563eb; text-decoration: none;">descienceosclub.com</a><br/>
+          <span style="color: #94a3b8; font-size: 10px;">You are receiving this email because you are subscribed to DeScience Open Source Club workshops. To unsubscribe, please reply to this email.</span>
         </p>
       </div>
+
     `;
 
     const candidateText = `
