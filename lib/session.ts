@@ -118,25 +118,36 @@ export function clearClientSession() {
   localStorage.removeItem(SESSION_COOKIE_NAME);
 }
 
-/**
- * Gets current session on client browser
- */
 export function getClientSession(): TalentosUser | null {
   if (typeof document === "undefined") return null;
+  let user: TalentosUser | null = null;
   const match = document.cookie
     .split("; ")
     .find((row) => row.startsWith(`${SESSION_COOKIE_NAME}=`));
   if (match) {
     const val = match.split("=")[1];
-    return deserializeSession(val);
-  }
-  const local = localStorage.getItem(SESSION_COOKIE_NAME);
-  if (local) {
-    try {
-      return JSON.parse(local);
-    } catch {
-      return null;
+    user = deserializeSession(val);
+  } else {
+    const local = localStorage.getItem(SESSION_COOKIE_NAME);
+    if (local) {
+      try {
+        user = JSON.parse(local);
+      } catch {
+        user = null;
+      }
     }
   }
-  return null;
+
+  // Merge updated profile fields from local storage cache if available
+  if (user && user.email) {
+    try {
+      const storedProfile = localStorage.getItem(`profile_override_${user.email.toLowerCase()}`);
+      if (storedProfile) {
+        const parsed = JSON.parse(storedProfile);
+        user = { ...user, ...parsed };
+      }
+    } catch {}
+  }
+
+  return user;
 }

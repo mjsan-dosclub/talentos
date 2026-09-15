@@ -89,12 +89,30 @@ export default function ProfileEditModal({
           github_handle: githubHandle,
         };
         setClientSession(updated);
+        try {
+          if (typeof window !== "undefined" && user.email) {
+            localStorage.setItem(
+              `profile_override_${user.email.toLowerCase()}`,
+              JSON.stringify({
+                name: fullName,
+                avatar_url: avatarUrl,
+                bio,
+                headline,
+                github_handle: githubHandle,
+              })
+            );
+          }
+        } catch {}
+
         if (onUserUpdated) onUserUpdated(updated);
 
-        setMessage({ type: "success", text: "Profile updated successfully." });
+        setMessage({ type: "success", text: "Profile updated successfully. Refreshing UI..." });
         setTimeout(() => {
           onClose();
-        }, 1200);
+          if (typeof window !== "undefined") {
+            window.location.reload();
+          }
+        }, 1000);
       } else {
         setMessage({ type: "error", text: data.error || "Could not save profile." });
       }

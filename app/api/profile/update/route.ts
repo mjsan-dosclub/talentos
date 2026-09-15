@@ -72,6 +72,27 @@ export async function POST(request: Request) {
       github_handle: github_handle?.trim() || activeUser.github_handle || "",
     };
 
+    // Save profile to persistent disk store data/profiles.json
+    try {
+      const fs = await import("fs");
+      const path = await import("path");
+      const dataDir = path.join(process.cwd(), "data");
+      const profilesFile = path.join(dataDir, "profiles.json");
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+      let profilesMap: Record<string, any> = {};
+      if (fs.existsSync(profilesFile)) {
+        try {
+          profilesMap = JSON.parse(fs.readFileSync(profilesFile, "utf-8"));
+        } catch {}
+      }
+      profilesMap[activeUser.email.toLowerCase()] = updatedUser;
+      fs.writeFileSync(profilesFile, JSON.stringify(profilesMap, null, 2), "utf-8");
+    } catch (fsErr) {
+      console.error("Failed saving profile to data/profiles.json:", fsErr);
+    }
+
     // If Supabase is connected and student has an ID, attempt live DB update
     if (activeUser.id && activeUser.role === "STUDENT") {
       try {
