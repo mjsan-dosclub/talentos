@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Link from "next/link";
-import { StudentMember } from "@/lib/admin-data";
+import { StudentMember, INITIAL_INSTITUTIONS } from "@/lib/admin-data";
 import GlobalTableFilter from "./GlobalTableFilter";
 import TablePagination from "./TablePagination";
 import {
@@ -638,13 +638,20 @@ export default function StudentsTab({
 
               <div className="flex flex-col gap-1">
                 <label className="font-semibold text-slate-700">Campus Hub:</label>
-                <input
-                  type="text"
+                <select
                   required
                   value={newStudent.institution}
                   onChange={(e) => setNewStudent({ ...newStudent, institution: e.target.value })}
-                  className="border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
+                  className="border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
+                >
+                  {INITIAL_INSTITUTIONS.map((inst) => (
+                    <option key={inst.id} value={inst.name}>
+                      {inst.name} ({inst.city})
+                    </option>
+                  ))}
+                  <option value="Anna University Campus Hub">Anna University Campus Hub</option>
+                  <option value="Other Campus Hub">Other Campus Hub</option>
+                </select>
               </div>
 
               <div className="flex flex-col gap-1">
@@ -723,15 +730,22 @@ export default function StudentsTab({
 
               <div className="flex flex-col gap-1">
                 <label className="font-semibold text-slate-700">Campus Hub:</label>
-                <input
-                  type="text"
+                <select
                   required
                   value={editingStudent.institution}
                   onChange={(e) =>
                     setEditingStudent({ ...editingStudent, institution: e.target.value })
                   }
-                  className="border border-slate-300 rounded-lg p-2"
-                />
+                  className="border border-slate-300 rounded-lg p-2 bg-white"
+                >
+                  {INITIAL_INSTITUTIONS.map((inst) => (
+                    <option key={inst.id} value={inst.name}>
+                      {inst.name} ({inst.city})
+                    </option>
+                  ))}
+                  <option value="Anna University Campus Hub">Anna University Campus Hub</option>
+                  <option value="Other Campus Hub">Other Campus Hub</option>
+                </select>
               </div>
 
               <div className="flex flex-col gap-1">

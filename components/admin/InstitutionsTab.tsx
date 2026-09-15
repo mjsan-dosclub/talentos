@@ -657,7 +657,7 @@ export default function InstitutionsTab({
             </div>
 
             <form onSubmit={handleSaveEdit} className="flex flex-col gap-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-slate-700">Institution Name:</label>
                   <input
@@ -678,6 +678,20 @@ export default function InstitutionsTab({
                     onChange={(e) => setEditingInst({ ...editingInst, city: e.target.value })}
                     className="border border-slate-300 rounded-lg p-2"
                   />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Tier / Type:</label>
+                  <select
+                    value={editingInst.tier || "Tier 1 Engineering"}
+                    onChange={(e) => setEditingInst({ ...editingInst, tier: e.target.value })}
+                    className="border border-slate-300 rounded-lg p-2 bg-white"
+                  >
+                    <option value="Tier 1 Engineering">Tier 1 Engineering</option>
+                    <option value="Premier Research">Premier Research</option>
+                    <option value="State University Hub">State University Hub</option>
+                    <option value="Autonomous Tech Campus">Autonomous Tech Campus</option>
+                  </select>
                 </div>
               </div>
 
