@@ -665,13 +665,33 @@ export default function StudentsTab({
 
               <div className="flex flex-col gap-1">
                 <label className="font-semibold text-slate-700">Department:</label>
-                <input
-                  type="text"
+                <select
                   required
                   value={newStudent.department}
                   onChange={(e) => setNewStudent({ ...newStudent, department: e.target.value })}
-                  className="border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
+                  className="border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
+                >
+                  <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+                  <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
+                  <option value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</option>
+                  <option value="Mechanical & Systems Engineering">Mechanical & Systems Engineering</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Cohort Batch:</label>
+                <select
+                  required
+                  value={newStudent.batch}
+                  onChange={(e) => setNewStudent({ ...newStudent, batch: e.target.value })}
+                  className="border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
+                >
+                  <option value="Batch 3 - 2026">Batch 3 - 2026</option>
+                  <option value="Batch 2 - 2025">Batch 2 - 2025</option>
+                  <option value="Batch 1 - 2024">Batch 1 - 2024</option>
+                </select>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
@@ -758,20 +778,58 @@ export default function StudentsTab({
               </div>
 
               <div className="flex flex-col gap-1">
-                <label className="font-semibold text-slate-700">Completed Workshops:</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="27"
-                  value={editingStudent.completedWorkshops}
+                <label className="font-semibold text-slate-700">Department:</label>
+                <select
+                  required
+                  value={editingStudent.department || "Computer Science & Engineering"}
+                  onChange={(e) =>
+                    setEditingStudent({ ...editingStudent, department: e.target.value })
+                  }
+                  className="border border-slate-300 rounded-lg p-2 bg-white"
+                >
+                  <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                  <option value="Information Technology">Information Technology</option>
+                  <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
+                  <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
+                  <option value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</option>
+                  <option value="Mechanical & Systems Engineering">Mechanical & Systems Engineering</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Cohort Batch:</label>
+                <select
+                  required
+                  value={editingStudent.batch || "Batch 3 - 2026"}
+                  onChange={(e) =>
+                    setEditingStudent({ ...editingStudent, batch: e.target.value })
+                  }
+                  className="border border-slate-300 rounded-lg p-2 bg-white"
+                >
+                  <option value="Batch 3 - 2026">Batch 3 - 2026</option>
+                  <option value="Batch 2 - 2025">Batch 2 - 2025</option>
+                  <option value="Batch 1 - 2024">Batch 1 - 2024</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Clearance Status:</label>
+                <select
+                  value={editingStudent.status}
                   onChange={(e) =>
                     setEditingStudent({
                       ...editingStudent,
-                      completedWorkshops: Number(e.target.value),
+                      status: e.target.value as StudentMember["status"],
                     })
                   }
-                  className="border border-slate-300 rounded-lg p-2"
-                />
+                  className="border border-slate-300 rounded-lg p-2 bg-white font-semibold text-slate-800"
+                >
+                  <option value="ACTIVE">ACTIVE</option>
+                  <option value="DEFENSE_READY">DEFENSE_READY</option>
+                  <option value="ON_LEAVE">ON_LEAVE</option>
+                  <option value="INACTIVE">INACTIVE</option>
+                  <option value="ARCHIVED">ARCHIVED</option>
+                </select>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
