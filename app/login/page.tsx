@@ -162,92 +162,7 @@ function LoginContent() {
       </header>
 
       {/* Main Container */}
-      <main className="flex-1 max-w-xl w-full mx-auto px-4 sm:px-6 py-10 flex flex-col justify-center gap-6">
-        {/* Fast-Auth 1-Click Role Switcher for Acceptance Matrix Testing */}
-        <div className="border border-emerald-200 bg-emerald-50/60 rounded-xl p-5 shadow-xs">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <div className="text-xs font-bold text-emerald-950 uppercase tracking-wider flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
-              Instant 1-Click Login (Acceptance Matrix Testing)
-            </div>
-            <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full border border-emerald-300">
-              Verified Roles
-            </span>
-          </div>
-          <p className="text-xs text-emerald-800 mb-3 leading-relaxed">
-            Select an authorized profile below to instantly start your session without typing credentials:
-          </p>
-          <div className="grid grid-cols-2 gap-2.5">
-            <button
-              type="button"
-              disabled={isAuthenticating}
-              onClick={() => handleFastLogin("student")}
-              className="p-3 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all rounded-lg flex flex-col disabled:opacity-50 cursor-pointer shadow-xs group"
-            >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
-                  <UserIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>Student: Arun</span>
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-700">Enter &rarr;</span>
-              </div>
-              <span className="text-[11px] text-slate-500 truncate mt-0.5">arun@student.dosclub.org</span>
-              <span className="text-[10px] text-slate-400 mt-1">Student 360 & Matrix</span>
-            </button>
-
-            <button
-              type="button"
-              disabled={isAuthenticating}
-              onClick={() => handleFastLogin("trainer")}
-              className="p-3 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all rounded-lg flex flex-col disabled:opacity-50 cursor-pointer shadow-xs group"
-            >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
-                  <BoltIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>Technical Expert</span>
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-700">Enter &rarr;</span>
-              </div>
-              <span className="text-[11px] text-slate-500 truncate mt-0.5">faculty@dosclub.org</span>
-              <span className="text-[10px] text-slate-400 mt-1">Live QR & Attendance</span>
-            </button>
-
-            <button
-              type="button"
-              disabled={isAuthenticating}
-              onClick={() => handleFastLogin("college")}
-              className="p-3 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all rounded-lg flex flex-col disabled:opacity-50 cursor-pointer shadow-xs group"
-            >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
-                  <BuildingIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>College Coordinator</span>
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-700">Enter &rarr;</span>
-              </div>
-              <span className="text-[11px] text-slate-500 truncate mt-0.5">coordinator@annauniv.edu</span>
-              <span className="text-[10px] text-slate-400 mt-1">Campus Students Roster</span>
-            </button>
-
-            <button
-              type="button"
-              disabled={isAuthenticating}
-              onClick={() => handleFastLogin("admin")}
-              className="p-3 text-left bg-white border border-emerald-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition-all rounded-lg flex flex-col disabled:opacity-50 cursor-pointer shadow-xs group"
-            >
-              <div className="flex items-center justify-between w-full">
-                <span className="font-semibold text-xs text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
-                  <ShieldCheckIcon className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  <span>Super Admin</span>
-                </span>
-                <span className="text-[10px] font-semibold text-emerald-700">Enter &rarr;</span>
-              </div>
-              <span className="text-[11px] text-slate-500 truncate mt-0.5">admin@dosclub.org</span>
-              <span className="text-[10px] text-slate-400 mt-1">Full System Governance</span>
-            </button>
-          </div>
-        </div>
-
+      <main className="flex-1 max-w-md w-full mx-auto px-4 sm:px-6 py-12 flex flex-col justify-center gap-6">
         {/* Standard Form Login */}
         <div className="border border-slate-200 bg-white rounded-xl p-6 sm:p-8 flex flex-col gap-6 shadow-sm">
           {/* Header Tag */}
@@ -262,11 +177,11 @@ function LoginContent() {
               Sign In to TalentOS
             </h1>
             <p className="text-xs text-slate-500 max-w-sm">
-              Enter your registered institutional credentials to access your portal:
+              Enter your registered credentials to access your portal:
             </p>
           </div>
 
-          {/* Role Selector with auto-fill */}
+          {/* Role Selector */}
           <div className="grid grid-cols-4 bg-slate-100 p-1 rounded-lg gap-1 text-xs">
             {(
               [
@@ -282,19 +197,8 @@ function LoginContent() {
                 onClick={() => {
                   setRole(item.id);
                   setStatusMessage(null);
-                  if (item.id === "student") {
-                    setEmail("arun@student.dosclub.org");
-                    setPassword("dosclub2026");
-                  } else if (item.id === "trainer") {
-                    setEmail("faculty@dosclub.org");
-                    setPassword("dosclub2026");
-                  } else if (item.id === "college") {
-                    setEmail("coordinator@annauniv.edu");
-                    setPassword("dosclub2026");
-                  } else {
-                    setEmail("admin@dosclub.org");
-                    setPassword("dosclub2026");
-                  }
+                  setEmail("");
+                  setPassword("");
                 }}
                 className={`py-2 px-1 text-center font-medium rounded-md transition-all cursor-pointer ${
                   role === item.id

@@ -15,24 +15,46 @@ export async function POST(request: Request) {
 
     let user: TalentosUser;
 
-    // 1. Fast-auth 1-Click Demo accounts (Explicitly selected via demo key)
-    if (demoKey && DEMO_ACCOUNTS[demoKey]) {
-      user = DEMO_ACCOUNTS[demoKey];
-    } else if (role === "trainer") {
-      if (password !== "dosclub2026" && password !== "trainer@2026") {
-        return NextResponse.json({ error: "Invalid password for Technical Expert role." }, { status: 401 });
+    // Role-based credential verification
+    const cleanEmail = (email || "").trim();
+    const providedPwd = (password || "").trim();
+
+    if (role === "trainer") {
+      const isRegisteredExpert = cleanEmail === "faculty@dosclub.org" || cleanEmail === "priya@dosclub.org" || cleanEmail.includes("trainer");
+      if (!isRegisteredExpert) {
+        return NextResponse.json({ error: `No registered Technical Expert account found for email: "${cleanEmail}".` }, { status: 404 });
       }
-      user = DEMO_ACCOUNTS.trainer;
+      if (providedPwd !== "dosclub2026" && providedPwd !== "trainer@2026") {
+        return NextResponse.json({ error: "Invalid password for Technical Expert role. Check your credentials." }, { status: 401 });
+      }
+      user = {
+        ...DEMO_ACCOUNTS.trainer,
+        email: cleanEmail,
+      };
     } else if (role === "college") {
-      if (password !== "dosclub2026" && password !== "college@2026") {
-        return NextResponse.json({ error: "Invalid password for College Coordinator role." }, { status: 401 });
+      const isRegisteredCoordinator = cleanEmail === "coordinator@annauniv.edu" || cleanEmail.includes("coordinator") || cleanEmail.includes("annauniv");
+      if (!isRegisteredCoordinator) {
+        return NextResponse.json({ error: `No registered College Coordinator account found for email: "${cleanEmail}".` }, { status: 404 });
       }
-      user = DEMO_ACCOUNTS.college;
+      if (providedPwd !== "dosclub2026" && providedPwd !== "college@2026") {
+        return NextResponse.json({ error: "Invalid password for College Coordinator role. Check your credentials." }, { status: 401 });
+      }
+      user = {
+        ...DEMO_ACCOUNTS.college,
+        email: cleanEmail,
+      };
     } else if (role === "admin") {
-      if (password !== "dosclub2026" && password !== "admin@2026") {
-        return NextResponse.json({ error: "Invalid password for Super Admin role." }, { status: 401 });
+      const isSuperAdmin = cleanEmail === "admin@dosclub.org" || cleanEmail.includes("admin");
+      if (!isSuperAdmin) {
+        return NextResponse.json({ error: `No registered Super Admin account found for email: "${cleanEmail}".` }, { status: 404 });
       }
-      user = DEMO_ACCOUNTS.admin;
+      if (providedPwd !== "admin@2026" && providedPwd !== "dosclub2026") {
+        return NextResponse.json({ error: "Invalid password for Super Admin account." }, { status: 401 });
+      }
+      user = {
+        ...DEMO_ACCOUNTS.admin,
+        email: cleanEmail,
+      };
     } else {
       // Student login - STRICT Credential Validation
       const cleanEmail = (email || "").trim();
