@@ -16,6 +16,7 @@ import {
   CalendarIcon,
 } from "@/components/Icons";
 import WorkshopCalendar from "@/components/WorkshopCalendar";
+import TablePagination from "@/components/admin/TablePagination";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 
 interface CollegeStudent {
@@ -148,6 +149,10 @@ export default function CollegeCoordinatorPage() {
   const [deptFilter, setDeptFilter] = useState("All");
   const [toast, setToast] = useState<string | null>(null);
   const [institutionName, setInstitutionName] = useState<string>("Anna University Campus Hub");
+  
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Read authenticated college affiliation from session
   useEffect(() => {
@@ -193,6 +198,11 @@ export default function CollegeCoordinatorPage() {
     const matchesDept = deptFilter === "All" || s.department === deptFilter;
     return matchesSearch && matchesDept;
   });
+
+  const paginatedStudents = filteredStudents.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   const pendingExceptionsCount = absences.filter(
     (a) => a.provisionalStatus === "ABSENT_UNCONFIRMED"
@@ -316,17 +326,17 @@ export default function CollegeCoordinatorPage() {
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-slate-200 gap-4 text-xs font-semibold overflow-x-auto">
+        <div className="flex border-b border-slate-200 gap-2 sm:gap-4 text-xs font-semibold overflow-x-auto no-scrollbar scroll-smooth">
           {[
-            { id: "students", label: `Campus Students Roster (${students.length})`, icon: <UsersIcon className="w-4 h-4" /> },
-            { id: "calendar", label: "Workshop Calendar & Schedule", icon: <CalendarIcon className="w-4 h-4" /> },
-            { id: "workshops", label: "Multi-Workshop Attendance (27 Sessions)", icon: <ChartBarIcon className="w-4 h-4" /> },
+            { id: "students", label: `Campus Roster (${students.length})`, icon: <UsersIcon className="w-4 h-4" /> },
+            { id: "calendar", label: "Workshop Schedule", icon: <CalendarIcon className="w-4 h-4" /> },
+            { id: "workshops", label: "27-Session Attendance", icon: <ChartBarIcon className="w-4 h-4" /> },
             { id: "exceptions", label: `Absence Exceptions (${pendingExceptionsCount})`, icon: <ScaleIcon className="w-4 h-4" /> },
           ].map((t) => (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id as any)}
-              className={`pb-3 flex items-center gap-2 border-b-2 transition-colors cursor-pointer ${
+              className={`pb-3 px-1 flex items-center gap-1.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
                 activeTab === t.id
                   ? "border-slate-900 text-slate-900 font-bold"
                   : "border-transparent text-slate-500 hover:text-slate-800"
@@ -337,6 +347,7 @@ export default function CollegeCoordinatorPage() {
             </button>
           ))}
         </div>
+
 
         {/* ========================================================================= */}
         {/* TAB 1: CAMPUS STUDENTS ROSTER                                             */}
@@ -368,8 +379,8 @@ export default function CollegeCoordinatorPage() {
             </div>
 
             {/* Students Table */}
-            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-hidden">
-              <table className="w-full text-left text-xs">
+            <div className="bg-white border border-slate-200 rounded-xl shadow-xs overflow-x-auto">
+              <table className="w-full text-left text-xs min-w-[640px]">
                 <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 uppercase text-[10px] tracking-wider">
                   <tr>
                     <th className="py-3.5 px-4">Student Member</th>
@@ -382,7 +393,7 @@ export default function CollegeCoordinatorPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredStudents.map((s) => (
+                  {paginatedStudents.map((s) => (
                     <tr key={s.dosId} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-3">
@@ -426,7 +437,7 @@ export default function CollegeCoordinatorPage() {
                       <td className="py-3 px-4 text-right">
                         <Link
                           href={`/record/${encodeURIComponent(s.dosId)}`}
-                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold"
+                          className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 font-semibold whitespace-nowrap"
                         >
                           Inspect 360 &rarr;
                         </Link>
@@ -435,9 +446,22 @@ export default function CollegeCoordinatorPage() {
                   ))}
                 </tbody>
               </table>
+
+              {/* Table Pagination */}
+              <TablePagination
+                currentPage={currentPage}
+                totalItems={filteredStudents.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={(newSize) => {
+                  setPageSize(newSize);
+                  setCurrentPage(1);
+                }}
+              />
             </div>
           </div>
         )}
+
 
         {/* ========================================================================= */}
         {/* TAB 2: MULTI-WORKSHOP ATTENDANCE BREAKDOWN                                 */}

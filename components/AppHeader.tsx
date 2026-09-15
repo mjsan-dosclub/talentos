@@ -56,15 +56,15 @@ export default function AppHeader() {
             <div className="flex flex-col min-w-0">
               <span className="font-gellix font-semibold text-xs sm:text-sm tracking-tight text-white group-hover:text-emerald-400 transition-colors flex items-center gap-1.5 sm:gap-2">
                 {/* Short name on mobile, full name on sm+ */}
-                <span className="sm:hidden truncate max-w-[120px]">TalentOS</span>
+                <span className="sm:hidden font-bold tracking-tight">TalentOS</span>
                 <span className="hidden sm:inline truncate">
                   {config.branding.siteTitle || "TalentOS by DeScience Open Source Club"}
                 </span>
-                <span className="text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1 sm:px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                <span className="hidden md:inline-block text-[9px] sm:text-[10px] uppercase font-bold tracking-wider px-1 sm:px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
                   {user ? user.role.replace("_", " ") : "B3 LEDGER"}
                 </span>
               </span>
-              <span className="text-[10px] sm:text-[11px] text-slate-400 font-normal tracking-wide hidden sm:inline truncate">
+              <span className="text-[10px] sm:text-[11px] text-slate-400 font-normal tracking-wide hidden lg:inline truncate">
                 {pathname.startsWith("/admin")
                   ? "Administration & Governance Console"
                   : pathname.startsWith("/college")
@@ -84,7 +84,7 @@ export default function AppHeader() {
         </div>
 
         {/* Right: Navigation & Session */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Quick Home & Dashboard Navigation */}
           <div className="flex items-center gap-1 sm:gap-1.5">
             {pathname !== "/" && !pathname.startsWith("/admin") && (
@@ -124,7 +124,7 @@ export default function AppHeader() {
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
-                <span>Dashboard</span>
+                <span className="hidden sm:inline">Dashboard</span>
               </a>
             ) : (
               <a

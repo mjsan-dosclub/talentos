@@ -40,6 +40,7 @@ import {
   CalendarIcon,
 } from "@/components/Icons";
 import WorkshopCalendar from "@/components/WorkshopCalendar";
+import { SCHEDULED_SESSIONS_LEDGER } from "@/lib/workshop-schedule";
 
 // STRICT INVARIANT STATES FROM PROJECT_RULES.md
 type ApprovedState =
@@ -602,17 +603,28 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
       ? "Thiagarajar College of Engineering Hub"
       : "Anna University Campus Hub");
 
-  // Longitudinal Counts
-  const completedCount = WORKSHOP_CURRICULUM.filter(
+  // Institutional workshop assignment filter (only show workshops scheduled for student's campus hub)
+  const assignedWorkshopCodes = new Set(
+    SCHEDULED_SESSIONS_LEDGER
+      .filter((s) => s.institutionName === studentInstitution || s.institutionId.includes(studentInstitution.substring(0, 3)))
+      .map((s) => s.workshopCode)
+  );
+
+  // Longitudinal Counts for assigned workshops
+  const campusWorkshops = WORKSHOP_CURRICULUM.filter(
+    (w) => assignedWorkshopCodes.size === 0 || assignedWorkshopCodes.has(w.code) || w.state === "COMPLETED" || w.state === "LATE" || w.state === "CHECKED_IN"
+  );
+
+  const completedCount = campusWorkshops.filter(
     (w) => w.state === "COMPLETED" || w.state === "MANUALLY_CONFIRMED"
   ).length;
-  const inProgressCount = WORKSHOP_CURRICULUM.filter(
+  const inProgressCount = campusWorkshops.filter(
     (w) => w.state === "CHECKED_IN" || w.state === "LATE"
   ).length;
-  const excusedCount = WORKSHOP_CURRICULUM.filter((w) => w.state === "EXCUSED").length;
-  const scheduledCount = WORKSHOP_CURRICULUM.filter((w) => w.state === "REGISTERED").length;
+  const excusedCount = campusWorkshops.filter((w) => w.state === "EXCUSED").length;
+  const scheduledCount = campusWorkshops.filter((w) => w.state === "REGISTERED").length;
 
-  const filteredWorkshops = WORKSHOP_CURRICULUM.filter((ws) => {
+  const filteredWorkshops = campusWorkshops.filter((ws) => {
     if (workshopFilter === "ALL") return true;
     if (workshopFilter === "COMPLETED") return ws.state === "COMPLETED" || ws.state === "MANUALLY_CONFIRMED";
     if (workshopFilter === "IN_PROGRESS") return ws.state === "CHECKED_IN" || ws.state === "LATE";
@@ -620,6 +632,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
     if (workshopFilter === "REGISTERED") return ws.state === "REGISTERED";
     return true;
   });
+
 
   const filteredSkills = skills.filter((s) =>
     s.tool_name.toLowerCase().includes(skillSearch.toLowerCase())

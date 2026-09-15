@@ -424,7 +424,7 @@ export default function TrainerDashboardPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-center">
+                    <div className="flex flex-wrap items-center gap-2 self-start sm:self-center mt-1 sm:mt-0">
                       <span
                         className={`px-2.5 py-1 text-[11px] font-semibold rounded-full border ${
                           p.status === "CHECKED_IN" || p.status === "COMPLETED"
@@ -459,6 +459,7 @@ export default function TrainerDashboardPage() {
                         </button>
                       )}
                     </div>
+
                   </div>
                 ))}
               </div>

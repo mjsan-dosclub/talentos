@@ -92,8 +92,13 @@ export function buildIcsDataUri(session: {
     "END:VEVENT",
     "END:VCALENDAR",
   ];
-  return `data:text/calendar;charset=utf8,${encodeURIComponent(icsLines.join("\r\n"))}`;
+  const content = icsLines.join("\r\n");
+  if (typeof btoa !== "undefined") {
+    return `data:text/calendar;base64,${btoa(unescape(encodeURIComponent(content)))}`;
+  }
+  return `data:text/calendar;charset=utf8,${encodeURIComponent(content)}`;
 }
+
 
 /**
  * Canonical In-Memory Ledger of Scheduled Workshops
