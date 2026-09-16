@@ -58,6 +58,7 @@ export default function StudentsTab({
   const [newStudent, setNewStudent] = useState({
     fullName: "",
     email: "",
+    phone: "",
     department: "Computer Science & Engineering",
     institution: institutions.length > 0 ? institutions[0].name : "",
     batch: "Batch 3 - 2026",
@@ -215,7 +216,7 @@ export default function StudentsTab({
 
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newStudent.fullName.trim() || !newStudent.email.trim()) return;
+    if (!newStudent.fullName.trim() || !newStudent.email.trim() || !newStudent.phone.trim()) return;
 
     setIsSubmitting(true);
     const nextNum = String(students.length + 1).padStart(3, "0");
@@ -223,6 +224,7 @@ export default function StudentsTab({
       dosId: `DOS-B3-${nextNum}`,
       fullName: newStudent.fullName.trim(),
       email: newStudent.email.trim(),
+      phone: newStudent.phone.trim(),
       department: newStudent.department,
       institution: newStudent.institution,
       batch: newStudent.batch,
@@ -243,6 +245,7 @@ export default function StudentsTab({
         setNewStudent({
           fullName: "",
           email: "",
+          phone: "",
           department: "Computer Science & Engineering",
           institution: institutions.length > 0 ? institutions[0].name : "",
           batch: "Batch 3 - 2026",
@@ -661,6 +664,12 @@ export default function StudentsTab({
               </div>
 
               <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Student WhatsApp / Mobile Number:</label>
+                <input type="tel" required value={newStudent.phone} onChange={(e) => setNewStudent({ ...newStudent, phone: e.target.value })} placeholder="e.g. +91 9876543210" className="border border-slate-300 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-slate-900" />
+                <span className="text-[10px] text-slate-400">Used for workshop information and WhatsApp communication.</span>
+              </div>
+
+              <div className="flex flex-col gap-1">
                 <label className="font-semibold text-slate-700">Campus Hub:</label>
                 <select
                   required
@@ -785,6 +794,11 @@ export default function StudentsTab({
                   }
                   className="border border-slate-300 rounded-lg p-2"
                 />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Student WhatsApp / Mobile Number:</label>
+                <input type="tel" required value={editingStudent.phone || ""} onChange={(e) => setEditingStudent({ ...editingStudent, phone: e.target.value })} placeholder="e.g. +91 9876543210" className="border border-slate-300 rounded-lg p-2" />
               </div>
 
               <div className="flex flex-col gap-1">
