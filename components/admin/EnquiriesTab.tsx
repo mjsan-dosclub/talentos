@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { EnquiryRecord } from "@/app/api/enquiry/route";
+import { downloadCsv } from "@/lib/export-csv";
 import TablePagination from "./TablePagination";
 import {
   UsersIcon,
@@ -34,6 +35,13 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
   const [pageSize, setPageSize] = useState(10);
   const [bulkProcessing, setBulkProcessing] = useState(false);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
+  const [previewEnquiry, setPreviewEnquiry] = useState<EnquiryRecord | null>(null);
+  const [kebabPosition, setKebabPosition] = useState({ top: 0, left: 0 });
+
+  const exportEnquiries = (rows: EnquiryRecord[], label: string) => {
+    const ok = downloadCsv(`talentos-${label}-${new Date().toISOString().slice(0, 10)}.csv`, rows as unknown as Record<string, unknown>[]);
+    if (ok) onToast(`Downloaded ${rows.length} enquiry record(s) as CSV.`);
+  };
 
   const fetchEnquiries = async () => {
     setLoading(true);
@@ -259,6 +267,12 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
           >
             Refresh Roster
           </button>
+          <button
+            onClick={() => exportEnquiries(selectedIds.size ? filteredEnquiries.filter((e) => selectedIds.has(e.id)) : filteredEnquiries, selectedIds.size ? "selected-enquiries" : "enquiries")}
+            className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-700 text-xs font-semibold text-white transition-colors"
+          >
+            Download {selectedIds.size ? "Selected" : "CSV"}
+          </button>
         </div>
       </div>
 
@@ -434,7 +448,6 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
               <tbody className="divide-y divide-slate-100">
                 {paginatedEnquiries.map((enq, idx) => {
                   const isSelected = selectedIds.has(enq.id);
-                  const isNearBottom = idx >= paginatedEnquiries.length - 2;
                   return (
                     <tr
                       key={enq.id}
@@ -497,7 +510,11 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
                       {/* Minimalist 3-dot Kebab Menu */}
                       <td className="py-3 px-4 text-right relative">
                         <button
-                          onClick={() => setOpenKebabId(openKebabId === enq.id ? null : enq.id)}
+                          onClick={(event) => {
+                            const rect = event.currentTarget.getBoundingClientRect();
+                            setKebabPosition({ top: Math.min(rect.bottom + 4, window.innerHeight - 330), left: Math.max(8, rect.right - 208) });
+                            setOpenKebabId(openKebabId === enq.id ? null : enq.id);
+                          }}
                           className="p-1 text-slate-400 hover:text-slate-700 rounded-md hover:bg-slate-100 transition-colors cursor-pointer"
                           aria-label="Actions"
                         >
@@ -511,10 +528,11 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
                               onClick={() => setOpenKebabId(null)}
                             />
                             <div
-                              className={`absolute right-3 ${
-                                isNearBottom ? "bottom-full mb-1" : "top-10"
-                              } w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-50 text-left text-xs animate-in fade-in zoom-in-95 duration-100`}
+                              style={{ top: kebabPosition.top, left: kebabPosition.left }}
+                              className="fixed w-52 bg-white border border-slate-200 rounded-xl shadow-xl py-1 z-[100] text-left text-xs animate-in fade-in zoom-in-95 duration-100"
                             >
+                              <button onClick={() => { setPreviewEnquiry(enq); setOpenKebabId(null); }} className="w-full px-3 py-1.5 text-left text-slate-700 hover:bg-slate-50 font-semibold">Preview Enquiry</button>
+                              <div className="border-t border-slate-100 my-1" />
                               {enq.phone && (
                                 <a
                                   href={`https://wa.me/${cleanPhoneForWhatsApp(enq.phone)}?text=${encodeURIComponent(
@@ -598,6 +616,18 @@ export default function EnquiriesTab({ onToast, onAuditLog }: EnquiriesTabProps)
           }}
         />
       </div>
+      {previewEnquiry && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/40 p-4" onClick={() => setPreviewEnquiry(null)}>
+          <div className="w-full max-w-xl rounded-2xl bg-white shadow-2xl p-6" onClick={(event) => event.stopPropagation()}>
+            <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
+              <div><p className="text-[10px] uppercase tracking-wider font-bold text-slate-400">Enquiry Preview</p><h2 className="text-xl font-bold text-slate-900">{previewEnquiry.full_name}</h2><p className="font-mono text-xs text-slate-400">{previewEnquiry.enquiry_ref}</p></div>
+              <button onClick={() => setPreviewEnquiry(null)} className="text-slate-400 hover:text-slate-800 text-xl" aria-label="Close preview">×</button>
+            </div>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-5 text-xs"><div><dt className="font-bold text-slate-400">Email</dt><dd className="text-slate-800">{previewEnquiry.email}</dd></div><div><dt className="font-bold text-slate-400">Phone</dt><dd className="text-slate-800">{previewEnquiry.phone}</dd></div><div><dt className="font-bold text-slate-400">Role / Institution</dt><dd className="text-slate-800">{previewEnquiry.current_role}</dd></div><div><dt className="font-bold text-slate-400">Status</dt><dd className="text-slate-800">{previewEnquiry.status}</dd></div><div className="sm:col-span-2"><dt className="font-bold text-slate-400">Referral</dt><dd className="text-slate-800">{previewEnquiry.referral_source}</dd></div><div className="sm:col-span-2"><dt className="font-bold text-slate-400">Message</dt><dd className="whitespace-pre-wrap text-slate-800">{previewEnquiry.message || "No message provided."}</dd></div></dl>
+            <div className="flex justify-end"><button onClick={() => setPreviewEnquiry(null)} className="rounded-xl bg-slate-900 px-4 py-2 text-xs font-semibold text-white">Close</button></div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
