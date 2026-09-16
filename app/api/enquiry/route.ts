@@ -210,45 +210,33 @@ export async function POST(req: NextRequest) {
       created_at: timestamp,
     };
 
-    const enquiries = loadEnquiries();
-    enquiries.unshift(newRecord);
-    saveEnquiries(enquiries);
+    const { error: enquirySaveError } = await supabaseAdmin.from("aspirant_enquiries").insert([
+      {
+        id: crypto.randomUUID(),
+        enquiry_ref: enquiryId,
+        full_name: name,
+        email,
+        phone,
+        institution: currentRole,
+        statement: `[Source: ${referralSource}] ${message}`,
+        status: "NEW",
+        created_at: timestamp,
+      },
+    ]);
 
-    // 1. Resilient Cloud Persistence in Supabase notification_dispatches (zero-loss on Vercel)
-    try {
-      await supabaseAdmin.from("notification_dispatches").insert([
-        {
-          id: crypto.randomUUID(),
-          channel: "ENQUIRY",
-          title: enquiryId,
-          content: message || `Enquiry from ${name} (${email})`,
-          target_filter: newRecord,
-          dispatched_by: "11111111-1111-1111-1111-111111111111",
-          sent_count: 1,
-          created_at: timestamp,
-        },
-      ]);
-    } catch (dispErr) {
-      console.warn("Supabase notification_dispatches enquiry save notice:", dispErr);
+    if (enquirySaveError) {
+      console.error("Supabase enquiry save failed:", enquirySaveError);
+      return NextResponse.json(
+        { error: "We could not record your enquiry. Please try again." },
+        { status: 503 }
+      );
     }
 
-    // 2. Best-effort insertion into aspirant_enquiries
-    try {
-      await supabaseAdmin.from("aspirant_enquiries").insert([
-        {
-          id: crypto.randomUUID(),
-          enquiry_ref: enquiryId,
-          full_name: name,
-          email,
-          phone,
-          institution: currentRole,
-          statement: `[Source: ${referralSource}] ${message}`,
-          status: "NEW",
-          created_at: timestamp,
-        },
-      ]);
-    } catch (dbErr) {
-      // Table may not be created yet, covered by notification_dispatches above
+    // Keep the file only as an explicitly local-development convenience.
+    if (process.env.ALLOW_FILE_FALLBACK === "true") {
+      const enquiries = loadEnquiries();
+      enquiries.unshift(newRecord);
+      saveEnquiries(enquiries);
     }
 
     // 1. Dispatch Candidate Auto-Responder Email (Thank You + Social Channels + Anti-Spam Whitelist)
