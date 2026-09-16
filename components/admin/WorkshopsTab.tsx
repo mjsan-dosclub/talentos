@@ -200,7 +200,7 @@ export default function WorkshopsTab({
     onToast(`Deleted workshop: ${code}`);
   };
 
-  const handleCreateWorkshop = (e: React.FormEvent) => {
+  const handleCreateWorkshop = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.title.trim()) return;
 
@@ -219,6 +219,23 @@ export default function WorkshopsTab({
       date: formData.date,
     };
 
+    const response = await fetch("/api/workshops", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: created.title,
+        session_number: Number(created.code.replace(/\D/g, "")) || workshops.length + 1,
+        description: created.focusArea,
+        trainer_name: created.expertName,
+        session_mode: created.mode === "IN_PERSON" ? "OFFLINE" : created.mode === "VIRTUAL" ? "ONLINE" : "HYBRID",
+        scheduled_at: `${created.date}T09:00:00.000Z`,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+      onToast(`Failed to create workshop: ${result.error || "Server error"}`);
+      return;
+    }
     setWorkshops([...workshops, created]);
     setIsAddOpen(false);
     setFormData(initialFormState);
@@ -297,7 +314,7 @@ export default function WorkshopsTab({
             onClick={() => setIsAddOpen(true)}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
           >
-            <span>+ Schedule Workshop</span>
+            <span>+ Create Workshop</span>
           </button>
         </div>
       </div>
@@ -582,10 +599,10 @@ export default function WorkshopsTab({
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  Schedule Curriculum Workshop
+                  Create New Workshop
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Select a workshop from the 27-module catalog with inline autocomplete.
+                  Create a durable master workshop record. Scheduling for colleges is handled separately.
                 </p>
               </div>
               <button
