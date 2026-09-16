@@ -1,1 +1,14 @@
-[]
+[
+  {
+    "dosId": "DOS-B3-006",
+    "fullName": "Madhan karki",
+    "email": "mohaneee88@gmail.com",
+    "phone": "9094496385",
+    "department": "Computer Science & Engineering",
+    "institution": "Anna University & DOS Club Hub",
+    "batch": "Batch 3 - 2026",
+    "completedWorkshops": 0,
+    "status": "ACTIVE",
+    "id": "a3483103"
+  }
+]
