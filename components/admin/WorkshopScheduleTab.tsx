@@ -900,11 +900,12 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Curriculum Focus Topic
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={formData.focusTopic}
                   onChange={(e) => setFormData({ ...formData, focusTopic: e.target.value })}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
+                  placeholder="Add objectives, preparation notes, links, and reference material..."
+                  rows={6}
                   required
                 />
               </div>
@@ -1079,11 +1080,12 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Focus Topic
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={editingSession.focusTopic}
                   onChange={(e) => setEditingSession({ ...editingSession, focusTopic: e.target.value })}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
+                  placeholder="Add objectives, preparation notes, links, and reference material..."
+                  rows={6}
                   required
                 />
               </div>
