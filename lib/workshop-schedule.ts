@@ -227,6 +227,10 @@ export let SCHEDULED_SESSIONS_LEDGER: ScheduledWorkshopSession[] = [
   },
 ];
 
+// QA starts with an empty scheduler. Sessions must be created by an admin in
+// Campus Scheduler; the legacy demo itinerary is intentionally not loaded.
+SCHEDULED_SESSIONS_LEDGER = [];
+
 /**
  * Enrich a session with 1-click Google Calendar and Apple iCal links
  */
