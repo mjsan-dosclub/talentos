@@ -91,7 +91,7 @@ function AdminDashboardContent() {
         if (data && data.workshops && Array.isArray(data.workshops) && data.workshops.length > 0) {
           const mapped: WorkshopItem[] = data.workshops.map((w: any) => ({
             id: w.id,
-            code: `WS-${String(w.session_number).padStart(2, "0")}`,
+            code: w.code || `WS-${String(w.session_number).padStart(2, "0")}`,
             title: w.title,
             focusArea: w.description || "Systems Engineering",
             institution: w.venue_name?.includes("Anna") ? "Anna University & DOS Club Hub" : w.venue_name || "All Campus Hubs",

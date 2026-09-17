@@ -25,6 +25,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const {
       title,
+      code,
       session_number,
       description,
       trainer_name,
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
           id: newId,
           batch_id: defaultBatchId,
           session_number: Number(session_number) || 28,
+          code: code || `WS-${String(Number(session_number) || 28).padStart(2, "0")}`,
           title: title || "New Systems Workshop",
           description: description || "Hands-on engineering workshop.",
           trainer_name: trainer_name || "Lead Technical Expert",

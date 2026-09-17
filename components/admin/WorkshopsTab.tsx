@@ -223,6 +223,7 @@ export default function WorkshopsTab({
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
+        code: created.code,
         title: created.title,
         session_number: Number(created.code.replace(/\D/g, "")) || workshops.length + 1,
         description: created.focusArea,
@@ -249,12 +250,19 @@ export default function WorkshopsTab({
     onToast(`Curriculum updated: Added ${created.code} (${created.title})`);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingWorkshop) return;
-    setWorkshops((prev) =>
-      prev.map((w) => (w.code === editingWorkshop.code ? editingWorkshop : w))
-    );
+    const response = await fetch("/api/workshops", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+      id: editingWorkshop.id,
+      session_number: Number(editingWorkshop.code.replace(/\D/g, "")),
+      title: editingWorkshop.title,
+      description: editingWorkshop.focusArea,
+      session_mode: editingWorkshop.mode === "IN_PERSON" ? "OFFLINE" : editingWorkshop.mode === "VIRTUAL" ? "ONLINE" : "HYBRID"
+    }) });
+    const result = await response.json();
+    if (!response.ok || !result.success) { onToast(`Failed to save workshop: ${result.error || "Server error"}`); return; }
+    setWorkshops((prev) => prev.map((w) => (w.code === editingWorkshop.code ? editingWorkshop : w)));
     onAuditLog?.(
       "Curriculum",
       "Session Update",
@@ -614,8 +622,8 @@ export default function WorkshopsTab({
             </div>
 
             <form onSubmit={handleCreateWorkshop} className="flex flex-col gap-4 text-xs">
-              {/* AUTOSUGGEST SEARCH INPUT */}
-              <div className="relative" ref={dropdownRef}>
+              {/* Master records are created directly; scheduling is handled separately. */}
+              <div className="hidden">
                 <label className="block font-semibold text-slate-700 mb-1">
                   Search &amp; Select Workshop (Code or Title):
                 </label>
@@ -674,7 +682,7 @@ export default function WorkshopsTab({
                   />
                 </div>
 
-                <div className="flex flex-col gap-1">
+                <div className="hidden">
                   <label className="font-semibold text-slate-700">Assigned Faculty:</label>
                   <select
                     value={formData.expertName}
@@ -752,7 +760,7 @@ export default function WorkshopsTab({
                   />
                 </div>
 
-                <div className="flex flex-col gap-1">
+                <div className="hidden">
                   <label className="font-semibold text-slate-700">Scheduled Date:</label>
                   <input
                     type="date"

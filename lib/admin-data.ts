@@ -49,6 +49,7 @@ export interface PartnerInstitution {
 }
 
 export interface WorkshopItem {
+  id?: string;
   code: string;
   title: string;
   focusArea: string;
