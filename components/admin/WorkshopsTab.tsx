@@ -801,7 +801,7 @@ export default function WorkshopsTab({
                   Edit Workshop: {editingWorkshop.code}
                 </h2>
                 <p className="text-xs text-slate-500">
-                  Update curriculum details and faculty assignment.
+                  Update the master workshop title and focus area. Scheduling status is managed separately.
                 </p>
               </div>
               <button
@@ -826,7 +826,7 @@ export default function WorkshopsTab({
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-slate-700">Focus Area:</label>
                   <input
@@ -839,24 +839,6 @@ export default function WorkshopsTab({
                   />
                 </div>
 
-                <div className="flex flex-col gap-1">
-                  <label className="font-semibold text-slate-700">Status:</label>
-                  <select
-                    value={editingWorkshop.status}
-                    onChange={(e) =>
-                      setEditingWorkshop({
-                        ...editingWorkshop,
-                        status: e.target.value as WorkshopItem["status"],
-                      })
-                    }
-                    className="border border-slate-300 rounded-lg p-2 bg-white"
-                  >
-                    <option value="SCHEDULED">SCHEDULED</option>
-                    <option value="ACTIVE_IN_SESSION">ACTIVE_IN_SESSION</option>
-                    <option value="COMPLETED">COMPLETED</option>
-                    <option value="INACTIVE">INACTIVE</option>
-                  </select>
-                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
