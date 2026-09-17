@@ -20,8 +20,8 @@ import {
 import { INITIAL_INSTITUTIONS } from "@/lib/admin-data";
 
 interface WorkshopScheduleTabProps {
-  workshops?: Array<{ code: string; title: string }>;
-  experts?: Array<{ id: string; fullName: string }>;
+  workshops?: Array<{ code: string; title: string; status?: string }>;
+  experts?: Array<{ id: string; fullName: string; status?: string }>;
   institutions?: Array<{ id: string; name: string; city: string }>;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
@@ -32,6 +32,8 @@ interface WorkshopScheduleTabProps {
 }
 
 export default function WorkshopScheduleTab({ institutions = [], workshops = [], experts = [], onAuditLog }: WorkshopScheduleTabProps) {
+  const activeWorkshops = workshops.filter((workshop) => !workshop.status || workshop.status === "ACTIVE");
+  const activeExperts = experts.filter((expert) => !expert.status || expert.status === "ACTIVE");
   const [sessions, setSessions] = useState<ScheduledWorkshopSession[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedInstitution, setSelectedInstitution] = useState<string>("ALL");
@@ -62,7 +64,6 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
   const [formData, setFormData] = useState({
     workshopCode: "",
     workshopTitle: "",
-    sessionNumber: 1,
     institutionName: institutions.length > 0 ? institutions[0].name : "",
     institutionId: institutions.length > 0 ? institutions[0].id : "",
     trainerName: "",
@@ -119,14 +120,14 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
       });
       const data = await res.json();
       if (data.success) {
-        setNotification(`Successfully assigned ${formData.workshopCode} (Session ${formData.sessionNumber}) to ${formData.institutionName}!`);
+        setNotification(`Successfully assigned ${formData.workshopCode} to ${formData.institutionName}!`);
         setIsAssignModalOpen(false);
         refreshSessions();
         onAuditLog?.(
           "Experts",
           "Workshop Schedule",
           "Create",
-          `Scheduled ${formData.workshopCode} (Session ${formData.sessionNumber}) for ${formData.institutionName} on ${formData.date}`
+          `Scheduled ${formData.workshopCode} for ${formData.institutionName} on ${formData.date}`
         );
         setTimeout(() => setNotification(null), 4000);
       } else {
@@ -791,27 +792,12 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                     }}
                     className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                   >
-                    {workshops.length > 0 ? workshops.map((workshop) => (
+                    {activeWorkshops.length > 0 ? activeWorkshops.map((workshop) => (
                       <option key={workshop.code} value={workshop.code}>{workshop.code}: {workshop.title}</option>
-                    )) : <option value="" disabled>No master workshops available</option>}
+                  )) : <option value="" disabled>No active master workshops available</option>}
                   </select>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Session Number
-                  </label>
-                  <select
-                    value={formData.sessionNumber}
-                    onChange={(e) => setFormData({ ...formData, sessionNumber: Number(e.target.value) })}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
-                  >
-                    <option value={1}>Session 1 (Core Theory & Labs)</option>
-                    <option value={2}>Session 2 (Hermetic Implementation)</option>
-                    <option value={3}>Session 3 (Advanced Integration & Defense)</option>
-                    <option value={4}>Session 4 (Final Evaluation)</option>
-                  </select>
-                </div>
               </div>
 
               {/* Trainer Assignment */}
@@ -830,9 +816,9 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                   }}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                 >
-                  {experts.length > 0 ? experts.map((expert) => (
+                  {activeExperts.length > 0 ? activeExperts.map((expert) => (
                     <option key={expert.id} value={expert.fullName}>{expert.fullName}</option>
-                  )) : <option value="" disabled>No experts available</option>}
+                  )) : <option value="" disabled>No active experts available</option>}
                 </select>
               </div>
 
