@@ -111,6 +111,13 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
 
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const requiredFields: Array<[string, string]> = [["target college", formData.institutionName], ["workshop", formData.workshopCode], ["expert", formData.trainerName], ["date", formData.date], ["start time", formData.startTime], ["end time", formData.endTime], ["venue", formData.venue], ["curriculum focus topic", formData.focusTopic]];
+    const missing = requiredFields.filter(([, value]) => !String(value || "").trim()).map(([label]) => label);
+    if (missing.length > 0) { alert(`Please complete the form. Missing: ${missing.join(", ")}.`); return; }
+    const timePattern = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s(AM|PM)$/i;
+    if (!timePattern.test(formData.startTime) || !timePattern.test(formData.endTime)) { alert("Use 12-hour time format, for example 09:00 AM."); return; }
+    const toMinutes = (value: string) => { const m = value.match(/^(\d+):(\d+)\s(AM|PM)$/i)!; let h = Number(m[1]) % 12; if (m[3].toUpperCase() === "PM") h += 12; return h * 60 + Number(m[2]); };
+    if (toMinutes(formData.startTime) >= toMinutes(formData.endTime)) { alert("End time must be later than start time."); return; }
     setSubmitting(true);
     try {
       const res = await fetch("/api/workshops/schedule", {

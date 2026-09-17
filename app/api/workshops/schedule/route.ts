@@ -78,6 +78,20 @@ export async function POST(req: NextRequest) {
         { status: 400 }
       );
     }
+    const timePattern = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s(AM|PM)$/i;
+    if (!timePattern.test(startTime || "") || !timePattern.test(endTime || "")) {
+      return NextResponse.json({ success: false, error: "Time must use 12-hour format, for example 09:00 AM." }, { status: 400 });
+    }
+    if (!Number.isFinite(Date.parse(`${date}T00:00:00`))) {
+      return NextResponse.json({ success: false, error: "A valid session date is required." }, { status: 400 });
+    }
+    const toMinutes = (value: string) => { const m = value.match(/^(\d+):(\d+)\s(AM|PM)$/i)!; let h = Number(m[1]) % 12; if (m[3].toUpperCase() === "PM") h += 12; return h * 60 + Number(m[2]); };
+    if (toMinutes(startTime) >= toMinutes(endTime)) {
+      return NextResponse.json({ success: false, error: "End time must be later than start time." }, { status: 400 });
+    }
+    if (String(venue || "").length > 500 || String(focusTopic || "").length > 10000) {
+      return NextResponse.json({ success: false, error: "Venue or curriculum content is too long." }, { status: 400 });
+    }
 
     const created = addScheduledSession({
       workshopCode,
