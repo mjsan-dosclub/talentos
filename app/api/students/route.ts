@@ -71,13 +71,25 @@ export async function POST(request: NextRequest) {
     const studentEmail = (email || "").trim().toLowerCase();
     const studentPhone = (phone || "").trim();
 
-    if (!studentDosId || !studentName || !studentEmail) {
+    if (!studentDosId || !studentName || !studentEmail || !studentPhone) {
       return NextResponse.json(
-        { error: "Missing required fields: dosId/dos_id, fullName/full_name, email" },
+        { error: "Missing required fields: DOS ID, full name, email, and mobile number" },
         { status: 400 }
       );
     }
 
+    const [dosCheck, emailCheck, phoneCheck, groupResult] = await Promise.all([
+      supabaseAdmin.from("students").select("id").eq("dos_id", studentDosId).limit(1),
+      supabaseAdmin.from("students").select("id").eq("email", studentEmail).limit(1),
+      supabaseAdmin.from("students").select("id").eq("phone", studentPhone).limit(1),
+      supabaseAdmin.from("cohort_groups").select("id").limit(1),
+    ]);
+    if (dosCheck.data?.length || emailCheck.data?.length || phoneCheck.data?.length) {
+      const duplicate = dosCheck.data?.length ? "DOS ID" : emailCheck.data?.length ? "email" : "mobile number";
+      return NextResponse.json({ error: `A student with this ${duplicate} already exists.` }, { status: 409 });
+    }
+    const groupId = groupResult.data?.[0]?.id;
+    if (!groupId) return NextResponse.json({ error: "No active cohort is available for student onboarding." }, { status: 503 });
     const newUuid = crypto.randomUUID();
 
     // 1. Primary: Insert into Supabase persistent storage
@@ -88,11 +100,11 @@ export async function POST(request: NextRequest) {
         .insert([
           {
             id: newUuid,
-            group_id: "33333333-3333-3333-3333-333333333333",
+            group_id: groupId,
             dos_id: studentDosId,
             full_name: studentName,
             email: studentEmail,
-            phone: studentPhone || "+91 98401 00000",
+            phone: studentPhone,
             department: department || "Computer Science & Engineering",
             course: "Systems Engineering Fellowship",
             year_of_study: 3,
@@ -110,7 +122,11 @@ export async function POST(request: NextRequest) {
       console.warn("[TalentOS] Supabase student insert exception:", e);
     }
 
-    // 2. Local fallback store
+    if (!dbSuccess) {
+      return NextResponse.json({ error: "Student could not be saved to the QA database." }, { status: 503 });
+    }
+
+    // Keep the local representation for the current session only; database is authoritative.
     const created = addStudent({
       dosId: studentDosId,
       fullName: studentName,
