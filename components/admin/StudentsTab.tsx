@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { StudentMember, PartnerInstitution, INITIAL_INSTITUTIONS } from "@/lib/admin-data";
 import { getClientSession } from "@/lib/session";
@@ -53,6 +53,35 @@ export default function StudentsTab({
   const [editingStudent, setEditingStudent] = useState<StudentMember | null>(null);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const bulkFileRef = useRef<HTMLInputElement>(null);
+
+  const handleBulkUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    const lines = (await file.text()).split(/\r?\n/).filter(Boolean);
+    if (lines.length < 2) { onToast("CSV must include a header row and at least one student."); return; }
+    const headers = lines[0].split(",").map((h) => h.trim().toLowerCase());
+    const required = ["full_name", "email", "phone", "institution"];
+    const missing = required.filter((h) => !headers.includes(h));
+    if (missing.length) { onToast(`CSV missing required columns: ${missing.join(", ")}`); return; }
+    let imported = 0; const errors: string[] = [];
+    for (let index = 1; index < lines.length; index++) {
+      const values = lines[index].split(","); const row: Record<string, string> = {};
+      headers.forEach((h, i) => { row[h] = (values[i] || "").trim(); });
+      if (!row.full_name || !row.email || !row.phone || !row.institution) { errors.push(`row ${index + 1}: missing required value`); continue; }
+      const response = await fetch("/api/students", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ dosId: row.dos_id || `DOS-B3-${String(students.length + imported + 1).padStart(3, "0")}`, fullName: row.full_name, email: row.email, phone: row.phone, institution: row.institution, department: row.department || "", batch: row.batch || "Batch 3 - 2026" }) });
+      const result = await response.json();
+      if (response.ok && result.success) { imported++; } else errors.push(`row ${index + 1}: ${result.error || "rejected"}`);
+    }
+    onToast(`Imported ${imported} student(s)${errors.length ? `; ${errors.length} row(s) rejected` : ""}.`);
+    if (imported) window.location.reload();
+  };
+
+  const downloadStudentTemplate = () => {
+    const blob = new Blob(["dos_id,full_name,email,phone,institution,department,batch\n,Doe Student,name@company.com,9000000000,College Name,Computer Science,Batch 3 - 2026\n"], { type: "text/csv" });
+    const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "student-import-template.csv"; link.click(); URL.revokeObjectURL(url);
+  };
 
   // New Student Form State
   const [newStudent, setNewStudent] = useState({
@@ -322,6 +351,9 @@ export default function StudentsTab({
             >
               <span>+ Enroll Student</span>
             </button>
+            <button onClick={downloadStudentTemplate} className="px-3 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Download CSV Template</button>
+            <button onClick={() => bulkFileRef.current?.click()} className="px-3 py-2 border border-blue-300 text-blue-700 text-xs font-semibold rounded-lg">Bulk Upload CSV</button>
+            <input ref={bulkFileRef} type="file" accept=".csv,text/csv" onChange={handleBulkUpload} className="hidden" />
           </div>
         )}
       </div>
