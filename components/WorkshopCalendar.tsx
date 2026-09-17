@@ -285,7 +285,7 @@ export default function WorkshopCalendar({
               const dateStr = `2026-09-${String(dayNum).padStart(2, "0")}`;
               const daySessions = sessionsByDate[dateStr] || [];
               const isSelected = selectedDate === dateStr;
-              const hasUpcoming = daySessions.some((s) => s.status === "UPCOMING");
+              const hasUpcoming = daySessions.some((s) => s.status === "SCHEDULED");
               const hasCompleted = daySessions.some((s) => s.status === "COMPLETED");
 
               return (

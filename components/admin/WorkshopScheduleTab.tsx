@@ -20,6 +20,8 @@ import {
 import { INITIAL_INSTITUTIONS } from "@/lib/admin-data";
 
 interface WorkshopScheduleTabProps {
+  workshops?: Array<{ code: string; title: string }>;
+  experts?: Array<{ id: string; fullName: string }>;
   institutions?: Array<{ id: string; name: string; city: string }>;
   onAuditLog?: (
     category: "Students" | "Experts" | "Attendance" | "Certifications" | "System",
@@ -29,7 +31,7 @@ interface WorkshopScheduleTabProps {
   ) => void;
 }
 
-export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: WorkshopScheduleTabProps) {
+export default function WorkshopScheduleTab({ institutions = [], workshops = [], experts = [], onAuditLog }: WorkshopScheduleTabProps) {
   const [sessions, setSessions] = useState<ScheduledWorkshopSession[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedInstitution, setSelectedInstitution] = useState<string>("ALL");
@@ -58,19 +60,19 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
 
   // New Workshop Assignment Form State
   const [formData, setFormData] = useState({
-    workshopCode: "WS-02",
-    workshopTitle: "Linux Kernel Primitives & eBPF",
-    sessionNumber: 2,
+    workshopCode: "",
+    workshopTitle: "",
+    sessionNumber: 1,
     institutionName: institutions.length > 0 ? institutions[0].name : "",
     institutionId: institutions.length > 0 ? institutions[0].id : "",
-    trainerName: "Priya Sundaram",
-    trainerId: "exp-001",
-    date: "2026-09-16",
+    trainerName: "",
+    trainerId: "",
+    date: "",
     startTime: "09:00 AM",
     endTime: "05:00 PM",
-    venue: "Turing Computing Labs, Guindy Campus",
-    focusTopic: "eBPF probe architecture and hermetic trace verification",
-    cohortSize: 42,
+    venue: "",
+    focusTopic: "",
+    cohortSize: 0,
   });
 
   useEffect(() => {
@@ -473,7 +475,7 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
               Bulk Mark Completed
             </button>
             <button
-              onClick={() => handleBulkStatusUpdate("CANCELLED")}
+              onClick={() => handleBulkStatusUpdate("POSTPONED")}
               disabled={bulkProcessing}
               className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-200 text-xs font-semibold rounded-xl transition-all"
             >
@@ -585,9 +587,9 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
                       className={`w-12 h-12 rounded-xl flex flex-col items-center justify-center font-bold text-white shrink-0 ${
                         session.status === "COMPLETED"
                           ? "bg-slate-500"
-                          : session.status === "IN_PROGRESS"
+                          : session.status === "ACTIVE_IN_SESSION"
                           ? "bg-amber-500 animate-pulse"
-                          : session.status === "CANCELLED"
+                          : session.status === "POSTPONED"
                           ? "bg-rose-500"
                           : "bg-[#3772FF]"
                       }`}
@@ -609,9 +611,9 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase ${
                             session.status === "COMPLETED"
                               ? "bg-emerald-100 text-emerald-700"
-                              : session.status === "IN_PROGRESS"
+                              : session.status === "ACTIVE_IN_SESSION"
                               ? "bg-amber-100 text-amber-800"
-                              : session.status === "CANCELLED"
+                              : session.status === "POSTPONED"
                               ? "bg-rose-100 text-rose-700"
                               : "bg-blue-100 text-blue-700"
                           }`}
@@ -656,10 +658,10 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
                       onChange={(e) => handleStatusChange(session.id, e.target.value as any)}
                       className="text-xs bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1.5 font-semibold text-slate-700 focus:outline-none"
                     >
-                      <option value="UPCOMING">Upcoming</option>
-                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="SCHEDULED">Scheduled</option>
+                      <option value="ACTIVE_IN_SESSION">Active In Session</option>
                       <option value="COMPLETED">Completed</option>
-                      <option value="CANCELLED">Cancelled</option>
+                      <option value="POSTPONED">Postponed</option>
                     </select>
 
                     {/* Edit Button */}
@@ -782,26 +784,16 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
                     value={formData.workshopCode}
                     onChange={(e) => {
                       const code = e.target.value;
-                      let title = "Linux Kernel Primitives & eBPF";
-                      let topic = "eBPF probe architecture and hermetic trace verification";
-                      if (code === "WS-01") {
-                        title = "Hermetic POSIX Architecture & Toolchains";
-                        topic = "POSIX system calls and reproducible C toolchains";
-                      } else if (code === "WS-03") {
-                        title = "Concurrent Memory Runtimes & Async IO";
-                        topic = "Actor concurrency, lock-free queues, and epoll reactor patterns";
-                      } else if (code === "WS-04") {
-                        title = "Zero-Grace Peer Defense & Protocol Audit";
-                        topic = "Distributed Raft chaos testing and split-brain recovery";
-                      }
+                      const workshop = workshops.find((item) => item.code === code);
+                      const title = workshop?.title || "";
+                      const topic = "";
                       setFormData({ ...formData, workshopCode: code, workshopTitle: title, focusTopic: topic });
                     }}
                     className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                   >
-                    <option value="WS-01">WS-01: Hermetic POSIX Architecture</option>
-                    <option value="WS-02">WS-02: Linux Kernel Primitives & eBPF</option>
-                    <option value="WS-03">WS-03: Concurrent Memory Runtimes</option>
-                    <option value="WS-04">WS-04: Zero-Grace Peer Defense</option>
+                    {workshops.length > 0 ? workshops.map((workshop) => (
+                      <option key={workshop.code} value={workshop.code}>{workshop.code}: {workshop.title}</option>
+                    )) : <option value="" disabled>No master workshops available</option>}
                   </select>
                 </div>
 
@@ -838,9 +830,9 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
                   }}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                 >
-                  <option value="Priya Sundaram">Priya Sundaram (Distributed Systems Lead)</option>
-                  <option value="Vikram Seth">Vikram Seth (Kernel Architecture Lead)</option>
-                  <option value="Anand Natarajan">Anand Natarajan (Async Systems Specialist)</option>
+                  {experts.length > 0 ? experts.map((expert) => (
+                    <option key={expert.id} value={expert.fullName}>{expert.fullName}</option>
+                  )) : <option value="" disabled>No experts available</option>}
                 </select>
               </div>
 
@@ -1089,10 +1081,10 @@ export default function WorkshopScheduleTab({ institutions = [], onAuditLog }: W
                     onChange={(e) => setEditingSession({ ...editingSession, status: e.target.value as any })}
                     className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-bold focus:outline-none focus:ring-1 focus:ring-[#3772FF]"
                   >
-                    <option value="UPCOMING">Upcoming</option>
-                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="SCHEDULED">Scheduled</option>
+                    <option value="ACTIVE_IN_SESSION">Active In Session</option>
                     <option value="COMPLETED">Completed</option>
-                    <option value="CANCELLED">Cancelled</option>
+                    <option value="POSTPONED">Postponed</option>
                   </select>
                 </div>
               </div>

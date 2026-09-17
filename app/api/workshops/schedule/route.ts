@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
 
     // Identify next upcoming session
     const upcomingSessions = sessions.filter(
-      (s) => s.status === "UPCOMING" || s.status === "IN_PROGRESS"
+      (s) => s.status === "SCHEDULED" || s.status === "ACTIVE_IN_SESSION"
     );
     const nextUpcoming = upcomingSessions[0] || null;
 
@@ -93,7 +93,7 @@ export async function POST(req: NextRequest) {
       venue: venue || `${institutionName} Campus Lab`,
       focusTopic: focusTopic || "Hands-on implementation & defense",
       cohortSize: Number(cohortSize) || 40,
-      status: "UPCOMING",
+      status: "SCHEDULED",
     });
 
     return NextResponse.json({ success: true, session: created }, { status: 201 });

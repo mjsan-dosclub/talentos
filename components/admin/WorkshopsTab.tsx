@@ -599,7 +599,7 @@ export default function WorkshopsTab({
 
       {/* RENDER VIEW 2: LIVE CAMPUS SCHEDULER */}
       {subView === "SCHEDULE" && (
-        <WorkshopScheduleTab institutions={institutions} onAuditLog={onAuditLog} />
+        <WorkshopScheduleTab institutions={institutions} workshops={workshops} experts={experts} onAuditLog={onAuditLog} />
       )}
 
       {/* SCHEDULE WORKSHOP MODAL WITH DUAL-FIELD AUTOSUGGEST */}

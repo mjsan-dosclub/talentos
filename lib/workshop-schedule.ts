@@ -18,7 +18,7 @@ export interface ScheduledWorkshopSession {
   venue: string; // e.g. "Turing Lab 3, Department of Computer Science"
   focusTopic: string; // e.g. "Kernel ring buffers and live tracing"
   cohortSize: number; // e.g. 42
-  status: "UPCOMING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
+  status: "SCHEDULED" | "ACTIVE_IN_SESSION" | "COMPLETED" | "POSTPONED";
   attendanceCount?: number;
   avgRating?: number;
   calendarLinks?: {
@@ -124,7 +124,7 @@ export let SCHEDULED_SESSIONS_LEDGER: ScheduledWorkshopSession[] = [
     venue: "Turing Computing Labs, Anna University Guindy Campus",
     focusTopic: "eBPF tracepoints, kernel probe ring buffers, and zero-copy packet filtration",
     cohortSize: 42,
-    status: "UPCOMING",
+    status: "SCHEDULED",
   },
 
   // 2. College 2 (PSG Tech Hub) - Thursday 18 Sep 2026 (Upcoming Session 2)
@@ -143,7 +143,7 @@ export let SCHEDULED_SESSIONS_LEDGER: ScheduledWorkshopSession[] = [
     venue: "Seminar Hall 4, Department of Information Technology, PSG Tech",
     focusTopic: "eBPF probe architecture and hermetic trace verification",
     cohortSize: 38,
-    status: "UPCOMING",
+    status: "SCHEDULED",
   },
 
   // 3. College 2 (PSG Tech Hub) - Friday 19 Sep 2026 (Upcoming Session 3 - Simultaneous block)
@@ -162,7 +162,7 @@ export let SCHEDULED_SESSIONS_LEDGER: ScheduledWorkshopSession[] = [
     venue: "Seminar Hall 4, Department of Information Technology, PSG Tech",
     focusTopic: "Actor concurrency, lock-free queues, and epoll reactor patterns",
     cohortSize: 38,
-    status: "UPCOMING",
+    status: "SCHEDULED",
   },
 
   // 4. College 1 (Anna University Hub) - Completed Past Session 1
@@ -223,7 +223,7 @@ export let SCHEDULED_SESSIONS_LEDGER: ScheduledWorkshopSession[] = [
     venue: "ECE Auditorium, TCE Madurai",
     focusTopic: "POSIX system calls and hermetic environment setup",
     cohortSize: 35,
-    status: "UPCOMING",
+    status: "SCHEDULED",
   },
 ];
 
@@ -325,7 +325,23 @@ export function getFilteredSchedule(params: {
   // Sort by date ascending
   result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  return result.map(enrichSessionWithCalendar);
+  const now = Date.now();
+  return result.map((session) => {
+    if (session.status === "POSTPONED") return enrichSessionWithCalendar(session);
+    const start = new Date(`${session.date}T${to24Hour(session.startTime)}:00`).getTime();
+    const end = new Date(`${session.date}T${to24Hour(session.endTime)}:00`).getTime();
+    const status = now >= end ? "COMPLETED" : now >= start ? "ACTIVE_IN_SESSION" : "SCHEDULED";
+    return enrichSessionWithCalendar({ ...session, status });
+  });
+}
+
+function to24Hour(time: string): string {
+  const match = time.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (!match) return "09:00";
+  let hour = Number(match[1]);
+  if (match[3].toUpperCase() === "PM" && hour < 12) hour += 12;
+  if (match[3].toUpperCase() === "AM" && hour === 12) hour = 0;
+  return `${String(hour).padStart(2, "0")}:${match[2]}`;
 }
 
 /**
@@ -342,7 +358,7 @@ export function addScheduledSession(newSession: Omit<ScheduledWorkshopSession, "
 }
 
 /**
- * Update an existing session status (e.g. mark IN_PROGRESS or COMPLETED)
+ * Update an existing session status (e.g. mark ACTIVE_IN_SESSION or COMPLETED)
  */
 export function updateSessionStatus(
   id: string,
