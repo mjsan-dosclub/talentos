@@ -270,7 +270,7 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
       </div>
 
       {/* Popups Table */}
-      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-x-auto">
+      <div className="bg-white rounded-xl border border-slate-200 shadow-xs overflow-visible">
         <div className="p-4 border-b border-slate-100 flex items-center justify-between">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500">
             All Broadcast Announcements ({popups.length})
@@ -292,7 +292,7 @@ export default function PopupsTab({ onToast }: PopupsTabProps) {
             No announcements configured. Click &ldquo;+ Schedule Announcement&rdquo; to create one.
           </div>
         ) : (
-          <div className="overflow-x-auto">
+          <div className="overflow-visible">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-semibold uppercase tracking-wider text-[10px]">

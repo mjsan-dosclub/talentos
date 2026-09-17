@@ -417,7 +417,7 @@ export default function StudentsTab({
 
       {/* Candidate Table Card */}
       <div className="bg-white border border-slate-200 rounded-xl shadow-xs">
-        <div className="overflow-x-auto rounded-xl">
+        <div className="overflow-visible rounded-xl">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[10px] font-bold">
