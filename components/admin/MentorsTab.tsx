@@ -462,6 +462,7 @@ export default function MentorsTab({
                         <span className="text-[10px] text-slate-400 font-mono mt-0.5">
                           {exp.email}
                         </span>
+                        {exp.phone && <span className="text-[10px] text-slate-500 mt-0.5">WhatsApp: {exp.phone}</span>}
                       </div>
                     </div>
 
