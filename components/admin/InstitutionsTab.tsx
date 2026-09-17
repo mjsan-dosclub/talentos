@@ -160,6 +160,7 @@ export default function InstitutionsTab({
       code: formData.code.trim().toUpperCase(),
       contact_person: formData.pocName.trim(),
       contact_email: formData.pocEmail.trim(),
+      contact_phone: formData.pocPhone.trim(),
       city: formData.city.trim() || "Chennai",
       state: formData.state.trim() || "Tamil Nadu",
       tier: formData.tier,
@@ -213,9 +214,12 @@ export default function InstitutionsTab({
     }
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingInst) return;
+    const response = await fetch("/api/institutions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editingInst) });
+    const result = await response.json();
+    if (!response.ok || !result.success) { onToast(`Failed to save college: ${result.error || "Server error"}`); return; }
     setInstitutions((prev) =>
       prev.map((i) => (i.id === editingInst.id ? editingInst : i))
     );

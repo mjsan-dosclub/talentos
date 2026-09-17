@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
-import { PartnerInstitution, INITIAL_INSTITUTIONS } from "@/lib/admin-data";
+import { PartnerInstitution } from "@/lib/admin-data";
 
 export async function GET() {
   try {
@@ -27,21 +27,13 @@ export async function GET() {
         pocName: inst.contact_person || "Institutional Coordinator",
         pocRole: "Point of Contact",
         pocEmail: inst.contact_email,
-        pocPhone: "+91 94440 12345",
+        pocPhone: inst.contact_phone || "",
       }));
-
-      // Combine with INITIAL_INSTITUTIONS so demo hubs remain available
-      const existingCodes = new Set(mapped.map((m) => m.code));
-      for (const init of INITIAL_INSTITUTIONS) {
-        if (!existingCodes.has(init.code)) {
-          mapped.push(init);
-        }
-      }
 
       return NextResponse.json({ success: true, count: mapped.length, institutions: mapped });
     }
 
-    return NextResponse.json({ success: true, count: INITIAL_INSTITUTIONS.length, institutions: INITIAL_INSTITUTIONS });
+    return NextResponse.json({ success: true, count: 0, institutions: [] });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
   }
@@ -50,15 +42,16 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, code, contact_person, contact_email, lat, lng, geofenceRadiusMeters } = body;
+    const { name, code, contact_person, contact_email, contact_phone, lat, lng, geofenceRadiusMeters } = body;
 
     const instName = (name || body.institutionName || "").trim();
     const instCode = (code || body.institutionCode || `INST-${Date.now().toString().slice(-4)}`).trim().toUpperCase();
     const pocName = (contact_person || body.pocName || "Institutional Coordinator").trim();
     const pocEmail = (contact_email || body.pocEmail || "").trim().toLowerCase();
+    const pocPhone = (contact_phone || body.pocPhone || "").trim();
 
-    if (!instName || !pocEmail) {
-      return NextResponse.json({ error: "Institution Name and POC Email are required." }, { status: 400 });
+    if (!instName || !pocEmail || !pocPhone) {
+      return NextResponse.json({ error: "Institution Name, POC Email, and POC Phone are required." }, { status: 400 });
     }
 
     const newId = crypto.randomUUID();
@@ -75,6 +68,7 @@ export async function POST(req: NextRequest) {
             code: instCode,
             contact_person: pocName,
             contact_email: pocEmail,
+            contact_phone: pocPhone,
             default_lat: Number(lat) || 13.011,
             default_lng: Number(lng) || 80.2354,
             geofence_radius_meters: Number(geofenceRadiusMeters) || 200,
@@ -163,7 +157,7 @@ export async function POST(req: NextRequest) {
       pocName,
       pocRole: "Point of Contact",
       pocEmail,
-      pocPhone: "+91 94440 12345",
+      pocPhone,
     };
 
     return NextResponse.json({
@@ -196,4 +190,19 @@ export async function DELETE(req: NextRequest) {
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
   }
+}
+
+export async function PATCH(req: NextRequest) {
+  const body = await req.json();
+  const { id, name, code, pocName, pocEmail, pocPhone, ...rest } = body;
+  if (!id) return NextResponse.json({ error: "Institution id required." }, { status: 400 });
+  const updates: any = { ...rest };
+  if (name !== undefined) updates.name = name;
+  if (code !== undefined) updates.code = code;
+  if (pocName !== undefined) updates.contact_person = pocName;
+  if (pocEmail !== undefined) updates.contact_email = pocEmail;
+  if (pocPhone !== undefined) updates.contact_phone = pocPhone;
+  const { error } = await supabaseAdmin.from("institutions").update(updates).eq("id", id);
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ success: true });
 }
