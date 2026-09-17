@@ -97,7 +97,7 @@ function AdminDashboardContent() {
             institution: w.venue_name?.includes("Anna") ? "Anna University & DOS Club Hub" : w.venue_name || "All Campus Hubs",
             date: w.scheduled_at?.split("T")[0] || "2026-09-20",
             time: "09:00 AM - 12:00 PM",
-            status: w.is_active ? "SCHEDULED" : "INACTIVE",
+            status: w.is_active ? "ACTIVE" : "INACTIVE",
             registeredCount: 40,
             attendedCount: 38,
             mode: w.session_mode || "OFFLINE",

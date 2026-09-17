@@ -56,7 +56,7 @@ export interface WorkshopItem {
   expertName: string;
   mode: "IN_PERSON" | "HYBRID" | "VIRTUAL";
   testPassThreshold: number;
-  status: "COMPLETED" | "ACTIVE_IN_SESSION" | "SCHEDULED" | "INACTIVE";
+  status: "ACTIVE" | "INACTIVE";
   date: string;
 }
 

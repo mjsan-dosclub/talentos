@@ -175,7 +175,13 @@ export default function WorkshopsTab({
   };
 
   // Single actions
-  const handleStatusChange = (code: string, status: WorkshopItem["status"], title: string) => {
+  const handleStatusChange = async (code: string, status: WorkshopItem["status"], title: string) => {
+    const workshop = workshops.find((w) => w.code === code);
+    const response = await fetch("/api/workshops", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
+      id: workshop?.id, session_number: Number(code.replace(/\D/g, "")), is_active: status === "ACTIVE"
+    }) });
+    const result = await response.json();
+    if (!response.ok || !result.success) { onToast(`Failed to update workshop status: ${result.error || "Server error"}`); return; }
     setWorkshops((prev) =>
       prev.map((w) => (w.code === code ? { ...w, status } : w))
     );
@@ -215,7 +221,7 @@ export default function WorkshopsTab({
       expertName: formData.expertName,
       mode: formData.mode,
       testPassThreshold: formData.testPassThreshold,
-      status: "SCHEDULED",
+      status: "ACTIVE",
       date: formData.date,
     };
 
@@ -348,9 +354,8 @@ export default function WorkshopsTab({
             }}
             statusOptions={[
               { value: "ALL", label: "All Statuses" },
-              { value: "COMPLETED", label: "Completed" },
-              { value: "ACTIVE_IN_SESSION", label: "Active In Session" },
-              { value: "SCHEDULED", label: "Scheduled" },
+              { value: "ACTIVE", label: "Active" },
+              { value: "INACTIVE", label: "Inactive" },
             ]}
             secondary={modeFilter}
             onSecondaryChange={(val) => {
@@ -387,22 +392,22 @@ export default function WorkshopsTab({
 
               <div className="flex items-center gap-2 flex-wrap text-xs">
                 <button
-                  onClick={() => handleBulkStatus("COMPLETED")}
+                  onClick={() => handleBulkStatus("INACTIVE")}
                   className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 rounded font-semibold cursor-pointer"
                 >
-                  Mark Completed
+                  Mark Inactive
                 </button>
                 <button
-                  onClick={() => handleBulkStatus("ACTIVE_IN_SESSION")}
+                  onClick={() => handleBulkStatus("ACTIVE")}
                   className="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 rounded font-semibold cursor-pointer"
                 >
-                  Mark In Session
+                  Mark Active
                 </button>
                 <button
-                  onClick={() => handleBulkStatus("SCHEDULED")}
+                  onClick={() => handleBulkStatus("ACTIVE")}
                   className="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 rounded font-semibold cursor-pointer"
                 >
-                  Mark Scheduled
+                  Mark Active
                 </button>
               </div>
             </div>
@@ -485,11 +490,9 @@ export default function WorkshopsTab({
                             <td className="p-3">
                               <span
                                 className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                                  ws.status === "COMPLETED"
+                                  ws.status === "ACTIVE"
                                     ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
-                                    : ws.status === "ACTIVE_IN_SESSION"
-                                    ? "bg-amber-50 text-amber-800 border border-amber-200 animate-pulse"
-                                    : "bg-blue-50 text-blue-800 border border-blue-200"
+                                    : "bg-slate-100 text-slate-600 border border-slate-300"
                                 }`}
                               >
                                 {ws.status}
@@ -539,7 +542,7 @@ export default function WorkshopsTab({
                                     <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                                       Set Status
                                     </div>
-                                    {(["SCHEDULED", "ACTIVE_IN_SESSION", "COMPLETED", "INACTIVE"] as const).map((st) => (
+                                    {(["ACTIVE", "INACTIVE"] as const).map((st) => (
                                       <button
                                         key={st}
                                         onClick={() => {
