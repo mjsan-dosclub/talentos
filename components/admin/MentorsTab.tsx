@@ -80,7 +80,7 @@ export default function MentorsTab({
     organization: "",
     designation: "",
     bio: "",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+    avatar: "",
     linkedinUrl: "",
     githubUrl: "",
   };
@@ -147,8 +147,11 @@ export default function MentorsTab({
   };
 
   // Single actions
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete mentor profile for "${name}"?`)) return;
+    const response = await fetch(`/api/experts?id=${encodeURIComponent(id)}`, { method: "DELETE" });
+    const result = await response.json();
+    if (!response.ok || !result.success) { onToast(`Failed to delete expert: ${result.error || "Server error"}`); return; }
     setExperts((prev) => prev.filter((e) => e.id !== id));
     onAuditLog?.(
       "Experts",
@@ -159,11 +162,14 @@ export default function MentorsTab({
     onToast(`Deleted expert mentor: ${name}`);
   };
 
-  const handleToggleStatus = (
+  const handleToggleStatus = async (
     id: string,
     status: ExpertMentor["status"],
     name: string
   ) => {
+    const response = await fetch("/api/experts", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id, status }) });
+    const result = await response.json();
+    if (!response.ok || !result.success) { onToast(`Failed to update expert status: ${result.error || "Server error"}`); return; }
     setExperts((prev) =>
       prev.map((e) => (e.id === id ? { ...e, status } : e))
     );
@@ -224,7 +230,7 @@ export default function MentorsTab({
     setOpenKebabId(null);
   };
 
-  const handleCreateMentor = (e: React.FormEvent) => {
+  const handleCreateMentor = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName.trim() || !formData.email.trim() || !formData.phone.trim()) return;
 
@@ -238,7 +244,7 @@ export default function MentorsTab({
       bio: formData.bio.trim() || "Experienced systems engineer mentoring in DOS Club.",
       avatar:
         formData.avatar.trim() ||
-        "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
+        "",
       linkedinUrl: formData.linkedinUrl.trim(),
       githubUrl: formData.githubUrl.trim(),
       domainSpecialties: addDomainTags,
@@ -246,7 +252,10 @@ export default function MentorsTab({
       status: "ACTIVE",
     };
 
-    setExperts([created, ...experts]);
+    const response = await fetch("/api/experts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(created) });
+    const result = await response.json();
+    if (!response.ok || !result.success) { onToast(`Failed to register expert: ${result.error || "Server error"}`); return; }
+    setExperts([result.expert, ...experts]);
     setIsAddOpen(false);
     setFormData(initialFormState);
     setAddWorkshopTags([]);
@@ -260,7 +269,7 @@ export default function MentorsTab({
     onToast(`Registered ${created.fullName} • Profile & calendar ready!`);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingExpert) return;
 
@@ -269,9 +278,10 @@ export default function MentorsTab({
       assignedWorkshops: editWorkshopTags,
     };
 
-    setExperts((prev) =>
-      prev.map((exp) => (exp.id === updated.id ? updated : exp))
-    );
+    const response = await fetch("/api/experts", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updated) });
+    const result = await response.json();
+    if (!response.ok || !result.success) { onToast(`Failed to save expert: ${result.error || "Server error"}`); return; }
+    setExperts((prev) => prev.map((exp) => (exp.id === updated.id ? result.expert : exp)));
     onAuditLog?.(
       "Experts",
       "Mentor Update",

@@ -76,6 +76,11 @@ function AdminDashboardContent() {
       })
       .catch((err) => console.warn("Failed loading live students:", err));
 
+    fetch("/api/experts")
+      .then((res) => res.json())
+      .then((data) => { if (Array.isArray(data?.experts)) setExperts(data.experts); })
+      .catch((err) => console.warn("Failed loading live experts:", err));
+
     fetch("/api/institutions")
       .then((res) => res.json())
       .then((data) => {
