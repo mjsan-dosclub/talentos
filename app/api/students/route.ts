@@ -33,13 +33,11 @@ export async function GET(request: NextRequest) {
             email: s.email,
             phone: s.phone || "",
             department: s.department || "Computer Science & Engineering",
-            institution: s.department?.includes("Anna")
-              ? "Anna University Campus Hub"
-              : s.department || "Partner Institution Hub",
+            institution: s.institution_name || (s.department?.includes("Anna") ? "Anna University Campus Hub" : s.department || "Partner Institution Hub"),
             batch: "Batch 3 - 2026",
             completedWorkshops: 0,
             status: s.is_archived ? "ARCHIVED" : "ACTIVE",
-            avatar: s.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80`,
+            avatar: s.avatar_url || "",
           }));
 
         return NextResponse.json({
@@ -109,6 +107,7 @@ export async function POST(request: NextRequest) {
             course: "Systems Engineering Fellowship",
             year_of_study: 3,
             is_archived: false,
+            institution_name: institution || "",
           },
         ])
         .select();
@@ -251,6 +250,7 @@ export async function PATCH(request: NextRequest) {
           ...(rest.email ? { email: rest.email } : {}),
           ...(rest.phone ? { phone: rest.phone } : {}),
           ...(rest.department ? { department: rest.department } : {}),
+          ...(rest.institution ? { institution_name: rest.institution } : {}),
         })
         .or(`id.eq.${id},dos_id.eq.${id}`);
     } catch (e) {
