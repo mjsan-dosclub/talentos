@@ -424,7 +424,6 @@ export default function WorkshopsTab({
                     </th>
                     <th className="p-3">Code &amp; Topic</th>
                     <th className="p-3">Focus Domain</th>
-                    <th className="p-3">Assigned Faculty</th>
                     <th className="p-3">Mode</th>
                     <th className="p-3">Defense Threshold</th>
                     <th className="p-3">Status</th>
@@ -434,7 +433,7 @@ export default function WorkshopsTab({
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="p-8 text-center text-slate-400 font-mono text-xs">
+                      <td colSpan={7} className="p-8 text-center text-slate-400 font-mono text-xs">
                         NO_WORKSHOPS_MATCHING_FILTER
                       </td>
                     </tr>
@@ -474,9 +473,6 @@ export default function WorkshopsTab({
                             </td>
                             <td className="p-3">
                               <span className="text-slate-600 font-medium">{ws.focusArea}</span>
-                            </td>
-                            <td className="p-3 font-semibold text-slate-800">
-                              {ws.expertName}
                             </td>
                             <td className="p-3">
                               <span className="px-2 py-0.5 rounded bg-slate-100 font-mono text-[10px] text-slate-600">
