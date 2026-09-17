@@ -56,7 +56,7 @@ export default function MentorsTab({
 
   // Workshop Autosuggest state
   const [addWorkshopInput, setAddWorkshopInput] = useState("");
-  const [addWorkshopTags, setAddWorkshopTags] = useState<string[]>(["WS-14"]);
+  const [addWorkshopTags, setAddWorkshopTags] = useState<string[]>([]);
   const [addWorkshopShowSuggestions, setAddWorkshopShowSuggestions] = useState(false);
 
   const [editWorkshopInput, setEditWorkshopInput] = useState("");
@@ -65,7 +65,7 @@ export default function MentorsTab({
 
   // Domain Specialties tag state
   const [addDomainInput, setAddDomainInput] = useState("");
-  const [addDomainTags, setAddDomainTags] = useState<string[]>(["Distributed Systems", "Fault Tolerance"]);
+  const [addDomainTags, setAddDomainTags] = useState<string[]>([]);
   const [editDomainInput, setEditDomainInput] = useState("");
 
   // Modal states
@@ -76,6 +76,7 @@ export default function MentorsTab({
   const initialFormState = {
     fullName: "",
     email: "",
+    phone: "",
     organization: "",
     designation: "",
     bio: "",
@@ -225,12 +226,13 @@ export default function MentorsTab({
 
   const handleCreateMentor = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || !formData.email.trim()) return;
+    if (!formData.fullName.trim() || !formData.email.trim() || !formData.phone.trim()) return;
 
     const created: ExpertMentor = {
       id: `exp-${String(experts.length + 1).padStart(3, "0")}`,
       fullName: formData.fullName.trim(),
       email: formData.email.trim(),
+      phone: formData.phone.trim(),
       organization: formData.organization.trim() || "Independent Industry Expert",
       designation: formData.designation.trim() || "Systems Mentor",
       bio: formData.bio.trim() || "Experienced systems engineer mentoring in DOS Club.",
@@ -239,9 +241,7 @@ export default function MentorsTab({
         "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80",
       linkedinUrl: formData.linkedinUrl.trim(),
       githubUrl: formData.githubUrl.trim(),
-      domainSpecialties: addDomainTags.length > 0
-        ? addDomainTags
-        : ["Distributed Systems", "Fault Tolerance"],
+      domainSpecialties: addDomainTags,
       assignedWorkshops: addWorkshopTags,
       status: "ACTIVE",
     };
@@ -249,8 +249,8 @@ export default function MentorsTab({
     setExperts([created, ...experts]);
     setIsAddOpen(false);
     setFormData(initialFormState);
-    setAddWorkshopTags(["WS-14"]);
-    setAddDomainTags(["Distributed Systems", "Fault Tolerance"]);
+    setAddWorkshopTags([]);
+    setAddDomainTags([]);
     onAuditLog?.(
       "Experts",
       "Mentor Registration",
@@ -289,7 +289,7 @@ export default function MentorsTab({
         <div>
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-900 text-white text-[10px] font-bold uppercase tracking-wider mb-1.5 font-mono">
             <AcademicCapIcon className="w-3 h-3" />
-            <span>Technical Expert Faculty</span>
+            <span>Technical Experts</span>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
             Expert Mentors Directory
@@ -744,7 +744,7 @@ export default function MentorsTab({
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  Register Technical Expert Mentor
+                  Register Expert
                 </h2>
                 <p className="text-xs text-slate-500">
                   Add systems faculty with complete background, credentials, and domain tags.
@@ -767,7 +767,7 @@ export default function MentorsTab({
                     required
                     value={formData.fullName}
                     onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                    placeholder="e.g. Ramesh Chandran"
+                    placeholder="Enter expert name"
                     className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800"
                   />
                 </div>
@@ -779,10 +779,18 @@ export default function MentorsTab({
                     required
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    placeholder="ramesh@systems.org"
+                    placeholder="name@company.com"
                     className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800"
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Phone Number:</label>
+                <input type="tel" required value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="Enter WhatsApp or mobile number"
+                  className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800" />
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -793,7 +801,7 @@ export default function MentorsTab({
                     required
                     value={formData.organization}
                     onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
-                    placeholder="e.g. Cloudflare / DeScience Labs"
+                    placeholder="Enter company or organization"
                     className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800"
                   />
                 </div>
@@ -805,7 +813,7 @@ export default function MentorsTab({
                     required
                     value={formData.designation}
                     onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                    placeholder="e.g. Staff Systems Architect"
+                    placeholder="Enter designation or title"
                     className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800"
                   />
                 </div>
@@ -967,7 +975,7 @@ export default function MentorsTab({
 
               {/* Profile Picture Upload & Preview */}
               <div className="flex flex-col gap-1.5 pt-1">
-                <label className="font-semibold text-slate-700">Faculty Profile Picture:</label>
+                <label className="font-semibold text-slate-700">Expert Profile Picture:</label>
                 <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
@@ -1016,7 +1024,7 @@ export default function MentorsTab({
                   type="submit"
                   className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg shadow-sm transition-colors cursor-pointer"
                 >
-                  Register Faculty
+                  Register Expert
                 </button>
               </div>
             </form>
@@ -1031,7 +1039,7 @@ export default function MentorsTab({
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div>
                 <h2 className="text-base font-bold text-slate-900">
-                  Edit Faculty: {editingExpert.fullName}
+                  Edit Expert: {editingExpert.fullName}
                 </h2>
                 <p className="text-xs text-slate-500">
                   Update credentials and assigned workshops.
@@ -1072,6 +1080,14 @@ export default function MentorsTab({
                     className="border border-slate-300 rounded-lg p-2"
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Phone Number:</label>
+                <input type="tel" required value={editingExpert.phone || ""}
+                  onChange={(e) => setEditingExpert({ ...editingExpert, phone: e.target.value })}
+                  placeholder="Enter WhatsApp or mobile number"
+                  className="border border-slate-300 rounded-lg p-2" />
               </div>
 
               <div className="flex flex-col gap-1">

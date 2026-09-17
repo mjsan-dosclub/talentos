@@ -18,6 +18,7 @@ export interface ExpertMentor {
   id: string;
   fullName: string;
   email: string;
+  phone?: string;
   organization: string;
   designation: string;
   bio: string;
