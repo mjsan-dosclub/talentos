@@ -224,6 +224,7 @@ export default function WorkshopsTab({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         code: created.code,
+        defense_pass_threshold: created.testPassThreshold,
         title: created.title,
         session_number: Number(created.code.replace(/\D/g, "")) || workshops.length + 1,
         description: created.focusArea,
@@ -258,6 +259,8 @@ export default function WorkshopsTab({
       session_number: Number(editingWorkshop.code.replace(/\D/g, "")),
       title: editingWorkshop.title,
       description: editingWorkshop.focusArea,
+      code: editingWorkshop.code,
+      defense_pass_threshold: editingWorkshop.testPassThreshold,
       session_mode: editingWorkshop.mode === "IN_PERSON" ? "OFFLINE" : editingWorkshop.mode === "VIRTUAL" ? "ONLINE" : "HYBRID"
     }) });
     const result = await response.json();
@@ -814,6 +817,12 @@ export default function WorkshopsTab({
 
             <form onSubmit={handleSaveEdit} className="flex flex-col gap-3 text-xs">
               <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Workshop Code:</label>
+                <input type="text" required value={editingWorkshop.code}
+                  onChange={(e) => setEditingWorkshop({ ...editingWorkshop, code: e.target.value.toUpperCase() })}
+                  className="border border-slate-300 rounded-lg p-2 font-mono uppercase" />
+              </div>
+              <div className="flex flex-col gap-1">
                 <label className="font-semibold text-slate-700">Workshop Title:</label>
                 <input
                   type="text"
@@ -827,18 +836,26 @@ export default function WorkshopsTab({
               </div>
 
               <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Focus Domain:</label>
+                <input type="text" value={editingWorkshop.focusArea}
+                  onChange={(e) => setEditingWorkshop({ ...editingWorkshop, focusArea: e.target.value })}
+                  className="border border-slate-300 rounded-lg p-2" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
-                  <label className="font-semibold text-slate-700">Focus Area:</label>
-                  <input
-                    type="text"
-                    value={editingWorkshop.focusArea}
-                    onChange={(e) =>
-                      setEditingWorkshop({ ...editingWorkshop, focusArea: e.target.value })
-                    }
-                    className="border border-slate-300 rounded-lg p-2"
-                  />
+                  <label className="font-semibold text-slate-700">Delivery Mode:</label>
+                  <select value={editingWorkshop.mode}
+                    onChange={(e) => setEditingWorkshop({ ...editingWorkshop, mode: e.target.value as WorkshopItem["mode"] })}
+                    className="border border-slate-300 rounded-lg p-2 bg-white">
+                    <option value="IN_PERSON">In-Person Campus Lab</option><option value="HYBRID">Hybrid</option><option value="VIRTUAL">Virtual War Room</option>
+                  </select>
                 </div>
-
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Defense Pass Threshold (/25):</label>
+                  <input type="number" min="1" max="25" value={editingWorkshop.testPassThreshold}
+                    onChange={(e) => setEditingWorkshop({ ...editingWorkshop, testPassThreshold: Number(e.target.value) })}
+                    className="border border-slate-300 rounded-lg p-2" />
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">

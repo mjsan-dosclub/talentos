@@ -26,6 +26,7 @@ export async function POST(req: NextRequest) {
     const {
       title,
       code,
+      defense_pass_threshold,
       session_number,
       description,
       trainer_name,
@@ -49,6 +50,7 @@ export async function POST(req: NextRequest) {
           batch_id: defaultBatchId,
           session_number: Number(session_number) || 28,
           code: code || `WS-${String(Number(session_number) || 28).padStart(2, "0")}`,
+          defense_pass_threshold: Number(defense_pass_threshold) || 20,
           title: title || "New Systems Workshop",
           description: description || "Hands-on engineering workshop.",
           trainer_name: trainer_name || "Lead Technical Expert",
