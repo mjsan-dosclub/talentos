@@ -178,6 +178,11 @@ export async function POST(request: NextRequest) {
               </div>
             </div>
 
+            <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 8px; padding: 18px; margin: 20px 0;">
+              <div style="font-size: 11px; font-weight: 700; color: #9a3412; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">First login required</div>
+              <div style="font-size: 13px; color: #7c2d12; line-height: 1.7;">Sign in with your email and DOS ID, create a private password, and upload a profile photo. Your student portal opens after both steps are complete.</div>
+            </div>
+
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0;">
               <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
                 Verified Fellowship Credentials
