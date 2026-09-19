@@ -66,17 +66,39 @@ export default function StudentSetupPage() {
     setUploading(true);
     setMessage("Uploading photo…");
     try {
-      const form = new FormData(); form.append("file", file); form.append("type", "avatar");
+      const uploadFile = await preparePhoto(file);
+      const form = new FormData(); form.append("file", uploadFile, file.name); form.append("type", "avatar");
       const response = await fetch("/api/upload", { method: "POST", body: form });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok || !data.url) return setMessage(data.error || "Photo upload failed. Please choose another image.");
+      if (!response.ok || !data.url) return setMessage(data.error || `Photo upload failed (HTTP ${response.status}). Please choose another image.`);
       setPhoto(data.url);
       setPhotoName(file.name);
       setMessage("Photo uploaded. Click Continue to finish your account setup.");
-    } catch {
-      setMessage("Photo upload failed because the network request failed. Check your connection and try again.");
+    } catch (error) {
+      console.error("Student photo upload failed", error);
+      setMessage("Photo upload could not reach the server. Check your connection and try again.");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function preparePhoto(file: File): Promise<File> {
+    if (file.size <= 600 * 1024) return file;
+    try {
+      const bitmap = await createImageBitmap(file);
+      const maxDimension = 640;
+      const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+      const context = canvas.getContext("2d");
+      if (!context) return file;
+      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      bitmap.close();
+      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
+      return blob ? new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }) : file;
+    } catch {
+      return file;
     }
   }
 
@@ -85,12 +107,13 @@ export default function StudentSetupPage() {
     try {
       const response = await fetch("/api/profile/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ full_name: user.name, avatar_url: photo }) });
       const data = await response.json().catch(() => ({}));
-      if (!response.ok) return setMessage(data.error || "Profile could not be saved. Please try again.");
+      if (!response.ok) return setMessage(data.error || `Profile could not be saved (HTTP ${response.status}). Please try again.`);
       const updated = data.user || { ...user, avatar_url: photo, requiresOnboarding: false };
       setClientSession(updated);
       window.location.href = "/record/" + encodeURIComponent(updated.dos_id || "");
-    } catch {
-      setMessage("Profile could not be saved because the network request failed. Please try again.");
+    } catch (error) {
+      console.error("Student profile save failed", error);
+      setMessage("Profile could not reach the server. Check your connection and try again.");
     }
   }
 
