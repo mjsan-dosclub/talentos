@@ -10,34 +10,62 @@ export default function StudentSetupPage() {
   const [photo, setPhoto] = useState("");
   const [message, setMessage] = useState("");
   const [passwordSaved, setPasswordSaved] = useState(false);
+  const [photoName, setPhotoName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   useEffect(() => setUser(getClientSession()), []);
 
   async function savePassword() {
     if (newPassword.length < 6) return setMessage("New password must be at least 6 characters.");
-    const response = await fetch("/api/auth/change-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentPassword, newPassword }) });
-    const data = await response.json();
-    if (!response.ok) return setMessage(data.error || "Password could not be saved.");
-    setPasswordSaved(true);
-    setMessage("Password saved. Upload your photo to continue.");
+    setSavingPassword(true);
+    setMessage("");
+    try {
+      const response = await fetch("/api/auth/change-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currentPassword, newPassword }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return setMessage(data.error || "Password could not be saved. Please try again.");
+      setPasswordSaved(true);
+      setMessage("Password saved. Now choose a profile photo.");
+    } catch {
+      setMessage("Password could not be saved because the network request failed. Check your connection and try again.");
+    } finally {
+      setSavingPassword(false);
+    }
   }
 
   async function uploadPhoto(file: File) {
-    const form = new FormData(); form.append("file", file); form.append("type", "avatar");
-    const response = await fetch("/api/upload", { method: "POST", body: form });
-    const data = await response.json();
-    if (!response.ok || !data.url) return setMessage(data.error || "Photo upload failed.");
-    setPhoto(data.url);
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) return setMessage("Please choose a JPG, PNG, or WebP image.");
+    if (file.size > 2 * 1024 * 1024) return setMessage("Photo must be 2MB or smaller.");
+    setUploading(true);
+    setMessage("Uploading photo…");
+    try {
+      const form = new FormData(); form.append("file", file); form.append("type", "avatar");
+      const response = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok || !data.url) return setMessage(data.error || "Photo upload failed. Please choose another image.");
+      setPhoto(data.url);
+      setPhotoName(file.name);
+      setMessage("Photo uploaded. Click Continue to finish your account setup.");
+    } catch {
+      setMessage("Photo upload failed because the network request failed. Check your connection and try again.");
+    } finally {
+      setUploading(false);
+    }
   }
 
   async function finish() {
     if (!user || !passwordSaved || !photo) return setMessage("Save your password and upload a photo first.");
-    const response = await fetch("/api/profile/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ full_name: user.name, avatar_url: photo }) });
-    const data = await response.json();
-    if (!response.ok) return setMessage(data.error || "Profile could not be saved.");
-    const updated = data.user || { ...user, avatar_url: photo, requiresOnboarding: false };
-    setClientSession(updated);
-    window.location.href = "/record/" + encodeURIComponent(updated.dos_id || "");
+    try {
+      const response = await fetch("/api/profile/update", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ full_name: user.name, avatar_url: photo }) });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) return setMessage(data.error || "Profile could not be saved. Please try again.");
+      const updated = data.user || { ...user, avatar_url: photo, requiresOnboarding: false };
+      setClientSession(updated);
+      window.location.href = "/record/" + encodeURIComponent(updated.dos_id || "");
+    } catch {
+      setMessage("Profile could not be saved because the network request failed. Please try again.");
+    }
   }
 
   if (!user) return <main className="min-h-screen grid place-items-center">Loading account...</main>;
@@ -49,10 +77,13 @@ export default function StudentSetupPage() {
     <input className="mt-1 w-full rounded border p-3" type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} />
     <label className="mt-4 block text-sm font-semibold">New password</label>
     <input className="mt-1 w-full rounded border p-3" type="password" minLength={6} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
-    <button className="mt-4 rounded bg-slate-900 px-4 py-3 text-sm font-semibold text-white" disabled={passwordSaved} onClick={savePassword}>{passwordSaved ? "Password saved" : "Save password"}</button>
-    <label className="mt-8 block text-sm font-semibold">Profile photo</label>
-    <input className="mt-1 block w-full text-sm" type="file" accept="image/png,image/jpeg,image/webp" onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])} />
+    <button className="mt-4 rounded bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50" disabled={passwordSaved || savingPassword} onClick={savePassword}>{savingPassword ? "Saving password…" : passwordSaved ? "Password saved" : "Save password"}</button>
+    <label className="mt-8 block text-sm font-semibold" htmlFor="student-photo">Profile photo</label>
+    <p className="mt-1 text-xs text-slate-500">JPG, PNG, or WebP · maximum 2MB</p>
+    <input id="student-photo" className="mt-2 block w-full rounded border p-2 text-sm" type="file" accept="image/png,image/jpeg,image/webp" disabled={uploading} onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])} />
+    {uploading && <p className="mt-2 text-sm text-blue-700">Uploading photo…</p>}
+    {photoName && !uploading && <p className="mt-2 text-sm text-green-700">Selected: {photoName}</p>}
     {photo && <img src={photo} alt="Uploaded profile" className="mt-4 h-24 w-24 rounded-full object-cover" />}
-    <button className="mt-8 w-full rounded bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50" disabled={!passwordSaved || !photo} onClick={finish}>Continue to student portal</button>
+    <button className="mt-8 w-full rounded bg-blue-600 px-4 py-3 font-semibold text-white disabled:opacity-50" disabled={!passwordSaved || !photo || uploading} onClick={finish}>Continue to student portal</button>
   </section></main>;
 }
