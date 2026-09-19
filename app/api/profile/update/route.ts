@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { supabase } from "@/lib/supabase";
+import { deserializeSignedSession, serializeSignedSession } from "@/lib/session-server";
 
 export async function POST(request: Request) {
   try {
@@ -49,7 +50,7 @@ export async function POST(request: Request) {
 
     if (sessionCookie?.value) {
       try {
-        activeUser = JSON.parse(decodeURIComponent(sessionCookie.value));
+        activeUser = await deserializeSignedSession(sessionCookie.value);
       } catch {
         // malformed
       }
@@ -117,8 +118,8 @@ export async function POST(request: Request) {
       message: "Personal information updated successfully.",
     });
 
-    response.cookies.set("talentos_session", encodeURIComponent(JSON.stringify(updatedUser)), {
-      httpOnly: false,
+    response.cookies.set("talentos_session", await serializeSignedSession(updatedUser), {
+      httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
       maxAge: 60 * 60 * 24 * 7, // 7 days

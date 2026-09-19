@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { SESSION_COOKIE_NAME, deserializeSession } from "./lib/session";
+import { SESSION_COOKIE_NAME } from "./lib/session";
+import { deserializeSignedSession } from "./lib/session-server";
 
 // Paths that are strictly public
 const PUBLIC_PATHS = [
@@ -11,7 +12,7 @@ const PUBLIC_PATHS = [
   "/robots.txt",
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 1. Allow Next.js internals, static assets, images, and API routes
@@ -29,7 +30,7 @@ export function middleware(request: NextRequest) {
 
   // 2. Read session cookie
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
-  const session = deserializeSession(sessionCookie);
+  const session = await deserializeSignedSession(sessionCookie);
 
   // 3. If unauthenticated, redirect to login with original target URL
   if (!session) {

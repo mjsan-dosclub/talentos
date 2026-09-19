@@ -103,9 +103,8 @@ export function deserializeSession(serialized: string | null | undefined): Talen
  */
 export function setClientSession(user: TalentosUser) {
   if (typeof document === "undefined") return;
-  const val = serializeSession(user);
-  // 7 days cookie
-  document.cookie = `${SESSION_COOKIE_NAME}=${val}; path=/; max-age=604800; SameSite=Lax`;
+  // The authenticated cookie is issued and signed by the server. Keep only a
+  // non-authoritative display cache in browser storage.
   localStorage.setItem(SESSION_COOKIE_NAME, JSON.stringify(user));
 }
 
@@ -121,20 +120,12 @@ export function clearClientSession() {
 export function getClientSession(): TalentosUser | null {
   if (typeof document === "undefined") return null;
   let user: TalentosUser | null = null;
-  const match = document.cookie
-    .split("; ")
-    .find((row) => row.startsWith(`${SESSION_COOKIE_NAME}=`));
-  if (match) {
-    const val = match.split("=")[1];
-    user = deserializeSession(val);
-  } else {
-    const local = localStorage.getItem(SESSION_COOKIE_NAME);
-    if (local) {
-      try {
-        user = JSON.parse(local);
-      } catch {
-        user = null;
-      }
+  const local = localStorage.getItem(SESSION_COOKIE_NAME);
+  if (local) {
+    try {
+      user = JSON.parse(local);
+    } catch {
+      user = null;
     }
   }
 

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import {
   SESSION_COOKIE_NAME,
-  serializeSession,
   DEMO_ACCOUNTS,
   TalentosUser,
   UserRole,
 } from "@/lib/session";
+import { serializeSignedSession } from "@/lib/session-server";
 import { getStudentByIdOrEmail } from "@/lib/db";
 
 export async function POST(request: Request) {
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
       };
     }
 
-    const cookieVal = serializeSession(user);
+    const cookieVal = await serializeSignedSession(user);
 
     const response = NextResponse.json({
       success: true,
@@ -112,7 +112,7 @@ export async function POST(request: Request) {
       path: "/",
       maxAge: 604800,
       sameSite: "lax",
-      httpOnly: false,
+      httpOnly: true,
     });
 
     return response;

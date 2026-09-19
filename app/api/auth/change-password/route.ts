@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { deserializeSignedSession } from "@/lib/session-server";
 
 export async function POST(request: Request) {
   try {
@@ -20,7 +21,7 @@ export async function POST(request: Request) {
 
     if (sessionCookie?.value) {
       try {
-        activeUser = JSON.parse(decodeURIComponent(sessionCookie.value));
+        activeUser = await deserializeSignedSession(sessionCookie.value);
       } catch {
         // malformed
       }
