@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { updateSystemConfig, getSystemConfig } from "@/lib/config";
 import { requireRoles } from "@/lib/api-auth";
+import { cookies } from "next/headers";
+import { SESSION_COOKIE_NAME } from "@/lib/session";
+import { deserializeSignedSession } from "@/lib/session-server";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 export async function POST(request: Request) {
   try {
@@ -54,6 +58,24 @@ export async function POST(request: Request) {
 
     if (type === "avatar" && !["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
       return NextResponse.json({ error: "Profile photos must be JPG, PNG, or WebP images." }, { status: 400 });
+    }
+
+    if (type === "avatar") {
+      const sessionValue = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
+      const session = await deserializeSignedSession(sessionValue);
+      if (!session?.id) return NextResponse.json({ error: "Student session is missing an account ID." }, { status: 401 });
+
+      const extension = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+      const objectPath = `${session.id}/profile.${extension}`;
+      const { error: storageError } = await supabaseAdmin.storage
+        .from("student-avatars")
+        .upload(objectPath, file, { contentType: file.type, upsert: true, cacheControl: "3600" });
+      if (storageError) {
+        console.error("Student avatar storage upload failed:", storageError);
+        return NextResponse.json({ error: "Photo storage is not ready. Please apply the student avatar storage migration." }, { status: 500 });
+      }
+      const { data: publicUrl } = supabaseAdmin.storage.from("student-avatars").getPublicUrl(objectPath);
+      return NextResponse.json({ success: true, url: publicUrl.publicUrl, fileName: file.name, fileSize: file.size, fileType: file.type, type });
     }
 
     const bytes = await file.arrayBuffer();
