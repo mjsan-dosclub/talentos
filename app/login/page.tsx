@@ -72,18 +72,8 @@ function LoginContent() {
       }
     } catch (err: any) {
       console.warn("Fast login error:", err);
-      const demoUser = DEMO_ACCOUNTS[demoKey];
-      setClientSession(demoUser);
-      const destination =
-        redirectUrl ||
-        (demoUser.role === "TRAINER"
-          ? "/trainer"
-          : demoUser.role === "COLLEGE_ADMIN"
-          ? "/college"
-          : demoUser.role === "SUPER_ADMIN"
-          ? "/admin"
-          : `/record/${encodeURIComponent(demoUser.dos_id || "DOS-B3-001")}`);
-      window.location.href = destination;
+      setStatusMessage("Authentication service is unavailable. Please try again.");
+      setIsAuthenticating(false);
     }
   };
 
