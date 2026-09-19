@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import { deserializeSignedSession, serializeSignedSession } from "@/lib/session-server";
 
 export async function POST(request: Request) {
@@ -97,18 +97,17 @@ export async function POST(request: Request) {
 
     // If Supabase is connected and student has an ID, attempt live DB update
     if (activeUser.id && activeUser.role === "STUDENT") {
-      try {
-        await supabase
-          .from("students")
-          .update({
-            full_name: full_name.trim(),
-            avatar_url: avatar_url || null,
-            bio: bio?.trim() || null,
-            headline: headline?.trim() || null,
-          })
-          .eq("id", activeUser.id);
-      } catch (dbErr) {
-        console.warn("Live DB profile update notice:", dbErr);
+      const { error: dbError } = await supabaseAdmin
+        .from("students")
+        .update({
+          full_name: full_name.trim(),
+          avatar_url: avatar_url || null,
+          must_reset_password: false,
+        })
+        .eq("id", activeUser.id);
+      if (dbError) {
+        console.error("Live DB profile update failed:", dbError);
+        return NextResponse.json({ error: "Profile could not be saved to the student record." }, { status: 500 });
       }
     }
 
