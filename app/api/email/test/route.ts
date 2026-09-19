@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail, getOutboxLedger } from "@/lib/email-service";
 import { getSystemConfig } from "@/lib/config";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 export async function GET() {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   const config = getSystemConfig();
   const outbox = getOutboxLedger();
   return NextResponse.json({
@@ -21,6 +24,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await req.json();
     const testRecipient = body.recipient || body.to;
