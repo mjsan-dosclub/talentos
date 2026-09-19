@@ -111,14 +111,19 @@ export async function POST(request: Request) {
       }
     }
 
+    // Keep large avatar data out of the session cookie and response. The avatar
+    // is persisted in the student record; cookies should remain small and safe.
+    const sessionUser = { ...updatedUser };
+    delete sessionUser.avatar_url;
+
     // Refresh the session cookie with updated non-sensitive fields
     const response = NextResponse.json({
       success: true,
-      user: updatedUser,
+      user: sessionUser,
       message: "Personal information updated successfully.",
     });
 
-    response.cookies.set("talentos_session", await serializeSignedSession(updatedUser), {
+    response.cookies.set("talentos_session", await serializeSignedSession(sessionUser), {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
