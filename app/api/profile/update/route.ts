@@ -114,7 +114,8 @@ export async function POST(request: Request) {
     // Keep large avatar data out of the session cookie and response. The avatar
     // is persisted in the student record; cookies should remain small and safe.
     const sessionUser = { ...updatedUser };
-    delete sessionUser.avatar_url;
+    // Storage URLs are small and stable; only data URLs must never enter a session.
+    if (sessionUser.avatar_url?.startsWith("data:")) delete sessionUser.avatar_url;
 
     // Refresh the session cookie with updated non-sensitive fields
     const response = NextResponse.json({

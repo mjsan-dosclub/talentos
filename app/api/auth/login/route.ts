@@ -95,6 +95,7 @@ export async function POST(request: Request) {
         role: "STUDENT",
         dos_id: student.dos_id,
         institution_id: student.institution_name || "",
+        avatar_url: student.avatar_url || undefined,
         requiresOnboarding: Boolean(student.must_reset_password ?? true) || !student.avatar_url,
       };
     }
