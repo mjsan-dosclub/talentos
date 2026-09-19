@@ -7,6 +7,8 @@ import {
 } from "@/lib/session";
 import { serializeSignedSession } from "@/lib/session-server";
 import { getStudentByIdOrEmail } from "@/lib/db";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { verifyPassword } from "@/lib/password-server";
 
 export async function POST(request: Request) {
   try {
@@ -60,7 +62,13 @@ export async function POST(request: Request) {
       const cleanEmail = (email || "").trim();
       const providedPwd = (password || "").trim();
 
-      const { student } = await getStudentByIdOrEmail(cleanEmail);
+      const { data: registeredStudent } = await supabaseAdmin
+        .from("students")
+        .select("id,email,full_name,dos_id,institution_name,avatar_url,password_hash,must_reset_password")
+        .ilike("email", cleanEmail)
+        .maybeSingle();
+      const { student: fallbackStudent } = registeredStudent ? { student: null } : await getStudentByIdOrEmail(cleanEmail);
+      const student: any = registeredStudent || fallbackStudent;
 
       if (!student) {
         return NextResponse.json(
@@ -70,13 +78,10 @@ export async function POST(request: Request) {
       }
 
       // Check password: Must match student's dos_id (case-insensitive) OR standard cohort default passwords
-      const validPasswords = [
-        student.dos_id.toLowerCase(),
-        "student@2026",
-        "dosclub2026"
-      ];
-
-      if (!validPasswords.includes(providedPwd.toLowerCase())) {
+      const validPassword = student.password_hash
+        ? verifyPassword(providedPwd, student.password_hash)
+        : providedPwd.toLowerCase() === student.dos_id.toLowerCase();
+      if (!validPassword) {
         return NextResponse.json(
           { error: `Invalid password for ${student.full_name}. Your default password is your DOS ID (${student.dos_id}).` },
           { status: 401 }
@@ -89,7 +94,8 @@ export async function POST(request: Request) {
         name: student.full_name,
         role: "STUDENT",
         dos_id: student.dos_id,
-        institution_id: "AU-DOS-01",
+        institution_id: student.institution_name || "",
+        requiresOnboarding: Boolean(student.must_reset_password ?? true) || !student.avatar_url,
       };
     }
 
@@ -105,6 +111,8 @@ export async function POST(request: Request) {
           ? "/college"
           : user.role === "SUPER_ADMIN"
           ? "/admin"
+          : user.requiresOnboarding
+          ? "/student/setup"
           : `/record/${encodeURIComponent(user.dos_id || "DOS-B3-001")}`,
     });
 

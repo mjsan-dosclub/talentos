@@ -72,6 +72,7 @@ export async function POST(request: Request) {
       headline: headline?.trim() || activeUser.headline || "",
       github_handle: github_handle?.trim() || activeUser.github_handle || "",
     };
+    if (activeUser.role === "STUDENT" && avatar_url) updatedUser.requiresOnboarding = false;
 
     // Save profile to persistent disk store data/profiles.json
     try {

@@ -10,6 +10,7 @@ export interface TalentosUser {
   avatar_url?: string;
   bio?: string;
   headline?: string;
+  requiresOnboarding?: boolean;
   github_handle?: string;
   loginTime?: string;
 }

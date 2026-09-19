@@ -47,6 +47,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (role === "STUDENT" && session.requiresOnboarding && !pathname.startsWith("/student/setup")) {
+    return NextResponse.redirect(new URL("/student/setup", request.url));
+  }
+
   // /admin requires SUPER_ADMIN
   if (pathname.startsWith("/admin")) {
     const deniedUrl = new URL("/login", request.url);
