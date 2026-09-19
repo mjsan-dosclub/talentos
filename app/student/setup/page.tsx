@@ -14,7 +14,33 @@ export default function StudentSetupPage() {
   const [uploading, setUploading] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
 
-  useEffect(() => setUser(getClientSession()), []);
+  useEffect(() => {
+    let active = true;
+    const restoreSession = async () => {
+      const cached = getClientSession();
+      if (cached) {
+        if (active) setUser(cached);
+        return;
+      }
+
+      try {
+        const response = await fetch("/api/auth/session", { cache: "no-store" });
+        if (!response.ok) throw new Error("Session expired");
+        const data = await response.json();
+        if (!active) return;
+        if (data.user) {
+          setClientSession(data.user);
+          setUser(data.user);
+        } else {
+          window.location.href = "/login?redirect=%2Fstudent%2Fsetup";
+        }
+      } catch {
+        if (active) window.location.href = "/login?redirect=%2Fstudent%2Fsetup";
+      }
+    };
+    restoreSession();
+    return () => { active = false; };
+  }, []);
 
   async function savePassword() {
     if (newPassword.length < 6) return setMessage("New password must be at least 6 characters.");
