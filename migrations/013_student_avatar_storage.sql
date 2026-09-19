@@ -3,7 +3,7 @@ values (
   'student-avatars',
   'student-avatars',
   true,
-  2097152,
+  204800,
   array['image/jpeg', 'image/png', 'image/webp']::text[]
 )
 on conflict (id) do update

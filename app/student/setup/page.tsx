@@ -62,7 +62,7 @@ export default function StudentSetupPage() {
   async function uploadPhoto(file: File) {
     const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) return setMessage("Please choose a JPG, PNG, or WebP image.");
-    if (file.size > 2 * 1024 * 1024) return setMessage("Photo must be 2MB or smaller.");
+    if (file.size > 10 * 1024 * 1024) return setMessage("The original photo must be 10MB or smaller.");
     setUploading(true);
     setMessage("Uploading photo…");
     try {
@@ -83,20 +83,31 @@ export default function StudentSetupPage() {
   }
 
   async function preparePhoto(file: File): Promise<File> {
-    if (file.size <= 600 * 1024) return file;
+    const targetBytes = 200 * 1024;
+    if (file.size <= targetBytes) return file;
     try {
       const bitmap = await createImageBitmap(file);
-      const maxDimension = 640;
-      const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
-      const canvas = document.createElement("canvas");
-      canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-      canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-      const context = canvas.getContext("2d");
-      if (!context) return file;
-      context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+      let smallest: Blob | null = null;
+      for (const maxDimension of [512, 384, 256, 192]) {
+        const scale = Math.min(1, maxDimension / Math.max(bitmap.width, bitmap.height));
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+        canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+        const context = canvas.getContext("2d");
+        if (!context) continue;
+        context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+        for (const quality of [0.8, 0.65, 0.5, 0.35]) {
+          const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", quality));
+          if (!blob) continue;
+          smallest = blob;
+          if (blob.size <= targetBytes) {
+            bitmap.close();
+            return new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" });
+          }
+        }
+      }
       bitmap.close();
-      const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.82));
-      return blob ? new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }) : file;
+      return smallest ? new File([smallest], file.name.replace(/\.[^.]+$/, ".jpg"), { type: "image/jpeg" }) : file;
     } catch {
       return file;
     }
@@ -128,7 +139,7 @@ export default function StudentSetupPage() {
     <input className="mt-1 w-full rounded border p-3" type="password" minLength={6} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
     <button className="mt-4 rounded bg-slate-900 px-4 py-3 text-sm font-semibold text-white disabled:opacity-50" disabled={passwordSaved || savingPassword} onClick={savePassword}>{savingPassword ? "Saving password…" : passwordSaved ? "Password saved" : "Save password"}</button>
     <label className="mt-8 block text-sm font-semibold" htmlFor="student-photo">Profile photo</label>
-    <p className="mt-1 text-xs text-slate-500">JPG, PNG, or WebP · maximum 2MB</p>
+    <p className="mt-1 text-xs text-slate-500">JPG, PNG, or WebP · automatically compressed to maximum 200KB</p>
     <input id="student-photo" className="mt-2 block w-full rounded border p-2 text-sm" type="file" accept="image/png,image/jpeg,image/webp" disabled={uploading} onChange={(e) => e.target.files?.[0] && uploadPhoto(e.target.files[0])} />
     {uploading && <p className="mt-2 text-sm text-blue-700">Uploading photo…</p>}
     {photoName && !uploading && <p className="mt-2 text-sm text-green-700">Selected: {photoName}</p>}

@@ -47,11 +47,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    // Allow up to 10MB for documents and project deliverables, 2MB for images
-    const maxSizeBytes = type === "evidence" ? 10 * 1024 * 1024 : 2 * 1024 * 1024;
+    // Evidence allows 10MB; profile photos are deliberately limited to 200KB.
+    const maxSizeBytes = type === "evidence" ? 10 * 1024 * 1024 : type === "avatar" ? 200 * 1024 : 2 * 1024 * 1024;
     if (file.size > maxSizeBytes) {
       return NextResponse.json(
-        { error: `File exceeds the maximum permitted limit of ${type === "evidence" ? "10MB" : "2MB"}` },
+        { error: `File exceeds the maximum permitted limit of ${type === "evidence" ? "10MB" : type === "avatar" ? "200KB" : "2MB"}` },
         { status: 400 }
       );
     }
