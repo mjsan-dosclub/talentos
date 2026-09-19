@@ -106,7 +106,6 @@ function AdminDashboardContent() {
             registeredCount: 40,
             attendedCount: 38,
             mode: w.session_mode || "OFFLINE",
-            testPassThreshold: w.defense_pass_threshold || 20,
             leadExpert: w.trainer_name || "Lead Technical Expert",
             deliveryType: "Standard Curriculum",
             institutionCount: 4,

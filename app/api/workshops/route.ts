@@ -7,7 +7,7 @@ export async function GET() {
   try {
     const { data, error } = await supabaseAdmin
       .from("workshops")
-      .select("*")
+      .select("id,batch_id,session_number,title,description,trainer_name,trainer_user_id,session_mode,scheduled_at,duration_minutes,venue_name,venue_lat,venue_lng,venue_radius_meters,submission_required,submission_type,submission_deadline,submission_instructions,is_active,created_at,code")
       .order("session_number", { ascending: true });
 
     if (error) {
@@ -26,7 +26,6 @@ export async function POST(req: NextRequest) {
     const {
       title,
       code,
-      defense_pass_threshold,
       session_number,
       description,
       trainer_name,
@@ -50,7 +49,6 @@ export async function POST(req: NextRequest) {
           batch_id: defaultBatchId,
           session_number: Number(session_number) || 28,
           code: code || `WS-${String(Number(session_number) || 28).padStart(2, "0")}`,
-          defense_pass_threshold: Number(defense_pass_threshold) || 20,
           title: title || "New Systems Workshop",
           description: description || "Hands-on engineering workshop.",
           trainer_name: trainer_name || "Lead Technical Expert",
@@ -92,7 +90,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ success: true, workshop: data });
+    const { defense_pass_threshold: _removedThreshold, ...safeWorkshop } = data as any;
+    return NextResponse.json({ success: true, workshop: safeWorkshop });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
   }
@@ -101,7 +100,7 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, session_number, ...updates } = body;
+    const { id, session_number, defense_pass_threshold: _removedThreshold, ...updates } = body;
 
     if (!id && !session_number) {
       return NextResponse.json({ error: "Workshop ID or session_number required" }, { status: 400 });

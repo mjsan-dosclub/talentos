@@ -82,7 +82,6 @@ export default function WorkshopsTab({
     focusArea: "",
     expertName: experts.length > 0 ? experts[0].fullName : "",
     mode: "IN_PERSON" as WorkshopItem["mode"],
-    testPassThreshold: 20,
     date: new Date().toISOString().slice(0, 10),
   };
   const [formData, setFormData] = useState(initialFormState);
@@ -220,7 +219,6 @@ export default function WorkshopsTab({
       focusArea: formData.focusArea.trim() || "Applied Systems",
       expertName: formData.expertName,
       mode: formData.mode,
-      testPassThreshold: formData.testPassThreshold,
       status: "ACTIVE",
       date: formData.date,
     };
@@ -230,7 +228,6 @@ export default function WorkshopsTab({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         code: created.code,
-        defense_pass_threshold: created.testPassThreshold,
         title: created.title,
         session_number: Number(created.code.replace(/\D/g, "")) || workshops.length + 1,
         description: created.focusArea,
@@ -266,7 +263,6 @@ export default function WorkshopsTab({
       title: editingWorkshop.title,
       description: editingWorkshop.focusArea,
       code: editingWorkshop.code,
-      defense_pass_threshold: editingWorkshop.testPassThreshold,
       session_mode: editingWorkshop.mode === "IN_PERSON" ? "OFFLINE" : editingWorkshop.mode === "VIRTUAL" ? "ONLINE" : "HYBRID"
     }) });
     const result = await response.json();
@@ -296,8 +292,8 @@ export default function WorkshopsTab({
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
             {workshops.length > 0
-              ? `${workshops.length} core engineering disciplines, defense thresholds, and live session delivery across campus hubs.`
-              : "Core engineering disciplines, defense thresholds, and live session delivery across campus hubs."}
+              ? `${workshops.length} core engineering disciplines and live session delivery across campus hubs.`
+              : "Core engineering disciplines and live session delivery across campus hubs."}
           </p>
         </div>
 
@@ -430,7 +426,6 @@ export default function WorkshopsTab({
                     <th className="p-3">Code &amp; Topic</th>
                     <th className="p-3">Focus Domain</th>
                     <th className="p-3">Mode</th>
-                    <th className="p-3">Defense Threshold</th>
                     <th className="p-3">Status</th>
                     <th className="p-3 text-right">Actions</th>
                   </tr>
@@ -438,7 +433,7 @@ export default function WorkshopsTab({
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {filtered.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400 font-mono text-xs">
+                      <td colSpan={6} className="p-8 text-center text-slate-400 font-mono text-xs">
                         NO_WORKSHOPS_MATCHING_FILTER
                       </td>
                     </tr>
@@ -483,9 +478,6 @@ export default function WorkshopsTab({
                               <span className="px-2 py-0.5 rounded bg-slate-100 font-mono text-[10px] text-slate-600">
                                 {ws.mode}
                               </span>
-                            </td>
-                            <td className="p-3 font-mono text-xs">
-                              <span className="font-bold text-blue-700">{ws.testPassThreshold}</span> / 25
                             </td>
                             <td className="p-3">
                               <span
@@ -748,20 +740,6 @@ export default function WorkshopsTab({
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="flex flex-col gap-1">
-                  <label className="font-semibold text-slate-700">Defense Pass Threshold (/25):</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="25"
-                    value={formData.testPassThreshold}
-                    onChange={(e) =>
-                      setFormData({ ...formData, testPassThreshold: Number(e.target.value) })
-                    }
-                    className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-900"
-                  />
-                </div>
-
                 <div className="hidden">
                   <label className="font-semibold text-slate-700">Scheduled Date:</label>
                   <input
@@ -848,12 +826,6 @@ export default function WorkshopsTab({
                     className="border border-slate-300 rounded-lg p-2 bg-white">
                     <option value="IN_PERSON">In-Person Campus Lab</option><option value="HYBRID">Hybrid</option><option value="VIRTUAL">Virtual War Room</option>
                   </select>
-                </div>
-                <div className="flex flex-col gap-1">
-                  <label className="font-semibold text-slate-700">Defense Pass Threshold (/25):</label>
-                  <input type="number" min="1" max="25" value={editingWorkshop.testPassThreshold}
-                    onChange={(e) => setEditingWorkshop({ ...editingWorkshop, testPassThreshold: Number(e.target.value) })}
-                    className="border border-slate-300 rounded-lg p-2" />
                 </div>
               </div>
 

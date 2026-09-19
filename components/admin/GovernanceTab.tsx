@@ -103,7 +103,7 @@ export default function GovernanceTab({
             Governance &amp; Audit Trail
           </h1>
           <p className="text-xs text-slate-500 mt-0.5">
-            Cryptographic ledger tracking administrator mutations, campus onboarding, and student defense passes.
+            Cryptographic ledger tracking administrator mutations and campus onboarding.
           </p>
         </div>
 
