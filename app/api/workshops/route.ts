@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
 import { generateGoogleCalendarUrl } from "@/lib/notification-templates";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 export async function GET() {
   try {
@@ -21,6 +22,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   try {
     const body = await req.json();
     const {
@@ -98,6 +100,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   try {
     const body = await req.json();
     const { id, session_number, defense_pass_threshold: _removedThreshold, ...updates } = body;
@@ -125,6 +128,7 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");

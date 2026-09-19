@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
 import { StudentMember, INITIAL_STUDENTS } from "@/lib/admin-data";
+import { requireSuperAdmin } from "@/lib/api-auth";
 import {
   getStudents,
   addStudent,
@@ -60,6 +61,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   try {
     const body = await request.json();
     const { dos_id, dosId, full_name, fullName, email, phone, department, institution, batch } = body;
@@ -231,6 +233,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   try {
     const body = await request.json();
     const { id, status, restore, ...rest } = body;
@@ -275,6 +278,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     let id = searchParams.get("id");

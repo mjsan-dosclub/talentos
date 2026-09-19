@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
 import { PartnerInstitution } from "@/lib/admin-data";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 export async function GET() {
   try {
@@ -40,6 +41,7 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   try {
     const body = await req.json();
     const { name, code, contact_person, contact_email, contact_phone, lat, lng, geofenceRadiusMeters } = body;
@@ -171,6 +173,7 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -193,6 +196,7 @@ export async function DELETE(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  const denied = await requireSuperAdmin(); if (denied) return denied;
   const body = await req.json();
   const { id, name, code, pocName, pocEmail, pocPhone, ...rest } = body;
   if (!id) return NextResponse.json({ error: "Institution id required." }, { status: 400 });
