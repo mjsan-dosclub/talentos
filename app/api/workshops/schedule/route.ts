@@ -22,6 +22,11 @@ async function requireAdmin() {
   return null;
 }
 
+async function currentSession() {
+  const cookie = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
+  return deserializeSignedSession(cookie);
+}
+
 function minutes(value: string) {
   const match = value.match(/^(\d+):(\d+)\s(AM|PM)$/i);
   if (!match) return -1;
@@ -89,14 +94,30 @@ async function conflict(body: Record<string, unknown>, id?: string) {
 }
 
 export async function GET(req: NextRequest) {
-  const denied = await requireAdmin(); if (denied) return denied;
+  const session = await currentSession();
+  if (!session) return NextResponse.json({ success: false, error: "Authentication required." }, { status: 401 });
   try {
     const params = new URL(req.url).searchParams;
     let query = supabaseAdmin.from("scheduled_workshop_sessions").select("*").order("session_date", { ascending: true });
-    if (params.get("institution") && params.get("institution") !== "ALL") query = query.eq("institution_name", params.get("institution") as string);
-    if (params.get("trainer") && params.get("trainer") !== "ALL") query = query.eq("trainer_name", params.get("trainer") as string);
     const result = await query; if (result.error) throw result.error;
-    const sessions = (result.data || []).map((row) => map(row as DbSession));
+    const requestedInstitution = params.get("institution");
+    const requestedTrainer = params.get("trainer");
+    const normalized = (value: unknown) => String(value || "").toLowerCase().trim();
+    const includesEitherWay = (left: unknown, right: unknown) => {
+      const a = normalized(left); const b = normalized(right);
+      return Boolean(a && b && (a.includes(b) || b.includes(a)));
+    };
+    const visibleRows = (result.data || []).filter((row) => {
+      const record = row as DbSession;
+      if (session.role === "TRAINER" && !includesEitherWay(record.trainer_id, session.id) && !includesEitherWay(record.trainer_name, session.name)) return false;
+      if ((session.role === "COLLEGE_ADMIN" || session.role === "STUDENT") && !includesEitherWay(record.institution_id, session.institution_id) && !includesEitherWay(record.institution_name, session.institution_id)) return false;
+      if (session.role === "SUPER_ADMIN") {
+        if (requestedInstitution && requestedInstitution !== "ALL" && !includesEitherWay(record.institution_name, requestedInstitution)) return false;
+        if (requestedTrainer && requestedTrainer !== "ALL" && !includesEitherWay(record.trainer_name, requestedTrainer)) return false;
+      } else if (session.role === "TRAINER" && requestedInstitution && requestedInstitution !== "ALL" && !includesEitherWay(record.institution_name, requestedInstitution)) return false;
+      return true;
+    });
+    const sessions = visibleRows.map((row) => map(row as DbSession));
     return NextResponse.json({ success: true, count: sessions.length, nextUpcoming: sessions.find((s) => s.status === "SCHEDULED" || s.status === "ACTIVE_IN_SESSION") || null, recentlyCompleted: sessions.filter((s) => s.status === "COMPLETED").slice(-3).reverse(), sessions });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error?.message || "Failed to retrieve workshop schedule" }, { status: 500 });
