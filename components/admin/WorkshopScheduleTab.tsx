@@ -755,16 +755,13 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                   value={formData.institutionName}
                   onChange={(e) => {
                     const inst = e.target.value;
-                    let id = "inst-001";
-                    let venue = "Turing Computing Labs, Guindy Campus";
-                    if (inst.includes("PSG")) {
-                      id = "inst-002";
-                      venue = "Seminar Hall 4, Dept of IT, PSG Tech";
-                    } else if (inst.includes("Thiagarajar")) {
-                      id = "inst-003";
-                      venue = "ECE Auditorium, TCE Madurai";
-                    }
-                    setFormData({ ...formData, institutionName: inst, institutionId: id, venue });
+                    const selectedInstitution = institutions.find((item) => item.name === inst);
+                    setFormData({
+                      ...formData,
+                      institutionName: inst,
+                      institutionId: selectedInstitution?.id || "",
+                      venue: "",
+                    });
                   }}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                 >
@@ -816,10 +813,12 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                   value={formData.trainerName}
                   onChange={(e) => {
                     const tName = e.target.value;
-                    let tId = "exp-001";
-                    if (tName.includes("Vikram")) tId = "exp-002";
-                    if (tName.includes("Anand")) tId = "exp-003";
-                    setFormData({ ...formData, trainerName: tName, trainerId: tId });
+                    const selectedExpert = activeExperts.find((expert) => expert.fullName === tName);
+                    setFormData({
+                      ...formData,
+                      trainerName: tName,
+                      trainerId: selectedExpert?.id || "",
+                    });
                   }}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                 >
