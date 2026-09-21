@@ -66,13 +66,29 @@ function map(row: DbSession): ScheduledWorkshopSession {
 }
 
 function validate(body: Record<string, unknown>) {
-  const required = ["workshopCode", "workshopTitle", "institutionName", "date", "trainerName", "startTime", "endTime", "venue", "focusTopic"];
+  const required = ["workshopCode", "workshopTitle", "institutionId", "institutionName", "date", "trainerId", "trainerName", "startTime", "endTime", "venue", "focusTopic"];
   const missing = required.filter((field) => !String(body[field] || "").trim());
   if (missing.length) return "Please complete the required fields: " + missing.join(", ") + ".";
   if (!TIME_PATTERN.test(String(body.startTime)) || !TIME_PATTERN.test(String(body.endTime))) return "Time must use 12-hour format, for example 09:00 AM.";
   if (minutes(String(body.startTime)) >= minutes(String(body.endTime))) return "End time must be later than start time.";
   if (Number.isNaN(new Date(String(body.date) + "T00:00:00").getTime())) return "A valid session date is required.";
   if (String(body.venue).length > 500 || String(body.focusTopic).length > 10000) return "Venue or curriculum content is too long.";
+  return null;
+}
+
+async function validateReferences(body: Record<string, unknown>) {
+  const [workshopResult, institutionResult, expertResult] = await Promise.all([
+    supabaseAdmin.from("workshops").select("code,is_active").eq("code", String(body.workshopCode || "")).maybeSingle(),
+    supabaseAdmin.from("institutions").select("id,is_active").eq("id", String(body.institutionId || "")).maybeSingle(),
+    supabaseAdmin.from("experts").select("id,status").eq("id", String(body.trainerId || "")).maybeSingle(),
+  ]);
+  if (workshopResult.error) throw workshopResult.error;
+  if (institutionResult.error) throw institutionResult.error;
+  if (expertResult.error) throw expertResult.error;
+  if (!workshopResult.data) return "Selected workshop record was not found.";
+  if (!workshopResult.data.is_active) return "Only active master workshops can be scheduled.";
+  if (!institutionResult.data || !institutionResult.data.is_active) return "Selected college is not available for scheduling.";
+  if (!expertResult.data || expertResult.data.status !== "ACTIVE") return "Selected expert is not active or was not found.";
   return null;
 }
 
@@ -129,6 +145,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json(); const validationError = validate(body);
     if (validationError) return NextResponse.json({ success: false, error: validationError }, { status: 400 });
+    const referenceError = await validateReferences(body);
+    if (referenceError) return NextResponse.json({ success: false, error: referenceError }, { status: 400 });
     if (await conflict(body)) return NextResponse.json({ success: false, error: "This expert is already assigned to an overlapping workshop on that date." }, { status: 409 });
     const result = await supabaseAdmin.from("scheduled_workshop_sessions").insert(payload(body)).select("*").single();
     if (result.error) throw result.error;
@@ -150,6 +168,8 @@ export async function PATCH(req: NextRequest) {
     const merged = { workshopCode: body.workshopCode ?? row.workshop_code, workshopTitle: body.workshopTitle ?? row.workshop_title, institutionId: body.institutionId ?? row.institution_id, institutionName: body.institutionName ?? row.institution_name, trainerId: body.trainerId ?? row.trainer_id, trainerName: body.trainerName ?? row.trainer_name, date: body.date ?? row.session_date, startTime: body.startTime ?? row.start_time, endTime: body.endTime ?? row.end_time, venue: body.venue ?? row.venue, focusTopic: body.focusTopic ?? row.focus_topic, cohortSize: body.cohortSize ?? row.cohort_size };
     const validationError = validate(merged);
     if (validationError) return NextResponse.json({ success: false, error: validationError }, { status: 400 });
+    const referenceError = await validateReferences(merged);
+    if (referenceError) return NextResponse.json({ success: false, error: referenceError }, { status: 400 });
     if (await conflict(merged, id)) return NextResponse.json({ success: false, error: "This expert is already assigned to an overlapping workshop on that date." }, { status: 409 });
     const result = await supabaseAdmin.from("scheduled_workshop_sessions").update({ ...payload(merged), ...(body.status ? { manual_status: body.status } : {}) }).eq("id", id).select("*").single();
     if (result.error) throw result.error;
