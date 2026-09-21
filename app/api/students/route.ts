@@ -16,15 +16,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const includeArchived = searchParams.get("includeArchived") === "true";
 
-    // 1. Primary: Fetch live persistent records from Supabase
+    // 1. Fetch persistent records from Supabase and disk store
+    const diskStudents = getStudents(includeArchived);
+
     try {
       const { data: dbStudents, error: dbErr } = await supabaseAdmin
         .from("students")
         .select("*")
         .order("created_at", { ascending: true });
 
-      if (!dbErr && dbStudents && dbStudents.length > 0) {
-        const mapped: StudentMember[] = dbStudents
+      if (!dbErr && dbStudents) {
+        const mappedDb: StudentMember[] = dbStudents
           .filter((s: any) => includeArchived || !s.is_archived)
           .map((s: any) => ({
             id: s.id,
@@ -42,20 +44,24 @@ export async function GET(request: NextRequest) {
             avatar: s.avatar_url || `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80`,
           }));
 
+        // Merge disk cache and DB records by email/dosId to prevent missing entries
+        const studentMap = new Map<string, StudentMember>();
+        diskStudents.forEach((st) => studentMap.set(st.email.toLowerCase(), st));
+        mappedDb.forEach((st) => studentMap.set(st.email.toLowerCase(), st));
+
+        const mergedStudents = Array.from(studentMap.values());
         return NextResponse.json({
           success: true,
-          count: mapped.length,
-          students: mapped,
-          source: "supabase_cloud",
+          count: mergedStudents.length,
+          students: mergedStudents,
+          source: "supabase_cloud_merged",
         });
       }
     } catch (dbError) {
       console.warn("[TalentOS] Supabase students query notice:", dbError);
     }
 
-    // 2. Fallback to disk store
-    const students = getStudents(includeArchived);
-    return NextResponse.json({ success: true, count: students.length, students, source: "disk_cache" });
+    return NextResponse.json({ success: true, count: diskStudents.length, students: diskStudents, source: "disk_cache" });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
   }

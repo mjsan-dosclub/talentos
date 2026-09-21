@@ -403,7 +403,7 @@ export default function PassLedgerTab({ onToast, onAuditLog }: PassLedgerTabProp
       </div>
 
       {/* Passes Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs pb-32 min-h-[360px]">
         <div className="overflow-x-auto rounded-2xl">
           <table className="w-full text-left border-collapse">
             <thead>

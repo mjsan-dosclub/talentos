@@ -233,10 +233,10 @@ export default function TrainerDashboardPage() {
                 Technical Expert Lead Cockpit
               </div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                WS-14: Resilient Microservices & Circuit Breakers
+                WS-07: Build Arena — Day 1: Architecture &amp; Data Modelling
               </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                Anna University Campus Hub • Batch 3 Cohort Alpha • Session 14 of 27
+                Anna University Campus Hub &bull; Batch 3 Cohort Alpha &bull; Session 7 of 27
               </p>
             </div>
 

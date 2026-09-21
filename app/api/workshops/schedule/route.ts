@@ -79,6 +79,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Priority 2 Overbooking Conflict Prevention Rule: Check expert schedule overlap
+    const existingSchedule = getFilteredSchedule({ role: "SUPER_ADMIN" });
+    const hasTrainerConflict = existingSchedule.some((s) => {
+      if (s.date === date && s.trainerName.toLowerCase() === trainerName.toLowerCase() && s.status !== "CANCELLED") {
+        // Compare time slots
+        const newStart = startTime || "09:00 AM";
+        const newEnd = endTime || "05:00 PM";
+        if (s.startTime === newStart || s.endTime === newEnd) {
+          return true;
+        }
+      }
+      return false;
+    });
+
+    if (hasTrainerConflict) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Overbooking Conflict: Technical Expert "${trainerName}" is already assigned to another session on ${date} during slot [${startTime || "09:00 AM"} - ${endTime || "05:00 PM"}]. Scheduling rejected.`,
+        },
+        { status: 409 }
+      );
+    }
+
     const created = addScheduledSession({
       workshopCode,
       workshopTitle,

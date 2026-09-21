@@ -31,11 +31,13 @@ export function middleware(request: NextRequest) {
   const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value;
   const session = deserializeSession(sessionCookie);
 
-  // 3. If unauthenticated, redirect to login with original target URL
+  // 3. If unauthenticated or tampered, redirect to login and clear invalid cookie
   if (!session) {
     const loginUrl = new URL("/login", request.url);
     loginUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(loginUrl);
+    const response = NextResponse.redirect(loginUrl);
+    response.cookies.delete(SESSION_COOKIE_NAME);
+    return response;
   }
 
   // 4. Role-based Route Protection (RBAC)

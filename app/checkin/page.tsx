@@ -160,9 +160,12 @@ function CheckInContent() {
     try {
       // Look up student record to validate campus hub & check-in state
       const studentRes = await fetch("/api/students");
-      const { students } = await studentRes.json();
-      const matched = students?.find(
-        (s: any) => s.dos_id.toUpperCase() === dosId.trim().toUpperCase() || s.email.toLowerCase() === dosId.trim().toLowerCase()
+      const data = await studentRes.json();
+      const students = data?.students || [];
+      const matched = students.find(
+        (s: any) =>
+          (s.dos_id || s.dosId || "").toUpperCase() === dosId.trim().toUpperCase() ||
+          (s.email || "").toLowerCase() === dosId.trim().toLowerCase()
       );
       const studentUuid = matched?.id || "a0000001-0000-0000-0000-000000000001";
 

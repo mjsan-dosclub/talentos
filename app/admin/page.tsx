@@ -16,6 +16,7 @@ import {
   RadioIcon,
   MailIcon,
   XIcon,
+  ShieldCheckIcon,
 } from "@/components/Icons";
 
 import { getClientSession } from "@/lib/session";
@@ -41,6 +42,7 @@ import GovernanceTab from "@/components/admin/GovernanceTab";
 import PopupsTab from "@/components/admin/PopupsTab";
 import PushNotificationsTab from "@/components/admin/PushNotificationsTab";
 import NotificationEngineTab from "@/components/admin/NotificationEngineTab";
+import MasterUsersTab from "@/components/admin/MasterUsersTab";
 
 function AdminDashboardContent() {
   const searchParams = useSearchParams();
@@ -157,6 +159,7 @@ function AdminDashboardContent() {
     | "push"
     | "notifications"
     | "cms"
+    | "admins"
     | "governance" = "students";
   let cmsSubTab: "landing" | "casestudies" | "enquiries" | "passes" = "landing";
 
@@ -168,6 +171,8 @@ function AdminDashboardContent() {
     activeModule = "institutions";
   } else if (rawTab === "mentors" || rawTab === "experts") {
     activeModule = "mentors";
+  } else if (rawTab === "admins" || rawTab === "master_users") {
+    activeModule = "admins";
   } else if (rawTab === "popups") {
     activeModule = "popups";
   } else if (rawTab === "push") {
@@ -275,6 +280,12 @@ function AdminDashboardContent() {
     {
       title: "Platform & Security",
       items: [
+        {
+          id: "admins",
+          label: "Master Users & Admins",
+          icon: <ShieldCheckIcon className="w-4 h-4" />,
+          badge: "MASTER",
+        },
         {
           id: "governance",
           label: "Platform Governance",
@@ -390,6 +401,11 @@ function AdminDashboardContent() {
           {/* MODULE: 3-WAY NOTIFICATION ENGINE (EMAIL / WA / PUSH) */}
           {activeModule === "notifications" && (
             <NotificationEngineTab onToast={triggerToast} />
+          )}
+
+          {/* MODULE: MASTER USERS & ADMISSION MANAGERS */}
+          {activeModule === "admins" && (
+            <MasterUsersTab onToast={triggerToast} onAuditLog={logAdminAudit} />
           )}
 
           {/* MODULE 6: PLATFORM & GOVERNANCE */}

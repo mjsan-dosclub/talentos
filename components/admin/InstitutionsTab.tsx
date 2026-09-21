@@ -322,7 +322,7 @@ export default function InstitutionsTab({
       )}
 
       {/* Minimalist Institutions Table */}
-      <div className="bg-white border border-slate-200 rounded-xl shadow-2xs">
+      <div className="bg-white border border-slate-200 rounded-xl shadow-2xs pb-32 min-h-[360px]">
         <div className="overflow-x-auto rounded-xl">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
@@ -839,15 +839,27 @@ export default function InstitutionsTab({
                 <button
                   type="button"
                   onClick={() => setEditingInst(null)}
-                  className="px-3.5 py-1.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 cursor-pointer"
+                  disabled={isSubmitting}
+                  className="px-3.5 py-1.5 border border-slate-300 rounded-lg text-slate-700 font-medium hover:bg-slate-50 cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg cursor-pointer"
+                  disabled={isSubmitting}
+                  className="px-4 py-1.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-semibold rounded-lg cursor-pointer flex items-center gap-1.5 transition-all shadow-xs"
                 >
-                  Save Changes
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin h-3.5 w-3.5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
                 </button>
               </div>
             </form>

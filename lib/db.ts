@@ -399,3 +399,13 @@ export async function submitSessionFeedback(feedback: {
     return { feedback: null, error: err.message };
   }
 }
+
+export async function getAdminUserByEmail(email: string) {
+  try {
+    const { data } = await supabase.from("admin_users").select("*").eq("email", email.toLowerCase().trim()).maybeSingle();
+    if (data) return data;
+  } catch {
+    // fallback
+  }
+  return null;
+}

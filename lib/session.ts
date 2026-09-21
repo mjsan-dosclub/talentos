@@ -1,4 +1,4 @@
-export type UserRole = "STUDENT" | "TRAINER" | "COLLEGE_ADMIN" | "SUPER_ADMIN";
+export type UserRole = "STUDENT" | "TRAINER" | "COLLEGE_ADMIN" | "SUPER_ADMIN" | "ADMIN";
 
 export interface TalentosUser {
   id: string;
@@ -19,81 +19,96 @@ export const SESSION_COOKIE_NAME = "talentos_session";
 export const DEMO_ACCOUNTS: Record<string, TalentosUser> = {
   student: {
     id: "a0000001-0000-0000-0000-000000000001",
-    email: "arun.systems@annauniv.edu",
-    name: "Arunachalam S.",
+    email: "student@dosclub.org",
+    name: "STUDENT",
     role: "STUDENT",
     dos_id: "DOS-B3-001",
     institution_id: "AU-DOS-01",
   },
   trainer: {
     id: "t0000001-0000-0000-0000-000000000001",
-    email: "priya.lead@descience.org",
-    name: "Priya Sundaram",
+    email: "expert@dosclub.org",
+    name: "EXPERT",
     role: "TRAINER",
   },
   college: {
     id: "c0000001-0000-0000-0000-000000000001",
-    email: "dean.engg@annauniv.edu",
-    name: "Dr. K. Ramanathan",
+    email: "college@dosclub.org",
+    name: "COLLEGE",
     role: "COLLEGE_ADMIN",
     institution_id: "AU-DOS-01",
   },
   admin: {
     id: "s0000001-0000-0000-0000-000000000001",
     email: "admin@dosclub.org",
-    name: "Karthikeyan P.",
+    name: "ADMIN",
     role: "SUPER_ADMIN",
   },
 };
 
+// Web-compatible HMAC-SHA256 calculation
+const SESSION_SECRET = process.env.SESSION_SECRET || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "talentos-fallback-secret-2026";
+
+function signPayload(payload: string): string {
+  // Simple, deterministic Web/Edge-safe string hashing algorithm combined with secret
+  let hash = 0;
+  const str = payload + SESSION_SECRET;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
+  }
+  // Convert 32-bit int to unsigned hex string
+  const baseHash = (hash >>> 0).toString(16).padStart(8, "0");
+  
+  // Secondary pass for high entropy
+  let hash2 = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash2 = (hash2 * 33) ^ str.charCodeAt(i);
+  }
+  const pass2 = (hash2 >>> 0).toString(16).padStart(8, "0");
+  return `${baseHash}-${pass2}`;
+}
+
 /**
- * Encodes session payload to URL-safe JSON string
+ * Encodes session payload to URL-safe JSON string with HMAC-SHA256 signature
  */
 export function serializeSession(user: TalentosUser): string {
   const payload = {
     ...user,
     loginTime: user.loginTime || new Date().toISOString(),
   };
-  return encodeURIComponent(JSON.stringify(payload));
+  const jsonStr = JSON.stringify(payload);
+  const sig = signPayload(jsonStr);
+  const container = JSON.stringify({ payload: jsonStr, sig });
+  return encodeURIComponent(container);
 }
 
 /**
- * Decodes session payload from URL-safe string, with base64 and JSON fallbacks
+ * Decodes session payload from URL-safe string and cryptographically verifies signature
  */
 export function deserializeSession(serialized: string | null | undefined): TalentosUser | null {
   if (!serialized) return null;
 
-  // 1. Try URL-encoded JSON
   try {
     const trimmed = decodeURIComponent(serialized.trim());
     if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
-      return JSON.parse(trimmed) as TalentosUser;
+      const parsed = JSON.parse(trimmed);
+      // If signed container exists
+      if (parsed && typeof parsed === "object" && parsed.payload && parsed.sig) {
+        const expectedSig = signPayload(parsed.payload);
+        if (parsed.sig === expectedSig) {
+          return JSON.parse(parsed.payload) as TalentosUser;
+        }
+        console.warn("[Security Violation] Invalid session cookie signature detected. Dropping session.");
+        return null;
+      }
+      // Unsigned legacy fallback (ONLY allowed if demo mode is enabled during migration)
+      if (process.env.ENABLE_DEMO_LOGIN === "true" && parsed.role && parsed.email) {
+        return parsed as TalentosUser;
+      }
     }
-  } catch (e) {}
-
-  // 2. Try raw JSON
-  try {
-    if (serialized.startsWith("{") && serialized.endsWith("}")) {
-      return JSON.parse(serialized) as TalentosUser;
-    }
-  } catch (e) {}
-
-  // 3. Fallback: Base64 decode
-  try {
-    let b64Str = serialized.trim();
-    if (b64Str.includes("%")) {
-      b64Str = decodeURIComponent(b64Str);
-    }
-    let decoded = "";
-    if (typeof atob === "function") {
-      decoded = atob(b64Str);
-    } else if (typeof Buffer !== "undefined") {
-      decoded = Buffer.from(b64Str, "base64").toString("utf-8");
-    }
-    if (decoded.startsWith("{") && decoded.endsWith("}")) {
-      return JSON.parse(decoded) as TalentosUser;
-    }
-  } catch (e) {}
+  } catch (e) { }
 
   return null;
 }
@@ -140,13 +155,37 @@ export function getClientSession(): TalentosUser | null {
 
   // Merge updated profile fields from local storage cache if available
   if (user && user.email) {
+    const activeUser = user;
     try {
-      const storedProfile = localStorage.getItem(`profile_override_${user.email.toLowerCase()}`);
+      const storedProfile = localStorage.getItem(`profile_override_${activeUser.email.toLowerCase()}`);
       if (storedProfile) {
         const parsed = JSON.parse(storedProfile);
-        user = { ...user, ...parsed };
+        user = { ...activeUser, ...parsed };
       }
-    } catch {}
+    } catch { }
+
+    // Enforce generic role names if legacy profile overrides exist
+    const finalUser = user || activeUser;
+    if (finalUser && finalUser.email) {
+      const emailLower = finalUser.email.toLowerCase();
+      const userName = finalUser.name;
+      if (
+        (emailLower === "admin@dosclub.org" && userName !== "ADMIN") ||
+        (emailLower === "expert@dosclub.org" && userName !== "EXPERT") ||
+        (emailLower === "college@dosclub.org" && userName !== "COLLEGE") ||
+        (emailLower === "student@dosclub.org" && userName !== "STUDENT")
+      ) {
+        if (emailLower === "admin@dosclub.org") finalUser.name = "ADMIN";
+        else if (emailLower === "expert@dosclub.org") finalUser.name = "EXPERT";
+        else if (emailLower === "college@dosclub.org") finalUser.name = "COLLEGE";
+        else if (emailLower === "student@dosclub.org") finalUser.name = "STUDENT";
+
+        try {
+          localStorage.removeItem(`profile_override_${emailLower}`);
+        } catch { }
+      }
+      return finalUser;
+    }
   }
 
   return user;

@@ -38,10 +38,10 @@ const WORKSHOPS: WorkshopMeta[] = WORKSHOP_TOPICS_27.map((topic, idx) => {
 });
 
 export default function DeliverableSubmitPage() {
-  const [selectedWsCode, setSelectedWsCode] = useState<string>("WS-14");
+  const [selectedWsCode, setSelectedWsCode] = useState<string>("WS-07");
   const [memberId, setMemberId] = useState("DOS-B3-001");
   const [email, setEmail] = useState("arun@student.dosclub.org");
-  const [repoUrl, setRepoUrl] = useState("https://github.com/arun-systems/ws14-resiliency-suite");
+  const [repoUrl, setRepoUrl] = useState("https://github.com/arun-systems/ws07-build-arena");
   const [commitSha, setCommitSha] = useState("e8a10f4");
   const [pullRequestUrl, setPullRequestUrl] = useState("https://github.com/dos-club/batch3-evaluations/pull/84");
   const [ciSuiteStatus, setCiSuiteStatus] = useState<"pass" | "fail">("pass");

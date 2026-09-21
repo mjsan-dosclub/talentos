@@ -83,7 +83,8 @@ function CaseStudyEditorContent() {
     metaKeywords: "",
     tagsText: "Rust, Systems, OpenSource",
     status: "PUBLISHED" as "PUBLISHED" | "DRAFT",
-    // Media embeds
+    // HTML content for rich text editor
+    htmlContent: "",
     videoUrl: "",
     spotifyUrl: "",
     githubRepoUrl: "",
@@ -92,6 +93,118 @@ function CaseStudyEditorContent() {
       { label: "Defense Rating", value: "98.4 / 100" },
     ],
   });
+
+  const editorRef = useRef<HTMLDivElement>(null);
+  const [editorMode, setEditorMode] = useState<"visual" | "html">("visual");
+
+  // DOM HTML Sanitizer function to strip dangerous tags, script injections, on* attributes, and javascript: links
+  const sanitizeHtml = (rawHtml: string): string => {
+    if (typeof window === "undefined") return rawHtml;
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawHtml, "text/html");
+
+    // Remove executable / non-content elements
+    const dangerousElements = doc.querySelectorAll(
+      "script, iframe, object, embed, style, link, meta, base, form, input, button, select, textarea"
+    );
+    dangerousElements.forEach((el) => el.remove());
+
+    // Recursively clean node attributes
+    const allowedTags = new Set([
+      "H2", "H3", "H4", "P", "B", "STRONG", "I", "EM", "U", "UL", "OL", "LI",
+      "BLOCKQUOTE", "CODE", "PRE", "IMG", "A", "BR", "DIV", "SPAN", "HR"
+    ]);
+
+    const cleanNode = (node: Node) => {
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const element = node as HTMLElement;
+        const tagName = element.tagName.toUpperCase();
+
+        if (!allowedTags.has(tagName)) {
+          // Unwrap element: replace element with its child nodes
+          const parent = element.parentNode;
+          while (element.firstChild) {
+            parent?.insertBefore(element.firstChild, element);
+          }
+          parent?.removeChild(element);
+          return;
+        }
+
+        // Remove dangerous attributes (on*, style containing javascript, javascript: href/src)
+        const attrs = Array.from(element.attributes);
+        for (const attr of attrs) {
+          const attrName = attr.name.toLowerCase();
+          const attrValue = attr.value.toLowerCase().trim();
+
+          if (
+            attrName.startsWith("on") ||
+            (attrName === "href" && attrValue.startsWith("javascript:")) ||
+            (attrName === "src" && attrValue.startsWith("javascript:"))
+          ) {
+            element.removeAttribute(attr.name);
+          }
+        }
+
+        // Recursively clean children
+        Array.from(element.childNodes).forEach(cleanNode);
+      }
+    };
+
+    Array.from(doc.body.childNodes).forEach(cleanNode);
+    return doc.body.innerHTML;
+  };
+
+  // Sync contentEditable innerHTML when editId finishes loading
+  useEffect(() => {
+    if (editorRef.current && formData.htmlContent) {
+      if (editorRef.current.innerHTML !== formData.htmlContent) {
+        editorRef.current.innerHTML = formData.htmlContent;
+      }
+    }
+  }, [formData.htmlContent]);
+
+  // Command handlers for formatting
+  const execEditorCommand = (command: string, value: string | undefined = undefined) => {
+    document.execCommand(command, false, value);
+    if (editorRef.current) {
+      const sanitized = sanitizeHtml(editorRef.current.innerHTML);
+      setFormData((prev) => ({ ...prev, htmlContent: sanitized }));
+    }
+  };
+
+  const handlePromptImage = () => {
+    const url = prompt("Enter Image URL (e.g., https://images.unsplash.com/...):");
+    if (url && url.trim()) {
+      const cleanUrl = url.trim();
+      if (!cleanUrl.toLowerCase().startsWith("javascript:")) {
+        execEditorCommand("insertImage", cleanUrl);
+      }
+    }
+  };
+
+  const handlePromptLink = () => {
+    const url = prompt("Enter Link URL (e.g., https://github.com/...):");
+    if (url && url.trim()) {
+      const cleanUrl = url.trim();
+      if (!cleanUrl.toLowerCase().startsWith("javascript:")) {
+        execEditorCommand("createLink", cleanUrl);
+      }
+    }
+  };
+
+  const handleEditorPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const pastedText = e.clipboardData.getData("text/html") || e.clipboardData.getData("text/plain");
+
+    if (pastedText) {
+      const clean = sanitizeHtml(pastedText);
+      document.execCommand("insertHTML", false, clean);
+      if (editorRef.current) {
+        const sanitized = sanitizeHtml(editorRef.current.innerHTML);
+        setFormData((prev) => ({ ...prev, htmlContent: sanitized }));
+      }
+    }
+  };
 
   // Fetch students & existing case study (if edit mode)
   useEffect(() => {
@@ -133,6 +246,7 @@ function CaseStudyEditorContent() {
                   fullStoryText: Array.isArray(found.fullStory)
                     ? found.fullStory.join("\n\n")
                     : "",
+                  htmlContent: found.htmlContent || (Array.isArray(found.fullStory) ? found.fullStory.map((p) => `<p>${p}</p>`).join("") : ""),
                   systemAudited: found.systemAudited || "SYS-04: Distributed Systems",
                   defenseStatus: found.defenseStatus || "PASSED_WITH_DISTINCTION",
                   studentName: found.student?.name || "",
@@ -284,6 +398,7 @@ function CaseStudyEditorContent() {
         badge: formData.badge,
         summary: formData.summary,
         fullStory: fullStoryParagraphs.length > 0 ? fullStoryParagraphs : [formData.summary],
+        htmlContent: formData.htmlContent || fullStoryParagraphs.map((p) => `<p>${p}</p>`).join(""),
         systemAudited: formData.systemAudited,
         defenseStatus: formData.defenseStatus,
         student: {
@@ -482,25 +597,170 @@ function CaseStudyEditorContent() {
               </div>
             </div>
 
-            {/* Main Article Body Editor */}
+            {/* Main Article Body Editor (Minimalist Medium/WordPress Style) */}
             <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h2 className="text-xs font-bold uppercase tracking-wider text-[#3772FF] font-mono">
-                  02 // Full Story Body & Article Narrative
+              <div className="flex flex-wrap items-center justify-between border-b border-slate-100 pb-3 gap-2">
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#3772FF] font-mono flex items-center gap-2">
+                  <SparklesIcon className="w-4 h-4 text-[#3772FF]" />
+                  <span>02 // Full Story Body & Article Narrative</span>
                 </h2>
-                <span className="text-[10px] text-slate-400 font-mono">
-                  PARAGRAPHS_SEPARATED_BY_BLANK_LINES
-                </span>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditorMode(editorMode === "visual" ? "html" : "visual")}
+                    className="text-[11px] font-mono font-bold px-2.5 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 transition-all"
+                  >
+                    {editorMode === "visual" ? "HTML Code Mode" : "WYSIWYG Visual Mode"}
+                  </button>
+                  <span className="text-[10px] text-slate-400 font-mono">
+                    AUTO_SANITY_SANITIZED
+                  </span>
+                </div>
               </div>
 
-              <textarea
-                rows={12}
-                value={formData.fullStoryText}
-                onChange={(e) => setFormData({ ...formData, fullStoryText: e.target.value })}
-                placeholder="Enter detailed article narrative here...&#10;&#10;Use blank lines between paragraphs to format sections automatically.&#10;&#10;Describe system architecture, performance benchmarks, chaos tests, and evaluation outcomes..."
-                className="w-full text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 font-mono leading-relaxed focus:ring-2 focus:ring-[#3772FF] focus:outline-none min-h-[260px]"
-                required
-              />
+              {/* Minimalist Floating Toolbar */}
+              {editorMode === "visual" && (
+                <div className="flex flex-wrap items-center gap-1.5 p-2 bg-slate-50 border border-slate-200 rounded-xl">
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("formatBlock", "H2")}
+                    title="Heading 2"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-all"
+                  >
+                    H2
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("formatBlock", "H3")}
+                    title="Heading 3"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-all"
+                  >
+                    H3
+                  </button>
+
+                  <div className="h-4 w-px bg-slate-300 mx-1" />
+
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("bold")}
+                    title="Bold text"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs font-black text-slate-900 transition-all"
+                  >
+                    B
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("italic")}
+                    title="Italic text"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs italic font-serif font-bold text-slate-800 transition-all"
+                  >
+                    I
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("underline")}
+                    title="Underline text"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs underline font-bold text-slate-800 transition-all"
+                  >
+                    U
+                  </button>
+
+                  <div className="h-4 w-px bg-slate-300 mx-1" />
+
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("insertUnorderedList")}
+                    title="Bullet list"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-all"
+                  >
+                    • List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("insertOrderedList")}
+                    title="Numbered list"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-all"
+                  >
+                    1. List
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("formatBlock", "BLOCKQUOTE")}
+                    title="Quote block"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs font-bold text-slate-800 transition-all"
+                  >
+                    &ldquo; Quote
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => execEditorCommand("formatBlock", "PRE")}
+                    title="Code block"
+                    className="px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-xs font-mono font-bold text-slate-800 transition-all"
+                  >
+                    &lt;/&gt; Code
+                  </button>
+
+                  <div className="h-4 w-px bg-slate-300 mx-1" />
+
+                  <button
+                    type="button"
+                    onClick={handlePromptImage}
+                    title="Insert image from URL"
+                    className="px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-xs font-bold text-emerald-800 transition-all flex items-center gap-1"
+                  >
+                    <span>📷 Image URL</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handlePromptLink}
+                    title="Insert hyperlink"
+                    className="px-2.5 py-1 rounded-lg bg-blue-50 border border-blue-200 hover:bg-blue-100 text-xs font-bold text-blue-800 transition-all flex items-center gap-1"
+                  >
+                    <span>🔗 Link</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Editor Workspace Area */}
+              {editorMode === "visual" ? (
+                <div
+                  ref={editorRef}
+                  contentEditable
+                  onPaste={handleEditorPaste}
+                  onInput={() => {
+                    if (editorRef.current) {
+                      const textContent = editorRef.current.innerText || "";
+                      const sanitized = sanitizeHtml(editorRef.current.innerHTML);
+                      setFormData((prev) => ({
+                        ...prev,
+                        htmlContent: sanitized,
+                        fullStoryText: textContent,
+                      }));
+                    }
+                  }}
+                  className="w-full text-sm sm:text-base bg-white border border-slate-200 rounded-xl p-5 text-slate-900 font-sans leading-relaxed focus:ring-2 focus:ring-[#3772FF] focus:outline-none min-h-[320px] prose max-w-none shadow-inner overflow-y-auto"
+                />
+              ) : (
+                <textarea
+                  rows={14}
+                  value={formData.htmlContent}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const clean = sanitizeHtml(val);
+                    setFormData((prev) => ({
+                      ...prev,
+                      htmlContent: clean,
+                      fullStoryText: val.replace(/<[^>]*>/g, ""),
+                    }));
+                  }}
+                  className="w-full text-xs font-mono bg-slate-950 text-emerald-400 border border-slate-800 rounded-xl p-4 leading-relaxed focus:ring-2 focus:ring-emerald-500 focus:outline-none min-h-[320px]"
+                />
+              )}
+
+              <p className="text-[11px] text-slate-500 font-medium">
+                💡 <strong>WYSIWYG Editor:</strong> Supports copy-pasting rich formatted text directly from Google Docs or ChatGPT. Script tags, inline event handlers, and executable payloads are automatically stripped for security.
+              </p>
             </div>
 
             {/* Media Embedding Suite (Video, Spotify Podcast, GitHub) */}

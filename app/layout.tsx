@@ -50,8 +50,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col font-sans bg-[#FBFBFB] text-neutral-900">
         {children}
-        <PwaRegister />
-        <FcmNotificationBanner />
+        {/* PWA & FCM Notification Banners temporarily suppressed for dev/testing */}
+        {process.env.NEXT_PUBLIC_ENABLE_PWA_NOTIFICATIONS === "true" && (
+          <>
+            <PwaRegister />
+            <FcmNotificationBanner />
+          </>
+        )}
       </body>
     </html>
   );

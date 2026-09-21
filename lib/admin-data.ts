@@ -57,6 +57,8 @@ export interface WorkshopItem {
   testPassThreshold: number;
   status: "COMPLETED" | "ACTIVE_IN_SESSION" | "SCHEDULED" | "INACTIVE";
   date: string;
+  detailedDescription?: string;
+  prerequisites?: string;
 }
 
 export interface AuditLogEntry {

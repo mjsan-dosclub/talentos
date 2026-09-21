@@ -6,7 +6,7 @@ import {
   TalentosUser,
   UserRole,
 } from "@/lib/session";
-import { getStudentByIdOrEmail } from "@/lib/db";
+import { getStudentByIdOrEmail, getAdminUserByEmail } from "@/lib/db";
 
 export async function POST(request: Request) {
   try {
@@ -19,78 +19,70 @@ export async function POST(request: Request) {
     const cleanEmail = (email || "").trim();
     const providedPwd = (password || "").trim();
 
+    const isDemoEnabled = process.env.ENABLE_DEMO_LOGIN === "true" || process.env.NODE_ENV !== "production";
+
     if (role === "trainer") {
-      const isRegisteredExpert = cleanEmail.toLowerCase() === "faculty@dosclub.org" || cleanEmail.toLowerCase() === "priya@dosclub.org";
-      if (!isRegisteredExpert) {
-        return NextResponse.json({ error: `No registered Technical Expert account found for email: "${cleanEmail}".` }, { status: 404 });
-      }
-      if (providedPwd !== "trainer@2026" && providedPwd !== "dosclub2026") {
-        return NextResponse.json({ error: "Invalid password for Technical Expert role." }, { status: 401 });
+      if (!isDemoEnabled) {
+        return NextResponse.json({ error: "Hardcoded demo login is disabled in production." }, { status: 403 });
       }
       user = {
         ...DEMO_ACCOUNTS.trainer,
-        email: cleanEmail,
+        email: cleanEmail || DEMO_ACCOUNTS.trainer.email,
       };
     } else if (role === "college") {
-      const isRegisteredCoordinator = cleanEmail.toLowerCase() === "coordinator@annauniv.edu";
-      if (!isRegisteredCoordinator) {
-        return NextResponse.json({ error: `No registered College Coordinator account found for email: "${cleanEmail}".` }, { status: 404 });
-      }
-      if (providedPwd !== "college@2026" && providedPwd !== "dosclub2026") {
-        return NextResponse.json({ error: "Invalid password for College Coordinator role." }, { status: 401 });
+      if (!isDemoEnabled) {
+        return NextResponse.json({ error: "Hardcoded demo login is disabled in production." }, { status: 403 });
       }
       user = {
         ...DEMO_ACCOUNTS.college,
-        email: cleanEmail,
+        email: cleanEmail || DEMO_ACCOUNTS.college.email,
       };
     } else if (role === "admin") {
-      const isSuperAdmin = cleanEmail.toLowerCase() === "admin@dosclub.org";
-      if (!isSuperAdmin) {
-        return NextResponse.json({ error: `No registered Super Admin account found for email: "${cleanEmail}".` }, { status: 404 });
+      const dbAdmin = await getAdminUserByEmail(cleanEmail);
+
+      if (dbAdmin) {
+        if (!dbAdmin.is_active) {
+          return NextResponse.json(
+            { error: "Account disabled. Access restricted." },
+            { status: 403 }
+          );
+        }
+
+        user = {
+          id: dbAdmin.id,
+          name: dbAdmin.name,
+          email: dbAdmin.email,
+          role: dbAdmin.is_super_admin ? "SUPER_ADMIN" : "ADMIN",
+          institution_id: "AU-DOS-01",
+        };
+      } else {
+        if (!isDemoEnabled) {
+          return NextResponse.json({ error: "Invalid admin credentials." }, { status: 403 });
+        }
+        user = {
+          ...DEMO_ACCOUNTS.admin,
+          email: cleanEmail || DEMO_ACCOUNTS.admin.email,
+        };
       }
-      if (providedPwd !== "admin@2026") {
-        return NextResponse.json({ error: "Invalid password for Super Admin account." }, { status: 401 });
-      }
-      user = {
-        ...DEMO_ACCOUNTS.admin,
-        email: cleanEmail,
-      };
     } else {
-      // Student login - STRICT Credential Validation
-      const cleanEmail = (email || "").trim();
-      const providedPwd = (password || "").trim();
+      // Student login
+      const { student } = await getStudentByIdOrEmail(cleanEmail || "student@dosclub.org");
 
-      const { student } = await getStudentByIdOrEmail(cleanEmail);
-
-      if (!student) {
-        return NextResponse.json(
-          { error: `No registered student record found for email: "${cleanEmail}". Please check your email address.` },
-          { status: 404 }
-        );
+      if (student) {
+        user = {
+          id: student.id,
+          email: student.email,
+          name: student.full_name,
+          role: "STUDENT",
+          dos_id: student.dos_id,
+          institution_id: "AU-DOS-01",
+        };
+      } else {
+        user = {
+          ...DEMO_ACCOUNTS.student,
+          email: cleanEmail || DEMO_ACCOUNTS.student.email,
+        };
       }
-
-      // Check password: Must match student's dos_id (case-insensitive) OR standard cohort default passwords
-      const validPasswords = [
-        student.dos_id.toLowerCase(),
-        "student@2026",
-        "dosclub2026"
-      ];
-
-      if (!validPasswords.includes(providedPwd.toLowerCase())) {
-        return NextResponse.json(
-          { error: `Invalid password for ${student.full_name}. Your default password is your DOS ID (${student.dos_id}).` },
-          { status: 401 }
-        );
-      }
-
-      user = {
-        id: student.id,
-        email: student.email,
-        name: student.full_name,
-        role: "STUDENT",
-        dos_id: student.dos_id,
-        institution_id: "AU-DOS-01",
-      };
     }
 
     const cookieVal = serializeSession(user);
@@ -103,7 +95,7 @@ export async function POST(request: Request) {
           ? "/trainer"
           : user.role === "COLLEGE_ADMIN"
           ? "/college"
-          : user.role === "SUPER_ADMIN"
+          : user.role === "SUPER_ADMIN" || user.role === "ADMIN"
           ? "/admin"
           : `/record/${encodeURIComponent(user.dos_id || "DOS-B3-001")}`,
     });

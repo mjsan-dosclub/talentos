@@ -15,49 +15,6 @@ export interface EnquiryRecord {
   status: "NEW" | "CONTACTED" | "ACCEPTED" | "INACTIVE";
   created_at: string;
 }
-import fs from "fs";
-import path from "path";
-
-const DATA_DIR = path.join(process.cwd(), "data");
-const ENQUIRIES_FILE = path.join(DATA_DIR, "enquiries.json");
-
-const INITIAL_ENQUIRIES: EnquiryRecord[] = [];
-
-function ensureEnquiriesFile(): void {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
-    }
-    if (!fs.existsSync(ENQUIRIES_FILE)) {
-      fs.writeFileSync(ENQUIRIES_FILE, JSON.stringify(INITIAL_ENQUIRIES, null, 2), "utf-8");
-    }
-  } catch {
-    // Non-blocking fallback for read-only Vercel lambda
-  }
-}
-
-function loadEnquiries(): EnquiryRecord[] {
-  ensureEnquiriesFile();
-  try {
-    if (fs.existsSync(ENQUIRIES_FILE)) {
-      const raw = fs.readFileSync(ENQUIRIES_FILE, "utf-8");
-      return JSON.parse(raw);
-    }
-  } catch (e) {
-    console.warn("Failed reading enquiries.json:", e);
-  }
-  return [...INITIAL_ENQUIRIES];
-}
-
-function saveEnquiries(data: EnquiryRecord[]): void {
-  ensureEnquiriesFile();
-  try {
-    fs.writeFileSync(ENQUIRIES_FILE, JSON.stringify(data, null, 2), "utf-8");
-  } catch (e) {
-    // Read-only filesystem on Vercel is expected; cloud store takes precedence
-  }
-}
-
 export async function GET() {
   const combinedMap = new Map<string, EnquiryRecord>();
 
@@ -121,14 +78,6 @@ export async function GET() {
     }
   } catch (e) {
     console.warn("[TalentOS] Supabase notification_dispatches query notice:", e);
-  }
-
-  // 3. Merge initial disk enquiries
-  const diskEnquiries = loadEnquiries();
-  for (const enq of diskEnquiries) {
-    if (!combinedMap.has(enq.enquiry_ref)) {
-      combinedMap.set(enq.enquiry_ref, enq);
-    }
   }
 
   const sorted = Array.from(combinedMap.values()).sort(
@@ -209,10 +158,6 @@ export async function POST(req: NextRequest) {
       status: "NEW",
       created_at: timestamp,
     };
-
-    const enquiries = loadEnquiries();
-    enquiries.unshift(newRecord);
-    saveEnquiries(enquiries);
 
     // 1. Resilient Cloud Persistence in Supabase notification_dispatches (zero-loss on Vercel)
     try {
@@ -451,22 +396,16 @@ export async function PATCH(req: NextRequest) {
     }
 
     let updatedCount = 0;
-    const enquiries = loadEnquiries();
-    const updated = enquiries.map((enq) => {
-      if (targetIds.includes(enq.id) || targetIds.includes(enq.enquiry_ref)) {
-        updatedCount++;
-        return { ...enq, status: status as EnquiryRecord["status"] };
-      }
-      return enq;
-    });
-    saveEnquiries(updated);
 
     // Update in Supabase aspirant_enquiries and notification_dispatches
     try {
-      await supabaseAdmin
+      const { data: updatedData } = await supabaseAdmin
         .from("aspirant_enquiries")
         .update({ status })
-        .or(`id.in.(${targetIds.join(",")}),enquiry_ref.in.(${targetIds.join(",")})`);
+        .or(`id.in.(${targetIds.join(",")}),enquiry_ref.in.(${targetIds.join(",")})`)
+        .select();
+
+      updatedCount = updatedData ? updatedData.length : targetIds.length;
       
       // Also update notification_dispatches channel=ENQUIRY records
       const { data: dispatches } = await supabaseAdmin
@@ -532,20 +471,18 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    const enquiries = loadEnquiries();
-    const initialLen = enquiries.length;
-    const filtered = enquiries.filter(
-      (enq) => !targetIds.includes(enq.id) && !targetIds.includes(enq.enquiry_ref)
-    );
-    const deletedCount = initialLen - filtered.length;
-    saveEnquiries(filtered);
+    let deletedCount = 0;
 
     // Delete in Supabase aspirant_enquiries and notification_dispatches
     try {
-      await supabaseAdmin
+      const { data: deletedData } = await supabaseAdmin
         .from("aspirant_enquiries")
         .delete()
-        .in("enquiry_ref", targetIds);
+        .in("enquiry_ref", targetIds)
+        .select();
+
+      deletedCount = deletedData ? deletedData.length : targetIds.length;
+
       await supabaseAdmin
         .from("notification_dispatches")
         .delete()

@@ -172,11 +172,18 @@ export default function CaseStudyDetailPage({ params }: PageProps) {
             {study.summary}
           </div>
 
-          {study.fullStory.map((paragraph, idx) => (
-            <p key={idx} className="text-[#23262F]">
-              {paragraph}
-            </p>
-          ))}
+          {study.htmlContent ? (
+            <div
+              className="prose max-w-none text-[#23262F] space-y-4"
+              dangerouslySetInnerHTML={{ __html: study.htmlContent }}
+            />
+          ) : (
+            study.fullStory.map((paragraph, idx) => (
+              <p key={idx} className="text-[#23262F]">
+                {paragraph}
+              </p>
+            ))
+          )}
 
           {/* Embedded Media Section */}
           {study.mediaEmbeds && (study.mediaEmbeds.videoUrl || study.mediaEmbeds.spotifyUrl) && (

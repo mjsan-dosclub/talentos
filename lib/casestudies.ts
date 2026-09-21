@@ -39,6 +39,7 @@ export interface CaseStudy {
   metaTitle?: string;
   metaKeywords?: string;
   status?: "DRAFT" | "PUBLISHED";
+  htmlContent?: string;
   mediaEmbeds?: {
     videoUrl?: string;
     spotifyUrl?: string;
