@@ -1,11 +1,18 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { canManageAttendance, getAttendanceSession } from "@/lib/attendance-auth";
 
 export async function GET(request: Request) {
   try {
+    const session = await getAttendanceSession();
+    if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const workshopId = searchParams.get("workshop_id");
-    const studentId = searchParams.get("student_id");
+    const requestedStudentId = searchParams.get("student_id");
+    const studentId = session.role === "STUDENT" ? session.id : requestedStudentId;
+    if (session.role === "STUDENT" && requestedStudentId && requestedStudentId !== session.id) {
+      return NextResponse.json({ error: "Students may only view their own attendance." }, { status: 403 });
+    }
 
     let query = supabaseAdmin.from("attendance_records").select("*");
     if (workshopId) query = query.eq("workshop_id", workshopId);
@@ -24,6 +31,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getAttendanceSession();
+    if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const body = await request.json();
     const {
       student_id,
@@ -42,6 +51,12 @@ export async function POST(request: Request) {
         { error: "Missing required fields: student_id, workshop_id" },
         { status: 400 }
       );
+    }
+    if (session.role === "STUDENT" && student_id !== session.id) {
+      return NextResponse.json({ error: "Students may only record their own attendance." }, { status: 403 });
+    }
+    if (!canManageAttendance(session) && session.role !== "STUDENT") {
+      return NextResponse.json({ error: "This role cannot record attendance." }, { status: 403 });
     }
 
     // Check if an attendance record already exists for this student and workshop

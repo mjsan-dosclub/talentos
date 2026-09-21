@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
-import { supabase } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getAttendanceSession } from "@/lib/attendance-auth";
 
 export async function POST(request: Request) {
   try {
+    const session = await getAttendanceSession();
+    if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const body = await request.json();
     const { student_id, workshop_id, check_out_lat, check_out_lng, feedback_rating, feedback_text } = body;
 
@@ -13,84 +16,53 @@ export async function POST(request: Request) {
       );
     }
 
+    if (session.role !== "STUDENT" || student_id !== session.id) {
+      return NextResponse.json({ error: "Only the signed-in student may complete checkout." }, { status: 403 });
+    }
+    const rating = Number(feedback_rating);
+    if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
+      return NextResponse.json({ error: "A feedback rating from 1 to 5 is required before checkout." }, { status: 400 });
+    }
+
     const checkOutTime = new Date().toISOString();
 
-    // 1. If feedback rating was submitted along with checkout, record it in session_feedback
-    if (feedback_rating) {
-      try {
-        await supabase.from("session_feedback").insert({
-          workshop_id,
-          student_id,
-          rating: Number(feedback_rating) || 4,
-          reflection_text: feedback_text?.trim() || "Completed checkout with positive session reflection.",
-          confidence_score: 4,
-        });
-      } catch (fbErr) {
-        console.warn("Feedback recording notice during checkout:", fbErr);
-      }
+    const { data: existing, error: attendanceError } = await supabaseAdmin
+      .from("attendance_records")
+      .select("*")
+      .eq("student_id", student_id)
+      .eq("workshop_id", workshop_id)
+      .maybeSingle();
+    if (attendanceError) throw attendanceError;
+    if (!existing || !existing.check_in_time) {
+      return NextResponse.json({ error: "Check-in is required before checkout." }, { status: 409 });
+    }
+    if (existing.check_out_time) {
+      return NextResponse.json({ error: "This attendance record has already been checked out." }, { status: 409 });
     }
 
-    // 2. Query or update attendance record in Supabase
-    let updatedRecord = null;
+    const { error: feedbackError } = await supabaseAdmin.from("session_feedback").insert({
+      workshop_id,
+      student_id,
+      rating,
+      reflection_text: feedback_text?.trim() || "Completed checkout with session feedback.",
+      confidence_score: 4,
+    });
+    if (feedbackError) throw feedbackError;
 
-    try {
-      // Find existing check-in record
-      const { data: existing } = await supabase
-        .from("attendance_records")
-        .select("*")
-        .eq("student_id", student_id)
-        .eq("workshop_id", workshop_id)
-        .single();
-
-      if (existing) {
-        // If checked in previously, updating checkout completes the attendance: status = PRESENT
-        const finalStatus = existing.status === "LATE" ? "LATE" : "PRESENT";
-
-        const { data: updated } = await supabase
-          .from("attendance_records")
-          .update({
-            check_out_time: checkOutTime,
-            status: finalStatus,
-            updated_at: checkOutTime,
-          })
-          .eq("id", existing.id)
-          .select()
-          .single();
-
-        updatedRecord = updated;
-      } else {
-        // Direct checkout without check-in creates a record with PARTIAL_ATTENDANCE status
-        const { data: created } = await supabase
-          .from("attendance_records")
-          .insert({
-            student_id,
-            workshop_id,
-            check_out_time: checkOutTime,
-            status: "PARTIAL_ATTENDANCE",
-            source: "QR_SCAN",
-          })
-          .select()
-          .single();
-
-        updatedRecord = created;
-      }
-    } catch (dbErr) {
-      console.warn("Supabase checkout notice:", dbErr);
-    }
-
-    // Fallback response if DB offline
-    if (!updatedRecord) {
-      updatedRecord = {
-        id: `att-checkout-${Date.now()}`,
-        student_id,
-        workshop_id,
+    const finalStatus = existing.status === "LATE" ? "LATE" : "PRESENT";
+    const { data: updatedRecord, error: updateError } = await supabaseAdmin
+      .from("attendance_records")
+      .update({
         check_out_time: checkOutTime,
         check_out_lat: check_out_lat || null,
         check_out_lng: check_out_lng || null,
-        status: "PRESENT",
-        source: "QR_SCAN",
-      };
-    }
+        status: finalStatus,
+        updated_at: checkOutTime,
+      })
+      .eq("id", existing.id)
+      .select()
+      .single();
+    if (updateError) throw updateError;
 
     return NextResponse.json({
       success: true,
