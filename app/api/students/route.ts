@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
     const cleanDisplayName = studentName.replace(/\s+(Verification|Test|Engineer|Lead)$/i, "").trim();
 
     // 3. Dispatch Automatic Welcome & Priority Access Pass Email
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://dosclub-talentos.vercel.app";
+    const baseUrl = (process.env.NEXT_PUBLIC_APP_URL || "https://dosclub-talentos.vercel.app").replace(/\/+$/, "");
     const loginUrl = `${baseUrl}/login`;
     const verificationUrl = `${baseUrl}/record/${studentDosId}`;
 
