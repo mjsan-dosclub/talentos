@@ -100,132 +100,48 @@ export function buildIcsDataUri(session: {
 }
 
 
-/**
- * Canonical In-Memory Ledger of Scheduled Workshops
- * Explicitly models user's scenario:
- * - College 1 (Anna University Hub): Wednesday 16 Sep 2026 -> Session 2 (1 workshop assigned)
- * - College 2 (PSG Tech Hub): Thursday 18 Sep & Friday 19 Sep 2026 -> Session 2 and Session 3 simultaneously (2 workshops assigned)
- * - Plus completed past workshops (Session 1) for historical calendar view
- */
-export let SCHEDULED_SESSIONS_LEDGER: ScheduledWorkshopSession[] = [
-  // 1. College 1 (Anna University Hub) - Wednesday 16 Sep 2026 (Upcoming Session 2)
-  {
-    id: "sched-001",
-    workshopCode: "WS-02",
-    workshopTitle: "Linux Kernel Primitives & eBPF",
-    sessionNumber: 2,
-    institutionId: "inst-001",
-    institutionName: "Anna University Campus Hub",
-    trainerId: "exp-001",
-    trainerName: "Priya Sundaram",
-    date: "2026-09-16", // Wednesday
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
-    venue: "Turing Computing Labs, Anna University Guindy Campus",
-    focusTopic: "eBPF tracepoints, kernel probe ring buffers, and zero-copy packet filtration",
-    cohortSize: 42,
-    status: "UPCOMING",
-  },
+import fs from "fs";
+import path from "path";
 
-  // 2. College 2 (PSG Tech Hub) - Thursday 18 Sep 2026 (Upcoming Session 2)
-  {
-    id: "sched-002",
-    workshopCode: "WS-02",
-    workshopTitle: "Linux Kernel Primitives & eBPF",
-    sessionNumber: 2,
-    institutionId: "inst-002",
-    institutionName: "PSG College of Technology Hub",
-    trainerId: "exp-001",
-    trainerName: "Priya Sundaram",
-    date: "2026-09-18", // Thursday 18th
-    startTime: "09:00 AM",
-    endTime: "01:00 PM",
-    venue: "Seminar Hall 4, Department of Information Technology, PSG Tech",
-    focusTopic: "eBPF probe architecture and hermetic trace verification",
-    cohortSize: 38,
-    status: "UPCOMING",
-  },
+const DATA_DIR = path.join(process.cwd(), "data");
+const SCHEDULE_FILE = path.join(DATA_DIR, "scheduled-sessions.json");
 
-  // 3. College 2 (PSG Tech Hub) - Friday 19 Sep 2026 (Upcoming Session 3 - Simultaneous block)
-  {
-    id: "sched-003",
-    workshopCode: "WS-03",
-    workshopTitle: "Concurrent Memory Runtimes & Async IO",
-    sessionNumber: 3,
-    institutionId: "inst-002",
-    institutionName: "PSG College of Technology Hub",
-    trainerId: "exp-001",
-    trainerName: "Priya Sundaram",
-    date: "2026-09-19", // Friday 19th
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
-    venue: "Seminar Hall 4, Department of Information Technology, PSG Tech",
-    focusTopic: "Actor concurrency, lock-free queues, and epoll reactor patterns",
-    cohortSize: 38,
-    status: "UPCOMING",
-  },
+export const INITIAL_SCHEDULED_SESSIONS: ScheduledWorkshopSession[] = [];
 
-  // 4. College 1 (Anna University Hub) - Completed Past Session 1
-  {
-    id: "sched-004",
-    workshopCode: "WS-01",
-    workshopTitle: "Hermetic POSIX Architecture & Toolchains",
-    sessionNumber: 1,
-    institutionId: "inst-001",
-    institutionName: "Anna University Campus Hub",
-    trainerId: "exp-002",
-    trainerName: "Vikram Seth",
-    date: "2026-09-09", // Wednesday last week
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
-    venue: "Turing Computing Labs, Anna University Guindy Campus",
-    focusTopic: "POSIX system calls, reproducible C toolchains, and strict isolation",
-    cohortSize: 42,
-    status: "COMPLETED",
-    attendanceCount: 41,
-    avgRating: 3.9,
-  },
+function ensureScheduleFile(): void {
+  try {
+    if (!fs.existsSync(DATA_DIR)) {
+      fs.mkdirSync(DATA_DIR, { recursive: true });
+    }
+    if (!fs.existsSync(SCHEDULE_FILE)) {
+      fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(INITIAL_SCHEDULED_SESSIONS, null, 2), "utf-8");
+    }
+  } catch (e) {
+    console.warn("Failed ensuring scheduled-sessions.json file:", e);
+  }
+}
 
-  // 5. College 2 (PSG Tech Hub) - Completed Past Session 1
-  {
-    id: "sched-005",
-    workshopCode: "WS-01",
-    workshopTitle: "Hermetic POSIX Architecture & Toolchains",
-    sessionNumber: 1,
-    institutionId: "inst-002",
-    institutionName: "PSG College of Technology Hub",
-    trainerId: "exp-002",
-    trainerName: "Vikram Seth",
-    date: "2026-09-11", // Friday last week
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
-    venue: "Seminar Hall 4, PSG Tech",
-    focusTopic: "POSIX system calls, reproducible C toolchains, and strict isolation",
-    cohortSize: 38,
-    status: "COMPLETED",
-    attendanceCount: 37,
-    avgRating: 4.0,
-  },
+export function loadScheduleFromDisk(): ScheduledWorkshopSession[] {
+  ensureScheduleFile();
+  try {
+    if (fs.existsSync(SCHEDULE_FILE)) {
+      const raw = fs.readFileSync(SCHEDULE_FILE, "utf-8");
+      return JSON.parse(raw);
+    }
+  } catch (e) {
+    console.warn("Failed reading scheduled-sessions.json:", e);
+  }
+  return [...INITIAL_SCHEDULED_SESSIONS];
+}
 
-  // 6. College 3 (Thiagarajar College of Engineering Hub) - Upcoming Session 1
-  {
-    id: "sched-006",
-    workshopCode: "WS-01",
-    workshopTitle: "Hermetic POSIX Architecture & Toolchains",
-    sessionNumber: 1,
-    institutionId: "inst-003",
-    institutionName: "Thiagarajar College of Engineering Hub",
-    trainerId: "exp-003",
-    trainerName: "Anand Natarajan",
-    date: "2026-09-23",
-    startTime: "09:00 AM",
-    endTime: "05:00 PM",
-    venue: "ECE Auditorium, TCE Madurai",
-    focusTopic: "POSIX system calls and hermetic environment setup",
-    cohortSize: 35,
-    status: "UPCOMING",
-  },
-];
+export function saveScheduleToDisk(sessions: ScheduledWorkshopSession[]): void {
+  ensureScheduleFile();
+  try {
+    fs.writeFileSync(SCHEDULE_FILE, JSON.stringify(sessions, null, 2), "utf-8");
+  } catch (e) {
+    console.error("Failed writing scheduled-sessions.json:", e);
+  }
+}
 
 /**
  * Enrich a session with 1-click Google Calendar and Apple iCal links
@@ -266,19 +182,20 @@ export function getFilteredSchedule(params: {
   institutionName?: string;
   trainerName?: string;
 }): ScheduledWorkshopSession[] {
-  let result = [...SCHEDULED_SESSIONS_LEDGER];
+  let result = loadScheduleFromDisk();
 
   // 1. Role: TRAINER (Expert Lead) - strictly restricted to workshops assigned to this expert
   if (params.role === "TRAINER") {
-    const trainerToMatch = (params.trainerName && params.trainerName !== "ALL" ? params.trainerName : "Priya Sundaram")
+    const trainerToMatch = (params.trainerName && params.trainerName !== "ALL" ? params.trainerName : "")
       .toLowerCase()
       .trim();
-    result = result.filter(
-      (s) =>
-        s.trainerName.toLowerCase().includes(trainerToMatch) ||
-        trainerToMatch.includes(s.trainerName.toLowerCase())
-    );
-    // If the trainer optionally filters by a specific campus hub they teach at
+    if (trainerToMatch) {
+      result = result.filter(
+        (s) =>
+          s.trainerName.toLowerCase().includes(trainerToMatch) ||
+          trainerToMatch.includes(s.trainerName.toLowerCase())
+      );
+    }
     if (params.institutionName && params.institutionName !== "ALL") {
       const cleanInst = params.institutionName.toLowerCase().trim();
       result = result.filter(
@@ -290,14 +207,14 @@ export function getFilteredSchedule(params: {
   }
   // 2. Role: COLLEGE_ADMIN or STUDENT - strictly restricted to workshops scheduled for their college
   else if (params.role === "COLLEGE_ADMIN" || params.role === "STUDENT") {
-    const instToMatch = (params.institutionName && params.institutionName !== "ALL" ? params.institutionName : "Anna University Campus Hub")
-      .toLowerCase()
-      .trim();
-    result = result.filter(
-      (s) =>
-        s.institutionName.toLowerCase().includes(instToMatch) ||
-        instToMatch.includes(s.institutionName.toLowerCase())
-    );
+    if (params.institutionName && params.institutionName !== "ALL") {
+      const instToMatch = params.institutionName.toLowerCase().trim();
+      result = result.filter(
+        (s) =>
+          s.institutionName.toLowerCase().includes(instToMatch) ||
+          instToMatch.includes(s.institutionName.toLowerCase())
+      );
+    }
   }
   // 3. Role: SUPER_ADMIN (Platform Administrator) - full visibility with flexible filters
   else {
@@ -328,12 +245,14 @@ export function getFilteredSchedule(params: {
  * Add a new scheduled workshop session (Admin action)
  */
 export function addScheduledSession(newSession: Omit<ScheduledWorkshopSession, "id">): ScheduledWorkshopSession {
-  const id = `sched-${String(SCHEDULED_SESSIONS_LEDGER.length + 1).padStart(3, "0")}`;
+  const current = loadScheduleFromDisk();
+  const id = `sched-${String(current.length + 1).padStart(3, "0")}`;
   const created: ScheduledWorkshopSession = {
     ...newSession,
     id,
   };
-  SCHEDULED_SESSIONS_LEDGER.push(created);
+  current.push(created);
+  saveScheduleToDisk(current);
   return enrichSessionWithCalendar(created);
 }
 
@@ -344,9 +263,11 @@ export function updateSessionStatus(
   id: string,
   status: ScheduledWorkshopSession["status"]
 ): ScheduledWorkshopSession | null {
-  const session = SCHEDULED_SESSIONS_LEDGER.find((s) => s.id === id);
+  const current = loadScheduleFromDisk();
+  const session = current.find((s) => s.id === id);
   if (!session) return null;
   session.status = status;
+  saveScheduleToDisk(current);
   return enrichSessionWithCalendar(session);
 }
 
@@ -357,31 +278,37 @@ export function updateScheduledSession(
   id: string,
   updates: Partial<ScheduledWorkshopSession>
 ): ScheduledWorkshopSession | null {
-  const index = SCHEDULED_SESSIONS_LEDGER.findIndex((s) => s.id === id);
+  const current = loadScheduleFromDisk();
+  const index = current.findIndex((s) => s.id === id);
   if (index === -1) return null;
-  SCHEDULED_SESSIONS_LEDGER[index] = {
-    ...SCHEDULED_SESSIONS_LEDGER[index],
+  current[index] = {
+    ...current[index],
     ...updates,
   };
-  return enrichSessionWithCalendar(SCHEDULED_SESSIONS_LEDGER[index]);
+  saveScheduleToDisk(current);
+  return enrichSessionWithCalendar(current[index]);
 }
 
 /**
  * Delete a single scheduled session
  */
 export function deleteScheduledSession(id: string): boolean {
-  const initLen = SCHEDULED_SESSIONS_LEDGER.length;
-  SCHEDULED_SESSIONS_LEDGER = SCHEDULED_SESSIONS_LEDGER.filter((s) => s.id !== id);
-  return SCHEDULED_SESSIONS_LEDGER.length < initLen;
+  const current = loadScheduleFromDisk();
+  const initLen = current.length;
+  const filtered = current.filter((s) => s.id !== id);
+  saveScheduleToDisk(filtered);
+  return filtered.length < initLen;
 }
 
 /**
  * Bulk delete scheduled sessions
  */
 export function deleteBulkScheduledSessions(ids: string[]): number {
-  const initLen = SCHEDULED_SESSIONS_LEDGER.length;
-  SCHEDULED_SESSIONS_LEDGER = SCHEDULED_SESSIONS_LEDGER.filter((s) => !ids.includes(s.id));
-  return initLen - SCHEDULED_SESSIONS_LEDGER.length;
+  const current = loadScheduleFromDisk();
+  const initLen = current.length;
+  const filtered = current.filter((s) => !ids.includes(s.id));
+  saveScheduleToDisk(filtered);
+  return initLen - filtered.length;
 }
 
 /**
@@ -391,12 +318,15 @@ export function updateBulkScheduledStatus(
   ids: string[],
   status: ScheduledWorkshopSession["status"]
 ): number {
+  const current = loadScheduleFromDisk();
   let count = 0;
-  SCHEDULED_SESSIONS_LEDGER.forEach((s) => {
+  current.forEach((s) => {
     if (ids.includes(s.id)) {
       s.status = status;
       count++;
     }
   });
+  saveScheduleToDisk(current);
   return count;
 }
+

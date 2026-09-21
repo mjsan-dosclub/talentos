@@ -40,7 +40,7 @@ import {
   CalendarIcon,
 } from "@/components/Icons";
 import WorkshopCalendar from "@/components/WorkshopCalendar";
-import { SCHEDULED_SESSIONS_LEDGER } from "@/lib/workshop-schedule";
+import { loadScheduleFromDisk } from "@/lib/workshop-schedule";
 
 // STRICT INVARIANT STATES FROM PROJECT_RULES.md
 type ApprovedState =
@@ -611,7 +611,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
 
   // Institutional workshop assignment filter (only show workshops scheduled for student's campus hub)
   const assignedWorkshopCodes = new Set(
-    SCHEDULED_SESSIONS_LEDGER
+    loadScheduleFromDisk()
       .filter((s) => s.institutionName === studentInstitution || s.institutionId.includes(studentInstitution.substring(0, 3)))
       .map((s) => s.workshopCode)
   );
