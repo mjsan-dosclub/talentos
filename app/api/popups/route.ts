@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { getAllPopups, createPopup, updatePopup, deletePopup } from "@/lib/popups";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 export async function GET() {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const popups = await getAllPopups();
     return NextResponse.json({ success: true, popups });
@@ -14,6 +17,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     if (!body.title || !body.contentType) {
@@ -33,6 +38,8 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     if (!body.id) {
@@ -55,6 +62,8 @@ export async function PUT(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -73,4 +82,3 @@ export async function DELETE(request: Request) {
     );
   }
 }
-

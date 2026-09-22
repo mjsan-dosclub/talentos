@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getSystemConfig, updateSystemConfig, DEFAULT_SYSTEM_CONFIG } from "@/lib/config";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 export async function GET() {
   try {
@@ -26,6 +27,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const updated = updateSystemConfig(body);

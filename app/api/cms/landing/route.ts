@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getLandingCms, updateLandingCms, resetLandingCms } from "@/lib/cms";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 export async function GET() {
   try {
@@ -14,6 +15,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const updated = updateLandingCms(body);
@@ -27,6 +30,8 @@ export async function POST(request: Request) {
 }
 
 export async function DELETE() {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const reset = resetLandingCms();
     return NextResponse.json({ success: true, cms: reset });

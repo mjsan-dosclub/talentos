@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 // In-memory registry fallback for device tokens and broadcast dispatches
 let registeredTokens: Array<{
@@ -40,6 +41,8 @@ let broadcastHistory: Array<{
 ];
 
 export async function GET() {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   return NextResponse.json({
     activeDevicesCount: registeredTokens.length,
     registeredDevices: registeredTokens,
@@ -89,6 +92,8 @@ export async function POST(request: Request) {
 
     // 2. Broadcast push alert to all registered PWA devices
     if (action === "broadcast") {
+      const denied = await requireSuperAdmin();
+      if (denied) return denied;
       const { title, body: alertBody, url } = body;
 
       if (!title || !alertBody) {

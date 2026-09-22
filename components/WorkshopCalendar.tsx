@@ -160,7 +160,7 @@ export default function WorkshopCalendar({
                   NEXT UPCOMING WORKSHOP
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-white/10 text-slate-200 text-[11px] font-mono font-semibold">
-                  Session #{nextUpcoming.sessionNumber}
+                  {nextUpcoming.workshopCode}
                 </span>
                 <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[11px] font-bold">
                   {nextUpcoming.institutionName}
@@ -378,7 +378,7 @@ export default function WorkshopCalendar({
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="px-2.5 py-0.5 rounded-full bg-[#23262F] text-white text-[10px] font-bold">
-                        {session.workshopCode} &bull; Session {session.sessionNumber}
+                        {session.workshopCode}
                       </span>
                       <span
                         className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
@@ -463,7 +463,7 @@ export default function WorkshopCalendar({
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-500 mt-0.5">
-                        Session {comp.sessionNumber} &bull; {comp.institutionName}
+                        {comp.workshopCode} &bull; {comp.institutionName}
                       </div>
                       <div className="text-[10px] text-slate-400 mt-0.5">
                         Completed on {comp.date} &bull; {comp.attendanceCount || comp.cohortSize} attended

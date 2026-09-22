@@ -109,6 +109,22 @@ async function conflict(body: Record<string, unknown>, id?: string) {
   return (result.data || []).find((row) => row.id !== id && minutes(String(body.startTime)) < minutes(row.end_time) && minutes(String(body.endTime)) > minutes(row.start_time));
 }
 
+async function recordAssignmentNotification(body: Record<string, unknown>) {
+  const title = `Workshop scheduled: ${String(body.workshopCode)} — ${String(body.institutionName)}`;
+  const content = `Workshop ${String(body.workshopCode)} (${String(body.workshopTitle)}) is scheduled for ${String(body.date)}, ${String(body.startTime)}–${String(body.endTime)} at ${String(body.venue)}. Expert: ${String(body.trainerName)}.`;
+  const result = await supabaseAdmin.from("notification_dispatches").insert({
+    target_filter: { institution_id: String(body.institutionId), trainer_id: String(body.trainerId) },
+    channel: "IN_APP",
+    title,
+    content,
+    dispatched_by: "SUPER_ADMIN_SCHEDULER",
+    sent_count: 0,
+    created_at: new Date().toISOString(),
+  });
+  if (result.error) throw result.error;
+  return { recorded: true, emailDispatch: "PENDING_APPROVAL" as const };
+}
+
 export async function GET(req: NextRequest) {
   const session = await currentSession();
   if (!session) return NextResponse.json({ success: false, error: "Authentication required." }, { status: 401 });
@@ -150,7 +166,13 @@ export async function POST(req: NextRequest) {
     if (await conflict(body)) return NextResponse.json({ success: false, error: "This expert is already assigned to an overlapping workshop on that date." }, { status: 409 });
     const result = await supabaseAdmin.from("scheduled_workshop_sessions").insert(payload(body)).select("*").single();
     if (result.error) throw result.error;
-    return NextResponse.json({ success: true, session: map(result.data as DbSession) }, { status: 201 });
+    let notifications = { recorded: false, emailDispatch: "PENDING_APPROVAL" as const };
+    try {
+      notifications = await recordAssignmentNotification(body);
+    } catch (notificationError) {
+      console.warn("[TalentOS] Workshop assignment notification notice:", notificationError);
+    }
+    return NextResponse.json({ success: true, session: map(result.data as DbSession), notifications }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error?.message || "Failed to schedule workshop session" }, { status: 500 });
   }
@@ -160,6 +182,15 @@ export async function PATCH(req: NextRequest) {
   const denied = await requireAdmin(); if (denied) return denied;
   try {
     const body = await req.json(); const id = String(body.id || "");
+    const ids = Array.isArray(body.ids) ? body.ids.map((value: unknown) => String(value)).filter(Boolean) : [];
+    if (ids.length > 0) {
+      if (!["SCHEDULED", "POSTPONED"].includes(String(body.status || ""))) {
+        return NextResponse.json({ success: false, error: "Bulk updates may only set Scheduled or Postponed. Active in Session and Completed are calculated from the schedule." }, { status: 400 });
+      }
+      const result = await supabaseAdmin.from("scheduled_workshop_sessions").update({ manual_status: body.status }).in("id", ids).select("id");
+      if (result.error) throw result.error;
+      return NextResponse.json({ success: true, updatedCount: result.data?.length || 0 });
+    }
     if (!id) return NextResponse.json({ success: false, error: "Session id is required" }, { status: 400 });
     if (body.status && !["SCHEDULED", "POSTPONED"].includes(body.status)) return NextResponse.json({ success: false, error: "ACTIVE_IN_SESSION and COMPLETED are calculated from the schedule." }, { status: 400 });
     const current = await supabaseAdmin.from("scheduled_workshop_sessions").select("*").eq("id", id).single();
@@ -182,11 +213,20 @@ export async function PATCH(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const denied = await requireAdmin(); if (denied) return denied;
   try {
-    const params = new URL(req.url).searchParams; const id = params.get("id");
-    if (!id) return NextResponse.json({ success: false, error: "Session id is required" }, { status: 400 });
-    const result = await supabaseAdmin.from("scheduled_workshop_sessions").delete().eq("id", id);
+    const params = new URL(req.url).searchParams;
+    let ids = params.get("id") ? [String(params.get("id"))] : [];
+    if (ids.length === 0) {
+      try {
+        const body = await req.json();
+        ids = Array.isArray(body?.ids) ? body.ids.map((value: unknown) => String(value)).filter(Boolean) : [];
+      } catch {
+        ids = [];
+      }
+    }
+    if (ids.length === 0) return NextResponse.json({ success: false, error: "Session id is required" }, { status: 400 });
+    const result = await supabaseAdmin.from("scheduled_workshop_sessions").delete().in("id", ids);
     if (result.error) throw result.error;
-    return NextResponse.json({ success: true, deletedCount: 1 });
+    return NextResponse.json({ success: true, deletedCount: ids.length });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error?.message || "Failed to delete scheduled session" }, { status: 500 });
   }

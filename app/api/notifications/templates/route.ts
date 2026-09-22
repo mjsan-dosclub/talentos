@@ -6,11 +6,14 @@ import {
   generateWhatsAppWebUrl,
   NotificationTemplate,
 } from "@/lib/notification-templates";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 // In-memory runtime storage for template customizations during local session
 let currentTemplates: NotificationTemplate[] = [...CANONICAL_NOTIFICATION_TEMPLATES];
 
 export async function GET(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   const { searchParams } = new URL(request.url);
   const category = searchParams.get("category");
 
@@ -45,6 +48,8 @@ export async function GET(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { id, subject, body: content } = body;
@@ -78,6 +83,8 @@ export async function PUT(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { action, templateId, recipientType, recipientTarget, customVariables } = body;

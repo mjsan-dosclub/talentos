@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 export async function GET() {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const { data, error } = await supabaseAdmin
       .from("notification_dispatches")
@@ -20,6 +23,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { target_filter, channel, title, content, dispatched_by, sent_count } = body;
