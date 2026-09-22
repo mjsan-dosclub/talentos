@@ -50,6 +50,7 @@ export default function TrainerDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [origin, setOrigin] = useState<string>("");
   const [trainerName, setTrainerName] = useState<string>("Priya Sundaram");
+  const [trainerId, setTrainerId] = useState<string>("");
   const [activeSession, setActiveSession] = useState<any>(null);
 
   // Read authenticated trainer identity from session
@@ -57,6 +58,7 @@ export default function TrainerDashboardPage() {
     const session = getClientSession();
     if (session?.role === "TRAINER" && session.name) {
       setTrainerName(session.name);
+      setTrainerId(session.id);
     }
   }, []);
 
@@ -204,7 +206,7 @@ export default function TrainerDashboardPage() {
         source: "TRAINER_MANUAL",
         check_in_time: new Date().toISOString(),
         override_reason: reason,
-        manual_override_by: trainerName,
+        manual_override_by: trainerId || null,
       }),
     });
     const result = await response.json();
