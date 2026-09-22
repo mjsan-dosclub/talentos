@@ -9,6 +9,7 @@ type DbSession = {
   id: string; workshop_code: string; workshop_title: string; institution_id: string; institution_name: string;
   trainer_id: string; trainer_name: string; session_date: string; start_time: string; end_time: string;
   venue: string; focus_topic: string; cohort_size: number; manual_status: "SCHEDULED" | "POSTPONED";
+  lifecycle_status?: "NOT_STARTED" | "IN_SESSION" | "ENDED"; started_at?: string | null; ended_at?: string | null;
 };
 
 const TIME_PATTERN = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s(AM|PM)$/i;
@@ -37,14 +38,9 @@ function minutes(value: string) {
 
 function status(row: DbSession): ScheduledWorkshopSession["status"] {
   if (row.manual_status === "POSTPONED") return "POSTPONED";
-  const now = new Date();
-  const day = new Date(row.session_date + "T00:00:00");
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  if (day > today) return "SCHEDULED";
-  if (day < today) return "COMPLETED";
-  const current = now.getHours() * 60 + now.getMinutes();
-  if (current < minutes(row.start_time)) return "SCHEDULED";
-  return current < minutes(row.end_time) ? "ACTIVE_IN_SESSION" : "COMPLETED";
+  if (row.lifecycle_status === "ENDED") return "COMPLETED";
+  if (row.lifecycle_status === "IN_SESSION") return "ACTIVE_IN_SESSION";
+  return "SCHEDULED";
 }
 
 function map(row: DbSession): ScheduledWorkshopSession {
@@ -53,6 +49,7 @@ function map(row: DbSession): ScheduledWorkshopSession {
     institutionId: row.institution_id, institutionName: row.institution_name, trainerId: row.trainer_id,
     trainerName: row.trainer_name, date: row.session_date, startTime: row.start_time, endTime: row.end_time,
     venue: row.venue, focusTopic: row.focus_topic, cohortSize: row.cohort_size, status: status(row),
+    lifecycleStatus: row.lifecycle_status || "NOT_STARTED", startedAt: row.started_at || null, endedAt: row.ended_at || null,
   } satisfies ScheduledWorkshopSession;
   const description = "College: " + session.institutionName + "\nExpert: " + session.trainerName + "\nTopic: " + session.focusTopic;
   const location = session.venue + ", " + session.institutionName;
@@ -179,9 +176,26 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
-  const denied = await requireAdmin(); if (denied) return denied;
+  const session = await currentSession();
+  if (!session) return NextResponse.json({ success: false, error: "Authentication required." }, { status: 401 });
   try {
     const body = await req.json(); const id = String(body.id || "");
+    if (body.action === "START" || body.action === "END") {
+      if (session.role !== "TRAINER" && session.role !== "SUPER_ADMIN") return NextResponse.json({ success: false, error: "Only the assigned trainer can control this workshop." }, { status: 403 });
+      if (!id) return NextResponse.json({ success: false, error: "Session id is required." }, { status: 400 });
+      const current = await supabaseAdmin.from("scheduled_workshop_sessions").select("*").eq("id", id).single();
+      if (current.error || !current.data) return NextResponse.json({ success: false, error: "Scheduled session not found." }, { status: 404 });
+      const row = current.data as DbSession;
+      if (session.role === "TRAINER" && row.trainer_id !== session.id && row.trainer_name !== session.name) return NextResponse.json({ success: false, error: "This trainer is not assigned to the scheduled session." }, { status: 403 });
+      if (body.action === "START" && row.lifecycle_status === "ENDED") return NextResponse.json({ success: false, error: "An ended workshop cannot be restarted." }, { status: 409 });
+      const updates = body.action === "START"
+        ? { lifecycle_status: "IN_SESSION", started_at: row.started_at || new Date().toISOString(), ended_at: null }
+        : { lifecycle_status: "ENDED", ended_at: new Date().toISOString() };
+      const result = await supabaseAdmin.from("scheduled_workshop_sessions").update(updates).eq("id", id).select("*").single();
+      if (result.error) throw result.error;
+      return NextResponse.json({ success: true, session: map(result.data as DbSession) });
+    }
+    const denied = await requireAdmin(); if (denied) return denied;
     const ids = Array.isArray(body.ids) ? body.ids.map((value: unknown) => String(value)).filter(Boolean) : [];
     if (ids.length > 0) {
       if (!["SCHEDULED", "POSTPONED"].includes(String(body.status || ""))) {

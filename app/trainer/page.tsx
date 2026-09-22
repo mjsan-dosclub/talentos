@@ -53,6 +53,7 @@ export default function TrainerDashboardPage() {
   const [trainerId, setTrainerId] = useState<string>("");
   const [activeSession, setActiveSession] = useState<any>(null);
   const [qrRefreshRequest, setQrRefreshRequest] = useState(0);
+  const [lifecycleBusy, setLifecycleBusy] = useState(false);
   const refreshInFlightRef = useRef(false);
   const rosterSessionRef = useRef("");
   const rosterRef = useRef<Student[]>([]);
@@ -246,6 +247,29 @@ export default function TrainerDashboardPage() {
     setCustomReasonText("");
   };
 
+  const setWorkshopLifecycle = async (action: "START" | "END") => {
+    if (!activeSession?.id) return;
+    setLifecycleBusy(true);
+    try {
+      const response = await fetch("/api/workshops/schedule", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: activeSession.id, action }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Unable to update workshop state.");
+      setActiveSession(result.session);
+      setQrRefreshRequest((value) => value + 1);
+      setNotification(action === "START" ? "Workshop started. Students can now check in." : "Workshop ended. Students can now check out with feedback.");
+      setTimeout(() => setNotification(null), 5000);
+    } catch (error) {
+      setNotification(error instanceof Error ? error.message : "Unable to update workshop state.");
+      setTimeout(() => setNotification(null), 5000);
+    } finally {
+      setLifecycleBusy(false);
+    }
+  };
+
   // Metrics
   const checkedInCount = participants.filter((p) => p.status === "CHECKED_IN" || p.status === "COMPLETED").length;
   const pendingCount = participants.filter((p) => p.status === "NOT_STARTED").length;
@@ -345,9 +369,19 @@ export default function TrainerDashboardPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {activeSession?.lifecycleStatus === "NOT_STARTED" && (
+                <button type="button" onClick={() => setWorkshopLifecycle("START")} disabled={lifecycleBusy} className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">
+                  Start Workshop
+                </button>
+              )}
+              {activeSession?.lifecycleStatus === "IN_SESSION" && (
+                <button type="button" onClick={() => setWorkshopLifecycle("END")} disabled={lifecycleBusy} className="rounded-lg bg-orange-600 px-4 py-2 text-xs font-bold text-white disabled:opacity-50">
+                  End Workshop
+                </button>
+              )}
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
                 <span className="h-2 w-2 rounded-full bg-emerald-600 animate-pulse" />
-                Session Active (Physical)
+                {activeSession?.lifecycleStatus === "ENDED" ? "Workshop Ended" : activeSession?.lifecycleStatus === "IN_SESSION" ? "Session Active (Physical)" : "Waiting to Start"}
               </span>
             </div>
           </div>

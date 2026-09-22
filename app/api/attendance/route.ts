@@ -106,11 +106,14 @@ export async function POST(request: Request) {
 
       const { data: scheduled, error: scheduledError } = await supabaseAdmin
         .from("scheduled_workshop_sessions")
-        .select("institution_id,institution_name")
+        .select("institution_id,institution_name,lifecycle_status")
         .eq("id", String(session_id))
         .maybeSingle();
       if (scheduledError) return NextResponse.json({ error: scheduledError.message }, { status: 500 });
       if (!scheduled) return NextResponse.json({ error: "Scheduled workshop session not found." }, { status: 404 });
+      if (source === "QR_SCAN" && scheduled.lifecycle_status !== "IN_SESSION") {
+        return NextResponse.json({ error: scheduled.lifecycle_status === "ENDED" ? "This workshop has ended. Use Departure Check-Out." : "The trainer has not started this workshop yet." }, { status: 409 });
+      }
       const { data: student, error: studentError } = await supabaseAdmin
         .from("students")
         .select("id,group_id,institution_name")

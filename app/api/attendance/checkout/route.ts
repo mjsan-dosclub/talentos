@@ -26,6 +26,16 @@ export async function POST(request: Request) {
     if (tokenError) throw tokenError;
     if (!token) return NextResponse.json({ error: "The workshop QR token is invalid or expired." }, { status: 403 });
     const verifiedWorkshopId = token.workshop_id;
+    const { data: scheduled, error: scheduledError } = await supabaseAdmin
+      .from("scheduled_workshop_sessions")
+      .select("lifecycle_status")
+      .eq("id", String(session_id))
+      .maybeSingle();
+    if (scheduledError) throw scheduledError;
+    if (!scheduled) return NextResponse.json({ error: "Scheduled workshop session not found." }, { status: 404 });
+    if (scheduled.lifecycle_status !== "ENDED") {
+      return NextResponse.json({ error: "Checkout becomes available after the trainer ends the workshop." }, { status: 409 });
+    }
     const rating = Number(feedback_rating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return NextResponse.json({ error: "A feedback rating from 1 to 5 is required before checkout." }, { status: 400 });

@@ -19,6 +19,9 @@ export interface ScheduledWorkshopSession {
   focusTopic: string; // e.g. "Kernel ring buffers and live tracing"
   cohortSize: number; // e.g. 42
   status: "SCHEDULED" | "ACTIVE_IN_SESSION" | "COMPLETED" | "POSTPONED";
+  lifecycleStatus?: "NOT_STARTED" | "IN_SESSION" | "ENDED";
+  startedAt?: string | null;
+  endedAt?: string | null;
   attendanceCount?: number;
   avgRating?: number;
   calendarLinks?: {

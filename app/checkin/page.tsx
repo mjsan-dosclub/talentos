@@ -94,6 +94,7 @@ function CheckInContent() {
         if (scheduled) {
           setSessionId(scheduled.id);
           setScheduledStatus(scheduled.status);
+          setMode(scheduled.lifecycleStatus === "ENDED" ? "CHECK_OUT" : "CHECK_IN");
           setScheduleNotice(initialSessionId ? "" : "Scan the QR displayed by your assigned expert to mark attendance.");
           setActiveVenue((current) => ({
             ...current,
@@ -334,6 +335,9 @@ function CheckInContent() {
     4: "Exceptional / High Impact",
   };
 
+  const canCheckIn = scheduledStatus === "ACTIVE_IN_SESSION";
+  const canCheckOut = scheduledStatus === "COMPLETED";
+
   if (scheduleLoading || !activeVenue.workshopCode) {
     return <main className="max-w-xl mx-auto p-8"><h1 className="text-xl font-bold">Workshop attendance</h1><p role="status" className="my-4">{scheduleLoading ? "Loading your assigned workshops…" : scheduleNotice}</p><Link href={dashboardReturn?.url || "/login"}>Back to dashboard</Link></main>;
   }
@@ -459,20 +463,22 @@ function CheckInContent() {
             <div className="grid grid-cols-2 p-1 bg-[#F4F5F6] rounded-2xl border border-[#E6E8EC]">
               <button
                 type="button"
+                disabled={!canCheckIn}
                 onClick={() => {
                   setMode("CHECK_IN");
                   setErrorMessage(null);
                 }}
                 className={`py-2 text-xs font-bold rounded-xl transition-all ${
-                  mode === "CHECK_IN"
-                    ? "bg-white text-[#23262F] shadow-xs"
-                    : "text-[#777E90] hover:text-[#23262F]"
+                    mode === "CHECK_IN"
+                      ? "bg-white text-[#23262F] shadow-xs"
+                      : "text-[#777E90] hover:text-[#23262F]"
                 }`}
               >
-                Entry Check-In
+                Entry Check-In{!canCheckIn ? " (Trainer must start first)" : ""}
               </button>
               <button
                 type="button"
+                disabled={!canCheckOut}
                 onClick={() => {
                   setMode("CHECK_OUT");
                   setErrorMessage(null);
@@ -483,7 +489,7 @@ function CheckInContent() {
                     : "text-[#777E90] hover:text-[#23262F]"
                 }`}
               >
-                Departure Check-Out
+                Departure Check-Out{!canCheckOut ? " (Available after end)" : ""}
               </button>
             </div>
 
