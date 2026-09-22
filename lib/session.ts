@@ -42,7 +42,7 @@ export const DEMO_ACCOUNTS: Record<string, TalentosUser> = {
   admin: {
     id: "s0000001-0000-0000-0000-000000000001",
     email: "admin@dosclub.org",
-    name: "Karthikeyan P.",
+    name: "DOS Club",
     role: "SUPER_ADMIN",
   },
 };

@@ -137,7 +137,7 @@ function AdminDashboardContent() {
       subcategory,
       action,
       modifiedBy: {
-        name: "Platform Administrator (Live)",
+        name: "DOS Club",
         email: "admin@dosclub.org",
         avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&auto=format&fit=crop&q=80",
       },
