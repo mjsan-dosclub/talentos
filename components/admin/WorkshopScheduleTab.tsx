@@ -5,6 +5,7 @@ import {
   ScheduledWorkshopSession,
 } from "@/lib/workshop-schedule";
 import WorkshopCalendar from "@/components/WorkshopCalendar";
+import { downloadCsv } from "@/lib/export-csv";
 import {
   CalendarIcon,
   ClockIcon,
@@ -395,6 +396,28 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
     }
   };
 
+  const exportSchedule = () => {
+    const source = selectedSessionIds.size > 0
+      ? sessions.filter((session) => selectedSessionIds.has(session.id))
+      : sessions;
+    const ok = downloadCsv("talentos-workshop-schedule.csv", source.map((session) => ({
+      session_id: session.id,
+      workshop_code: session.workshopCode,
+      workshop_title: session.workshopTitle,
+      college: session.institutionName,
+      expert: session.trainerName,
+      date: session.date,
+      start_time: session.startTime,
+      end_time: session.endTime,
+      venue: session.venue,
+      focus_topic: session.focusTopic,
+      cohort_size: session.cohortSize,
+      status: session.status,
+    })));
+    setNotification(ok ? `Exported ${source.length} scheduled session(s) to CSV.` : "No scheduled sessions to export.");
+    setTimeout(() => setNotification(null), 3500);
+  };
+
   const isAllSelected =
     sessions.length > 0 && sessions.every((s) => selectedSessionIds.has(s.id));
 
@@ -560,6 +583,14 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
               <div className="text-xs text-slate-500 font-mono">
                 Showing {sessions.length} Scheduled Sessions
               </div>
+              <button
+                type="button"
+                onClick={exportSchedule}
+                disabled={sessions.length === 0}
+                className="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-300 text-slate-700 hover:bg-white disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Export {selectedSessionIds.size > 0 ? "Selected" : "List"}
+              </button>
             </div>
           </div>
 
