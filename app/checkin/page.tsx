@@ -162,6 +162,10 @@ function CheckInContent() {
       setErrorMessage("Session feedback rating is mandatory before completing check-out (TAL-063).");
       return;
     }
+    if (mode === "CHECK_OUT" && !feedbackText.trim()) {
+      setErrorMessage("Please enter a session reflection before completing check-out.");
+      return;
+    }
 
     // Default coordinates if not granted
     const finalLat = coords ? coords.lat : VENUE.lat + 0.0001;
@@ -562,11 +566,12 @@ function CheckInContent() {
                   {/* Reflection Text */}
                   <div>
                     <label className="block text-[11px] font-bold uppercase tracking-wider text-[#777E90] mb-1">
-                      Key Technical Reflection / Takeaway
+                      Key Technical Reflection / Takeaway *
                     </label>
                     <textarea
                       rows={2}
                       placeholder="e.g. Implemented raft consensus logic and debugged heartbeat failures."
+                      required
                       value={feedbackText}
                       onChange={(e) => setFeedbackText(e.target.value)}
                       className="w-full px-3 py-2 rounded-xl bg-white border border-[#E6E8EC] text-xs text-[#23262F] focus:outline-none focus:border-[#23262F]"

@@ -30,6 +30,10 @@ export async function POST(request: Request) {
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return NextResponse.json({ error: "A feedback rating from 1 to 5 is required before checkout." }, { status: 400 });
     }
+    const reflectionText = typeof feedback_text === "string" ? feedback_text.trim() : "";
+    if (!reflectionText) {
+      return NextResponse.json({ error: "A written session reflection is required before checkout." }, { status: 400 });
+    }
 
     const checkOutTime = new Date().toISOString();
 
@@ -51,7 +55,7 @@ export async function POST(request: Request) {
       workshop_id: verifiedWorkshopId,
       student_id,
       rating,
-      reflection_text: feedback_text?.trim() || "Completed checkout with session feedback.",
+      reflection_text: reflectionText,
       confidence_score: 4,
     });
     if (feedbackError) throw feedbackError;
