@@ -17,7 +17,6 @@ import {
 } from "@/components/Icons";
 import WorkshopCalendar from "@/components/WorkshopCalendar";
 import TablePagination from "@/components/admin/TablePagination";
-import { WORKSHOP_TOPICS_27 } from "@/lib/db";
 
 interface CollegeStudent {
   dosId: string;
@@ -150,6 +149,7 @@ export default function CollegeCoordinatorPage() {
   const [toast, setToast] = useState<string | null>(null);
   const [institutionName, setInstitutionName] = useState<string>("Your college");
   const [institutionId, setInstitutionId] = useState<string>("");
+  const [scheduledSessions, setScheduledSessions] = useState<any[]>([]);
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -182,6 +182,10 @@ export default function CollegeCoordinatorPage() {
         setStudents(mapped);
       })
       .catch(() => setStudents([]));
+    fetch("/api/workshops/schedule", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => setScheduledSessions(data.sessions || []))
+      .catch(() => setScheduledSessions([]));
   }, []);
 
   const triggerToast = (msg: string) => {
@@ -328,8 +332,8 @@ export default function CollegeCoordinatorPage() {
             <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
               Workshops Executed
             </span>
-            <span className="text-2xl font-bold text-slate-900">14 / 27</span>
-            <span className="text-[11px] text-blue-600 font-medium">Next: WS-15 Distributed Tracing</span>
+            <span className="text-2xl font-bold text-slate-900">{scheduledSessions.filter((session) => session.status === "COMPLETED").length} / {scheduledSessions.length}</span>
+            <span className="text-[11px] text-blue-600 font-medium">{scheduledSessions.find((session) => session.status === "SCHEDULED")?.workshopCode || "No upcoming workshop"}</span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-1">
@@ -346,7 +350,7 @@ export default function CollegeCoordinatorPage() {
           {[
             { id: "students", label: `Campus Roster (${students.length})`, icon: <UsersIcon className="w-4 h-4" /> },
             { id: "calendar", label: "Workshop Schedule", icon: <CalendarIcon className="w-4 h-4" /> },
-            { id: "workshops", label: "27-Session Attendance", icon: <ChartBarIcon className="w-4 h-4" /> },
+            { id: "workshops", label: `Workshop Attendance (${scheduledSessions.length})`, icon: <ChartBarIcon className="w-4 h-4" /> },
             { id: "exceptions", label: `Absence Exceptions (${pendingExceptionsCount})`, icon: <ScaleIcon className="w-4 h-4" /> },
           ].map((t) => (
             <button
@@ -431,7 +435,7 @@ export default function CollegeCoordinatorPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-0.5 rounded">
-                          {s.completedWorkshops} / 27
+                          {s.completedWorkshops} / {scheduledSessions.length}
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
@@ -496,20 +500,19 @@ export default function CollegeCoordinatorPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {WORKSHOP_TOPICS_27.map((topic, i) => {
-                  const num = i + 1;
-                  const code = `WS-${String(num).padStart(2, "0")}`;
-                  const isCompleted = num < 14;
-                  const isLive = num === 14;
-                  const attendedCount = isCompleted ? 39 + (num % 4) : isLive ? 38 : 0;
-                  const rate = isCompleted ? (attendedCount / 42) * 100 : isLive ? 90.5 : 0;
+                {scheduledSessions.map((session, i) => {
+                  const code = session.workshopCode;
+                  const isCompleted = session.status === "COMPLETED";
+                  const isLive = session.status === "ACTIVE_IN_SESSION";
+                  const attendedCount = 0;
+                  const rate = 0;
 
                   return (
                     <tr key={code} className="hover:bg-slate-50/80 transition-colors">
                       <td className="py-3 px-4 font-mono font-bold text-slate-800">{code}</td>
-                      <td className="py-3 px-4 font-semibold text-slate-900">{topic}</td>
+                      <td className="py-3 px-4 font-semibold text-slate-900">{session.workshopTitle}</td>
                       <td className="py-3 px-4 text-center font-mono">
-                        {isCompleted || isLive ? `${attendedCount} / 42` : "—"}
+                        {isCompleted || isLive ? `${attendedCount} / ${students.length}` : "—"}
                       </td>
                       <td className="py-3 px-4 text-center">
                         {rate > 0 ? (
@@ -539,7 +542,7 @@ export default function CollegeCoordinatorPage() {
                         </span>
                       </td>
                       <td className="py-3 px-4 text-right text-slate-500 font-medium">
-                        {num % 2 === 0 ? "Hybrid Hub" : "In-Person Lab"}
+                        {session.venue || "—"}
                       </td>
                     </tr>
                   );
@@ -664,7 +667,7 @@ export default function CollegeCoordinatorPage() {
             <img src="/dos-club-logo.png" alt="DOS Club" className="h-5 w-5 rounded-full" />
             <span className="font-semibold text-slate-700">DeScience Open Source Club</span>
             <span className="text-slate-300">•</span>
-            <span>Anna University Campus Hub</span>
+            <span>{institutionName}</span>
           </div>
           <span className="text-slate-400">Longitudinal Student Development & Attendance Matrix</span>
         </div>
