@@ -14,6 +14,9 @@ export default function PwaRegister() {
   const [isInstalled, setIsInstalled] = useState(false);
 
   useEffect(() => {
+    // Keep the install prompt hidden in QA/preview. Enable it explicitly in the
+    // production deployment with NEXT_PUBLIC_ENABLE_PWA_INSTALL=true.
+    const installPromptEnabled = process.env.NEXT_PUBLIC_ENABLE_PWA_INSTALL === "true";
     // 1. Check if already running standalone PWA
     if (typeof window !== "undefined") {
       const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone;
@@ -51,7 +54,7 @@ export default function PwaRegister() {
         setDeferredPrompt(e as BeforeInstallPromptEvent);
         // Only show if user hasn't dismissed before in this session
         const dismissed = sessionStorage.getItem("talentos_pwa_dismissed");
-        if (!dismissed) {
+        if (installPromptEnabled && !dismissed) {
           setShowInstallBanner(true);
         }
       };

@@ -51,19 +51,27 @@ function AdminDashboardContent() {
 
   // Enforce SUPER_ADMIN role clearance client-side
   useEffect(() => {
-    const session = getClientSession();
-    setCurrentSession(session);
-    const permissionByTab: Record<string, string> = {
-      students: "STUDENTS", workshops: "WORKSHOPS", schedule: "WORKSHOPS", institutions: "INSTITUTIONS", mentors: "EXPERTS", experts: "EXPERTS", notifications: "NOTIFICATIONS", push: "NOTIFICATIONS", governance: "GOVERNANCE", audit: "GOVERNANCE", settings: "SETTINGS",
-    };
-    const permitted = session?.role === "SUPER_ADMIN" || (session?.role === "CUSTOM_ADMIN" && Boolean(session.permissions?.includes(permissionByTab[rawTab] as any)));
-    if (!session || !permitted || (rawTab === "users" && session.role !== "SUPER_ADMIN")) {
-      router.replace(
-        `/login?error=ERR_ACCESS_DENIED_ADMIN_ONLY&redirect=${encodeURIComponent(
-          window.location.pathname + window.location.search
-        )}`
-      );
+    let cancelled = false;
+    async function checkAccess() {
+      const response = await fetch("/api/auth/session", { cache: "no-store" }).catch(() => null);
+      const data = response?.ok ? await response.json() : null;
+      const session = data?.user || getClientSession();
+      if (cancelled) return;
+      setCurrentSession(session);
+      const permissionByTab: Record<string, string> = {
+        students: "STUDENTS", workshops: "WORKSHOPS", schedule: "WORKSHOPS", institutions: "INSTITUTIONS", mentors: "EXPERTS", experts: "EXPERTS", notifications: "NOTIFICATIONS", push: "NOTIFICATIONS", governance: "GOVERNANCE", audit: "GOVERNANCE", settings: "SETTINGS",
+      };
+      const permitted = session?.role === "SUPER_ADMIN" || (session?.role === "CUSTOM_ADMIN" && Boolean(session.permissions?.includes(permissionByTab[rawTab] as any)));
+      if (!session || !permitted || (rawTab === "users" && session.role !== "SUPER_ADMIN")) {
+        router.replace(
+          `/login?error=ERR_ACCESS_DENIED_ADMIN_ONLY&redirect=${encodeURIComponent(
+            window.location.pathname + window.location.search
+          )}`
+        );
+      }
     }
+    checkAccess();
+    return () => { cancelled = true; };
   }, [router, rawTab]);
 
   // Core Data State
