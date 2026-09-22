@@ -88,6 +88,21 @@ async function runContractTests() {
     }
   });
 
+  // 6. Guard against the portal/sample-data regression found during QA.
+  await assertCheck("Authenticated records and check-in have no sample fallback", async () => {
+    const recordSource = fs.readFileSync(path.resolve(__dirname, "../app/record/[id]/page.tsx"), "utf8");
+    const checkinSource = fs.readFileSync(path.resolve(__dirname, "../app/checkin/page.tsx"), "utf8");
+    if (!recordSource.includes("const campusWorkshops = currentUser")) {
+      throw new Error("Authenticated record views are not tied to live schedules");
+    }
+    if (!checkinSource.includes("No active or upcoming workshop is assigned")) {
+      throw new Error("Check-in has no explicit no-assignment state");
+    }
+    if (checkinSource.includes('workshopCode: "WS-07"')) {
+      throw new Error("Check-in still contains the WS-07 sample fallback");
+    }
+  });
+
   console.log("\n===========================================");
   console.log(`TOTAL: ${passed + failed} | PASSED: ${passed} | FAILED: ${failed}`);
   console.log("===========================================");
