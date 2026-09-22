@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { PartnerInstitution } from "@/lib/admin-data";
+import { downloadCsv } from "@/lib/export-csv";
 import GlobalTableFilter from "./GlobalTableFilter";
 import TablePagination from "./TablePagination";
 import {
@@ -46,6 +47,22 @@ export default function InstitutionsTab({
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingInst, setEditingInst] = useState<PartnerInstitution | null>(null);
+
+  const exportInstitutions = () => {
+    const source = selectedIds.size > 0 ? filtered.filter((institution) => selectedIds.has(institution.id)) : filtered;
+    const ok = downloadCsv("talentos-colleges.csv", source.map((institution) => ({
+      code: institution.code,
+      name: institution.name,
+      city: institution.city,
+      state: institution.state,
+      region: institution.region,
+      poc_name: institution.pocName,
+      poc_email: institution.pocEmail,
+      poc_phone: institution.pocPhone,
+      status: institution.status,
+    })));
+    onToast(ok ? `Exported ${source.length} college record(s) to CSV.` : "No college records to export.");
+  };
 
   // New Partner Form State
   const initialFormState = {
@@ -235,6 +252,11 @@ export default function InstitutionsTab({
 
   return (
     <div className="flex flex-col gap-6">
+      <div className="flex justify-end">
+        <button onClick={exportInstitutions} className="px-3 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg">
+          Export {selectedIds.size > 0 ? "Selected" : "List"}
+        </button>
+      </div>
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>

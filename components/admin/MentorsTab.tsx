@@ -4,6 +4,7 @@ import React, { useState, useRef } from "react";
 import Link from "next/link";
 import { ExpertMentor } from "@/lib/admin-data";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
+import { downloadCsv } from "@/lib/export-csv";
 import GlobalTableFilter from "./GlobalTableFilter";
 import TablePagination from "./TablePagination";
 import {
@@ -47,6 +48,20 @@ export default function MentorsTab({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
+
+  const exportMentors = () => {
+    const source = selectedIds.size > 0 ? filtered.filter((expert) => selectedIds.has(expert.id)) : filtered;
+    const ok = downloadCsv("talentos-experts.csv", source.map((expert) => ({
+      full_name: expert.fullName,
+      email: expert.email,
+      phone: expert.phone,
+      organization: expert.organization,
+      designation: expert.designation,
+      status: expert.status,
+      github_profile: expert.githubUrl,
+    })));
+    onToast(ok ? `Exported ${source.length} expert record(s) to CSV.` : "No expert records to export.");
+  };
 
   // Upload states
   const [uploadingAddAvatar, setUploadingAddAvatar] = useState(false);
@@ -341,6 +356,9 @@ export default function MentorsTab({
             <span>+ Add Mentor</span>
           </button>
         </div>
+        <button onClick={exportMentors} className="px-3 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg">
+          Export {selectedIds.size > 0 ? "Selected" : "List"}
+        </button>
       </div>
 
       {/* Reusable Global Filter Bar */}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { StudentMember, PartnerInstitution, INITIAL_INSTITUTIONS } from "@/lib/admin-data";
+import { downloadCsv } from "@/lib/export-csv";
 import { getClientSession } from "@/lib/session";
 import GlobalTableFilter from "./GlobalTableFilter";
 import TablePagination from "./TablePagination";
@@ -94,6 +95,21 @@ export default function StudentsTab({
   const downloadStudentTemplate = () => {
     const blob = new Blob(["dos_id,full_name,email,phone,institution,department,batch\n,Doe Student,name@company.com,9000000000,College Name,Computer Science,Batch 3 - 2026\n"], { type: "text/csv" });
     const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "student-import-template.csv"; link.click(); URL.revokeObjectURL(url);
+  };
+
+  const exportStudents = () => {
+    const source = selectedIds.size > 0 ? filtered.filter((student) => selectedIds.has(student.id)) : filtered;
+    const ok = downloadCsv("talentos-students.csv", source.map((student) => ({
+      dos_id: student.dosId,
+      full_name: student.fullName,
+      email: student.email,
+      phone: student.phone,
+      institution: student.institution,
+      department: student.department,
+      batch: student.batch,
+      status: student.status,
+    })));
+    onToast(ok ? `Exported ${source.length} student record(s) to CSV.` : "No student records to export.");
   };
 
   // New Student Form State
@@ -366,6 +382,7 @@ export default function StudentsTab({
             </button>
             <button onClick={downloadStudentTemplate} className="px-3 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Download CSV Template</button>
             <button onClick={() => bulkFileRef.current?.click()} className="px-3 py-2 border border-blue-300 text-blue-700 text-xs font-semibold rounded-lg">Bulk Upload CSV</button>
+            <button onClick={exportStudents} className="px-3 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg">Export {selectedIds.size > 0 ? "Selected" : "List"}</button>
             <input ref={bulkFileRef} type="file" accept=".csv,text/csv" onChange={handleBulkUpload} className="hidden" />
           </div>
         )}

@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { WorkshopItem, ExpertMentor } from "@/lib/admin-data";
 import { WORKSHOP_TOPICS_27 } from "@/lib/db";
+import { downloadCsv } from "@/lib/export-csv";
 import GlobalTableFilter from "./GlobalTableFilter";
 import WorkshopScheduleTab from "./WorkshopScheduleTab";
 import TablePagination from "./TablePagination";
@@ -70,6 +71,19 @@ export default function WorkshopsTab({
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingWorkshop, setEditingWorkshop] = useState<WorkshopItem | null>(null);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
+
+  const exportWorkshops = () => {
+    const source = selectedCodes.size > 0 ? filtered.filter((workshop) => selectedCodes.has(workshop.code)) : filtered;
+    const ok = downloadCsv("talentos-workshops.csv", source.map((workshop) => ({
+      code: workshop.code,
+      title: workshop.title,
+      focus_domain: workshop.focusArea,
+      delivery_mode: workshop.mode,
+      assigned_expert: workshop.expertName,
+      status: workshop.status,
+    })));
+    onToast(ok ? `Exported ${source.length} workshop record(s) to CSV.` : "No workshop records to export.");
+  };
 
   // Autosuggest State for Add Workshop Form
   const [autosuggestQuery, setAutosuggestQuery] = useState("");
@@ -328,6 +342,12 @@ export default function WorkshopsTab({
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <span>+ Create Workshop</span>
+          </button>
+          <button
+            onClick={exportWorkshops}
+            className="px-3 py-2 border border-slate-300 text-slate-700 text-xs font-semibold rounded-lg"
+          >
+            Export {selectedCodes.size > 0 ? "Selected" : "List"}
           </button>
         </div>
       </div>
