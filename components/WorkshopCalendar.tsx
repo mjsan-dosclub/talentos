@@ -37,14 +37,7 @@ export default function WorkshopCalendar({
   const [loading, setLoading] = useState<boolean>(true);
   const [nextUpcoming, setNextUpcoming] = useState<ScheduledWorkshopSession | null>(null);
   const [recentlyCompleted, setRecentlyCompleted] = useState<ScheduledWorkshopSession[]>([]);
-
-  // Available institutional hub filters for Admin or Multi-Campus views
-  const AVAILABLE_HUBS = [
-    "ALL",
-    "Anna University Campus Hub",
-    "PSG College of Technology Hub",
-    "Thiagarajar College of Engineering Hub",
-  ];
+  const [availableHubs, setAvailableHubs] = useState<string[]>(["ALL"]);
 
   // Sync institutional selection if prop updates
   useEffect(() => {
@@ -65,7 +58,13 @@ export default function WorkshopCalendar({
       const res = await fetch(`/api/workshops/schedule?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
-        setSessions(data.sessions || []);
+        const nextSessions = data.sessions || [];
+        setSessions(nextSessions);
+        const hubs: string[] = Array.from(new Set<string>(nextSessions.map((session: ScheduledWorkshopSession) => String(session.institutionName || "")).filter((hub: string) => Boolean(hub))));
+        setAvailableHubs(["ALL", ...hubs]);
+        if (selectedInstitution !== "ALL" && hubs.length > 0 && !hubs.includes(selectedInstitution)) {
+          setSelectedInstitution("ALL");
+        }
         setNextUpcoming(data.nextUpcoming || null);
         setRecentlyCompleted(data.recentlyCompleted || []);
         if (data.nextUpcoming?.date) {
@@ -134,7 +133,7 @@ export default function WorkshopCalendar({
               onChange={(e) => setSelectedInstitution(e.target.value)}
               className="text-xs font-semibold py-2 px-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-white text-slate-800 focus:outline-none focus:border-slate-800"
             >
-              {AVAILABLE_HUBS.map((hub) => (
+              {availableHubs.map((hub) => (
                 <option key={hub} value={hub}>
                   {hub === "ALL"
                     ? role === "TRAINER"

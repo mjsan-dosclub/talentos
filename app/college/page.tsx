@@ -143,12 +143,13 @@ const INITIAL_ABSENCES: AbsenceCase[] = [
 
 export default function CollegeCoordinatorPage() {
   const [activeTab, setActiveTab] = useState<"students" | "workshops" | "exceptions" | "calendar">("students");
-  const [students, setStudents] = useState<CollegeStudent[]>(INITIAL_COLLEGE_STUDENTS);
-  const [absences, setAbsences] = useState<AbsenceCase[]>(INITIAL_ABSENCES);
+  const [students, setStudents] = useState<CollegeStudent[]>([]);
+  const [absences, setAbsences] = useState<AbsenceCase[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [deptFilter, setDeptFilter] = useState("All");
   const [toast, setToast] = useState<string | null>(null);
-  const [institutionName, setInstitutionName] = useState<string>("Anna University Campus Hub");
+  const [institutionName, setInstitutionName] = useState<string>("Your college");
+  const [institutionId, setInstitutionId] = useState<string>("");
   
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -157,15 +158,30 @@ export default function CollegeCoordinatorPage() {
   // Read authenticated college affiliation from session
   useEffect(() => {
     const session = getClientSession();
-    if (session?.institution_id) {
-      if (session.institution_id === "inst-002" || session.institution_id.includes("PSG")) {
-        setInstitutionName("PSG College of Technology Hub");
-      } else if (session.institution_id === "inst-003" || session.institution_id.includes("TCE")) {
-        setInstitutionName("Thiagarajar College of Engineering Hub");
-      } else {
-        setInstitutionName("Anna University Campus Hub");
-      }
-    }
+    if (!session || session.role !== "COLLEGE_ADMIN") return;
+    setInstitutionName(session.name || "Your college");
+    setInstitutionId(session.institution_id || session.id || "");
+    fetch("/api/students", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => {
+        const expected = String(session.name || "").toLowerCase();
+        const mapped = (data.students || []).filter((student: any) => {
+          const value = String(student.institution || "").toLowerCase();
+          return value === expected || value.includes(expected) || expected.includes(value);
+        }).map((student: any) => ({
+          dosId: student.dosId,
+          fullName: student.fullName,
+          email: student.email,
+          department: student.department || "—",
+          year: 0,
+          completedWorkshops: 0,
+          attendanceRate: 0,
+          lastAttended: "—",
+          status: student.status === "ACTIVE" ? "ACTIVE" : "ACTIVE",
+        }));
+        setStudents(mapped);
+      })
+      .catch(() => setStudents([]));
   }, []);
 
   const triggerToast = (msg: string) => {
@@ -214,7 +230,7 @@ export default function CollegeCoordinatorPage() {
       items: [
         { id: "students", label: "Campus Students", icon: <UsersIcon className="w-4 h-4" />, count: students.length },
         { id: "calendar", label: "Workshop Calendar", icon: <CalendarIcon className="w-4 h-4" />, badge: "CALENDAR" },
-        { id: "workshops", label: "27-Workshop Matrix", icon: <ChartBarIcon className="w-4 h-4" />, count: 27 },
+        { id: "workshops", label: "Workshop Matrix", icon: <ChartBarIcon className="w-4 h-4" /> },
         { id: "exceptions", label: "Absence Exceptions", icon: <ScaleIcon className="w-4 h-4" />, count: pendingExceptionsCount },
       ],
     },
@@ -269,14 +285,14 @@ export default function CollegeCoordinatorPage() {
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-emerald-500 ring-4 ring-emerald-500/20" />
               <span className="font-mono text-xs font-bold text-slate-500 uppercase tracking-wider">
-                AU-DOS-01 • CAMPUS HUB
+                {institutionId || "CAMPUS"} • CAMPUS HUB
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900">
-              Anna University & DOS Club Hub
+              {institutionName}
             </h1>
             <p className="text-xs text-slate-500">
-              Coordinator: <strong className="text-slate-700">Dr. K. Ramanathan (Dean of Engineering)</strong> • Chennai, Tamil Nadu
+              Coordinator: <strong className="text-slate-700">{getClientSession()?.name || "College coordinator"}</strong>
             </p>
           </div>
 
@@ -296,16 +312,16 @@ export default function CollegeCoordinatorPage() {
             <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
               Enrolled Campus Students
             </span>
-            <span className="text-2xl font-bold text-slate-900">42</span>
-            <span className="text-[11px] text-emerald-600 font-medium">Batch 3 - Systems Engineering</span>
+            <span className="text-2xl font-bold text-slate-900">{students.length}</span>
+            <span className="text-[11px] text-emerald-600 font-medium">Students registered to this college</span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-1">
             <span className="text-[11px] uppercase font-bold text-slate-400 tracking-wider">
               Average Cohort Attendance
             </span>
-            <span className="text-2xl font-bold text-emerald-600">91.4%</span>
-            <span className="text-[11px] text-slate-500 font-medium">Across 14 completed sessions</span>
+            <span className="text-2xl font-bold text-emerald-600">—</span>
+            <span className="text-[11px] text-slate-500 font-medium">Attendance appears after sessions are recorded</span>
           </div>
 
           <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col gap-1">

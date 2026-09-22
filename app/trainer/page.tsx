@@ -49,6 +49,7 @@ export default function TrainerDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [origin, setOrigin] = useState<string>("");
   const [trainerName, setTrainerName] = useState<string>("Priya Sundaram");
+  const [activeSession, setActiveSession] = useState<any>(null);
 
   // Read authenticated trainer identity from session
   useEffect(() => {
@@ -63,25 +64,6 @@ export default function TrainerDashboardPage() {
     if (typeof window !== "undefined") {
       setOrigin(window.location.origin);
     }
-  }, []);
-
-  // Load students for today's session
-  useEffect(() => {
-    getStudents().then(({ students }) => {
-      const now = new Date();
-      const initial: ParticipantState[] = students.map((s, idx) => ({
-        student: s,
-        status: idx === 0 ? "CHECKED_IN" : idx === 1 ? "COMPLETED" : "NOT_STARTED",
-        source: idx === 0 || idx === 1 ? "QR_SCAN" : "TRAINER_MANUAL",
-        checkInTime:
-          idx === 0
-            ? formatConfigTime(now)
-            : idx === 1
-            ? formatConfigTime(new Date(now.getTime() - 15 * 60000))
-            : undefined,
-      }));
-      setParticipants(initial);
-    });
   }, []);
 
   // Obtain short-lived, server-issued QR tokens for the trainer's assigned session.
@@ -109,6 +91,14 @@ export default function TrainerDashboardPage() {
           }
           return;
         }
+        setActiveSession(nextSession);
+        const { students } = await getStudents();
+        const sessionInstitution = String(nextSession.institutionName || "").toLowerCase();
+        const roster = students.filter((student) => {
+          const institution = String((student as any).institution || (student as any).institution_name || "").toLowerCase();
+          return !sessionInstitution || institution === sessionInstitution || institution.includes(sessionInstitution) || sessionInstitution.includes(institution);
+        });
+        setParticipants(roster.map((student) => ({ student, status: "NOT_STARTED", source: "TRAINER_MANUAL" })));
 
         const tokenResponse = await fetch("/api/attendance/token", {
           method: "POST",
@@ -300,10 +290,10 @@ export default function TrainerDashboardPage() {
                 Technical Expert Lead Cockpit
               </div>
               <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900">
-                WS-14: Resilient Microservices & Circuit Breakers
+                {activeSession ? `${activeSession.workshopCode}: ${activeSession.workshopTitle}` : "No assigned workshop"}
               </h1>
               <p className="text-xs text-slate-500 mt-0.5">
-                Anna University Campus Hub • Batch 3 Cohort Alpha • Session 14 of 27
+                {activeSession ? `${activeSession.institutionName} • ${activeSession.date} • ${activeSession.startTime}–${activeSession.endTime}` : qrUnavailable}
               </p>
             </div>
 

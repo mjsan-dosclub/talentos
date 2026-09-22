@@ -55,6 +55,7 @@ function CheckInContent() {
   const [dosId, setDosId] = useState(initialStudentId);
   const [sessionId, setSessionId] = useState(initialSessionId);
   const [currentUser, setCurrentUser] = useState<TalentosUser | null>(null);
+  const [activeVenue, setActiveVenue] = useState(VENUE);
 
   useEffect(() => {
     const session = getClientSession();
@@ -66,6 +67,28 @@ function CheckInContent() {
       setErrorMessage("Please sign in as a student before scanning a workshop QR code.");
     }
   }, []);
+
+  // Resolve the displayed workshop from the authenticated, session-scoped QR.
+  // The fallback is used only until the schedule response arrives; it is never
+  // used to authorize attendance because the API validates the session/token.
+  useEffect(() => {
+    if (!initialSessionId) return;
+    fetch("/api/workshops/schedule", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => {
+        const scheduled = (data.sessions || []).find((item: any) => String(item.id) === initialSessionId);
+        if (scheduled) {
+          setActiveVenue((current) => ({
+            ...current,
+            name: scheduled.institutionName || current.name,
+            workshopCode: scheduled.workshopCode || current.workshopCode,
+            workshopTitle: scheduled.workshopTitle || current.workshopTitle,
+            workshopId: scheduled.workshopCode || current.workshopId,
+          }));
+        }
+      })
+      .catch(() => undefined);
+  }, [initialSessionId]);
 
   useEffect(() => {
     const urlToken = searchParams.get("token");
@@ -112,9 +135,9 @@ function CheckInContent() {
           const userLng = pos.coords.longitude;
           setCoords({ lat: userLat, lng: userLng });
 
-          const dist = computeDistanceMeters(userLat, userLng, VENUE.lat, VENUE.lng);
+          const dist = computeDistanceMeters(userLat, userLng, activeVenue.lat, activeVenue.lng);
           setDistance(dist);
-          if (dist <= VENUE.radiusMeters) {
+          if (dist <= activeVenue.radiusMeters) {
             setGeoStatus("IN_BOUNDS");
           } else {
             setGeoStatus("OUT_OF_BOUNDS");
@@ -131,10 +154,10 @@ function CheckInContent() {
 
   // Quick helper to simulate campus in-bounds coordinates
   const simulateCampusLocation = () => {
-    const simLat = VENUE.lat + 0.0002;
-    const simLng = VENUE.lng + 0.0001;
+    const simLat = activeVenue.lat + 0.0002;
+    const simLng = activeVenue.lng + 0.0001;
     setCoords({ lat: simLat, lng: simLng });
-    const dist = computeDistanceMeters(simLat, simLng, VENUE.lat, VENUE.lng);
+    const dist = computeDistanceMeters(simLat, simLng, activeVenue.lat, activeVenue.lng);
     setDistance(dist);
     setGeoStatus("IN_BOUNDS");
     setErrorMessage(null);
@@ -168,8 +191,8 @@ function CheckInContent() {
     }
 
     // Default coordinates if not granted
-    const finalLat = coords ? coords.lat : VENUE.lat + 0.0001;
-    const finalLng = coords ? coords.lng : VENUE.lng + 0.0001;
+    const finalLat = coords ? coords.lat : activeVenue.lat + 0.0001;
+    const finalLng = coords ? coords.lng : activeVenue.lng + 0.0001;
     const finalDist = distance !== null ? distance : 38;
 
     setIsSubmitting(true);
@@ -187,12 +210,12 @@ function CheckInContent() {
       const studentCampus = matched?.institution || "Anna University Campus Hub";
       const isCampusMatch =
         studentCampus.toLowerCase().includes("anna") ||
-        VENUE.name.toLowerCase().includes(studentCampus.toLowerCase().substring(0, 4));
+        activeVenue.name.toLowerCase().includes(studentCampus.toLowerCase().substring(0, 4));
 
       if (!isCampusMatch && !matched?.department?.toLowerCase().includes("computer")) {
         setIsSubmitting(false);
         setErrorMessage(
-          `CAMPUS ACCESS RESTRICTED // Your registered hub (${studentCampus}) does not match today's venue (${VENUE.name}). Please attend your designated campus workshop.`
+          `CAMPUS ACCESS RESTRICTED // Your registered hub (${studentCampus}) does not match today's venue (${activeVenue.name}). Please attend your designated campus workshop.`
         );
         return;
       }
@@ -203,7 +226,7 @@ function CheckInContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             student_id: studentUuid,
-            workshop_id: VENUE.workshopId,
+            workshop_id: activeVenue.workshopId,
             session_id: sessionId,
             qr_token: cleanToken,
             status: "CHECKED_IN",
@@ -237,7 +260,7 @@ function CheckInContent() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             student_id: studentUuid,
-            workshop_id: VENUE.workshopId,
+            workshop_id: activeVenue.workshopId,
             session_id: sessionId,
             qr_token: cleanToken,
             check_out_lat: finalLat,
@@ -338,7 +361,7 @@ function CheckInContent() {
             <div className="flex flex-col gap-2.5 p-4 bg-[#F4F5F6] border border-[#E6E8EC] rounded-2xl text-xs">
               <div className="flex justify-between">
                 <span className="text-[#777E90]">Session:</span>
-                <span className="text-[#23262F] font-semibold">{VENUE.workshopCode}</span>
+                <span className="text-[#23262F] font-semibold">{activeVenue.workshopCode}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-[#777E90]">Lifecycle Status:</span>
@@ -354,7 +377,7 @@ function CheckInContent() {
               )}
               <div className="flex justify-between">
                 <span className="text-[#777E90]">Geofence Distance:</span>
-                <span className="text-[#23262F] font-mono">{receipt.distance}m (limit: {VENUE.radiusMeters}m)</span>
+                <span className="text-[#23262F] font-mono">{receipt.distance}m (limit: {activeVenue.radiusMeters}m)</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-[#E6E8EC]">
                 <span className="text-[#777E90]">Timestamp:</span>
@@ -433,10 +456,10 @@ function CheckInContent() {
                 Active Session
               </div>
               <h1 className="text-base font-bold text-[#23262F]">
-                {VENUE.workshopCode}: {VENUE.workshopTitle}
+                {activeVenue.workshopCode}: {activeVenue.workshopTitle}
               </h1>
               <p className="text-xs text-[#777E90]">
-                Perimeter: {VENUE.radiusMeters}m • {VENUE.name}
+                Perimeter: {activeVenue.radiusMeters}m • {activeVenue.name}
               </p>
             </div>
 

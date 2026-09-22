@@ -474,6 +474,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
   // Assessments State
   const [assessments, setAssessments] = useState<ExternalAssessment[]>([]);
   const [currentUser, setCurrentUser] = useState<TalentosUser | null>(null);
+  const [liveWorkshopRecords, setLiveWorkshopRecords] = useState<WorkshopRecord[]>([]);
 
   useEffect(() => {
     const session = getClientSession();
@@ -484,6 +485,26 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
     }
     setCurrentUser(session);
   }, [identifier]);
+
+  // Authenticated students must see only sessions assigned by the scheduler.
+  // The legacy 27-session curriculum remains available only for public/demo
+  // record views; it must never be used as a fallback for a real student.
+  useEffect(() => {
+    if (currentUser?.role !== "STUDENT") return;
+    fetch("/api/workshops/schedule", { cache: "no-store" })
+      .then((response) => response.json())
+      .then((data) => {
+        const records = (data.sessions || []).map((session: any, index: number): WorkshopRecord => ({
+          index: index + 1,
+          code: String(session.workshopCode || ""),
+          title: String(session.workshopTitle || "Workshop"),
+          topic: String(session.focusTopic || ""),
+          state: session.status === "COMPLETED" ? "COMPLETED" : session.status === "ACTIVE_IN_SESSION" ? "CHECKED_IN" : session.status === "POSTPONED" ? "INCOMPLETE" : "REGISTERED",
+        }));
+        setLiveWorkshopRecords(records);
+      })
+      .catch(() => setLiveWorkshopRecords([]));
+  }, [currentUser]);
 
   const getRoleNavigation = () => {
     if (!currentUser) {
@@ -617,9 +638,11 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
   );
 
   // Longitudinal Counts for assigned workshops
-  const campusWorkshops = WORKSHOP_CURRICULUM.filter(
-    (w) => assignedWorkshopCodes.size === 0 || assignedWorkshopCodes.has(w.code) || w.state === "COMPLETED" || w.state === "LATE" || w.state === "CHECKED_IN"
-  );
+  const campusWorkshops = currentUser?.role === "STUDENT"
+    ? liveWorkshopRecords
+    : WORKSHOP_CURRICULUM.filter(
+        (w) => assignedWorkshopCodes.size === 0 || assignedWorkshopCodes.has(w.code) || w.state === "COMPLETED" || w.state === "LATE" || w.state === "CHECKED_IN"
+      );
 
   const completedCount = campusWorkshops.filter(
     (w) => w.state === "COMPLETED" || w.state === "MANUALLY_CONFIRMED"
