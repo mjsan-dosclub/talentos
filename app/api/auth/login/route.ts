@@ -44,16 +44,17 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: `No registered College Coordinator account found for email: "${cleanEmail}".` }, { status: 404 });
       }
     } else if (role === "admin") {
-      const isSuperAdmin = cleanEmail.toLowerCase() === "admin@dosclub.org";
-      if (!isSuperAdmin) {
-        return NextResponse.json({ error: `No registered Super Admin account found for email: "${cleanEmail}".` }, { status: 404 });
+      const configuredEmail = process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
+      const configuredPasswordHash = process.env.SUPER_ADMIN_PASSWORD_HASH?.trim();
+      if (!configuredEmail || !configuredPasswordHash) {
+        return NextResponse.json({ error: "Super Admin credentials are not configured for this environment." }, { status: 503 });
       }
-      if (providedPwd !== "admin@2026") {
-        return NextResponse.json({ error: "Invalid password for Super Admin account." }, { status: 401 });
+      if (cleanEmail.toLowerCase() !== configuredEmail || !verifyPassword(providedPwd, configuredPasswordHash)) {
+        return NextResponse.json({ error: "Invalid Super Admin credentials." }, { status: 401 });
       }
       user = {
         ...DEMO_ACCOUNTS.admin,
-        email: cleanEmail,
+        email: configuredEmail,
       };
     } else {
       // Student login - STRICT Credential Validation

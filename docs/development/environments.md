@@ -30,7 +30,14 @@ SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 # 4. Canonical Base URL
 NEXT_PUBLIC_APP_URL=https://talentos.dosclub.org
+
+# 5. Server-only Super Admin credentials
+# Keep both values in your deployment platform's secret store, not in source control.
+SUPER_ADMIN_EMAIL=admin@example.org
+SUPER_ADMIN_PASSWORD_HASH=scrypt$replace_with_generated_hash
 ```
+
+Generate the password hash locally with `node scripts/create-password-hash.mjs`. The prompt hides the password and prints the value for `SUPER_ADMIN_PASSWORD_HASH`.
 
 ---
 
