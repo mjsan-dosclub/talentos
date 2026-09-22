@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 // In-memory fallback ledger for enquiries so admin panel displays submissions even when database is offline
 export interface EnquiryRecord {
@@ -59,6 +60,8 @@ function saveEnquiries(data: EnquiryRecord[]): void {
 }
 
 export async function GET() {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   const combinedMap = new Map<string, EnquiryRecord>();
 
   // 1. Primary: Check dedicated aspirant_enquiries table in Supabase
@@ -426,6 +429,8 @@ TalentOS Automated Dispatch
 }
 
 export async function PATCH(req: NextRequest) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await req.json();
     const { id, ids, status } = body;
@@ -493,6 +498,8 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(req.url);
     const queryId = searchParams.get("id");
