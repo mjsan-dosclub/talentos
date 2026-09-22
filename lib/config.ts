@@ -85,7 +85,7 @@ export const DEFAULT_SYSTEM_CONFIG: SystemConfig = {
     resendApiKey: process.env.RESEND_API_KEY || "",
     fromAddress: process.env.EMAIL_FROM || "notifications@dosclub.org",
     fromName: "DOS Club TalentOS",
-    globalCc: process.env.EMAIL_GLOBAL_CC || "descienceosclub@gmail.com, admissions@dosclub.org",
+    globalCc: process.env.EMAIL_GLOBAL_CC || "descienceosclub@gmail.com",
     enabled: true,
   },
   whatsapp: {

@@ -789,7 +789,7 @@ export default function SystemSettingsPage() {
                         email: { ...config.email, globalCc: e.target.value },
                       })
                     }
-                    placeholder="e.g. descienceosclub@gmail.com, admissions@dosclub.org"
+                    placeholder="e.g. descienceosclub@gmail.com"
                     className="border border-blue-300 rounded-lg p-2.5 font-mono text-xs bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 mt-1"
                   />
                   <span className="text-[10px] text-slate-500 font-mono">

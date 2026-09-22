@@ -101,6 +101,7 @@ export function resolveRecipientsWithGlobalCc(
     ? globalCcRaw
         .split(",")
         .map((a) => a.trim().toLowerCase())
+        .map((a) => a === "admissions@dosclub.org" ? "descienceosclub@gmail.com" : a)
         .filter((a) => a.includes("@"))
     : [];
 

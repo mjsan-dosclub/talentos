@@ -514,7 +514,7 @@ WHILE YOU WAIT — CONNECT WITH OUR OFFICIAL COMMUNITY CHANNELS:
 - Discord Server: https://discord.com/channels/1503348482218524672/1503348483594129550
 
 ANTI-SPAM TIP:
-Please save admissions@dosclub.org in your contacts so our interview scheduling invitation does not get delayed in your Spam folder.
+Please save descienceosclub@gmail.com in your contacts so our interview scheduling invitation does not get delayed in your Spam folder.
 
 Warm regards,
 Admissions Directorate
@@ -575,4 +575,3 @@ DeScience Open Source Club`,
     variables: ["casestudy_title", "student_name", "student_pod", "system_audited", "key_metric", "casestudy_url", "discord_thread_url"],
   },
 ];
-
