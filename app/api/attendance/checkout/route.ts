@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getAttendanceSession } from "@/lib/attendance-auth";
 
@@ -7,7 +8,7 @@ export async function POST(request: Request) {
     const session = await getAttendanceSession();
     if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const body = await request.json();
-    const { student_id, workshop_id, check_out_lat, check_out_lng, feedback_rating, feedback_text } = body;
+    const { student_id, workshop_id, session_id, qr_token, check_out_lat, check_out_lng, feedback_rating, feedback_text } = body;
 
     if (!student_id || !workshop_id) {
       return NextResponse.json(
@@ -19,6 +20,12 @@ export async function POST(request: Request) {
     if (session.role !== "STUDENT" || student_id !== session.id) {
       return NextResponse.json({ error: "Only the signed-in student may complete checkout." }, { status: 403 });
     }
+    if (!session_id || !qr_token) return NextResponse.json({ error: "A current workshop QR token is required for checkout." }, { status: 400 });
+    const tokenHash = createHash("sha256").update(String(qr_token)).digest("hex");
+    const { data: token, error: tokenError } = await supabaseAdmin.from("attendance_qr_tokens").select("workshop_id").eq("token_hash", tokenHash).eq("session_id", String(session_id)).gt("expires_at", new Date().toISOString()).maybeSingle();
+    if (tokenError) throw tokenError;
+    if (!token) return NextResponse.json({ error: "The workshop QR token is invalid or expired." }, { status: 403 });
+    const verifiedWorkshopId = token.workshop_id;
     const rating = Number(feedback_rating);
     if (!Number.isInteger(rating) || rating < 1 || rating > 5) {
       return NextResponse.json({ error: "A feedback rating from 1 to 5 is required before checkout." }, { status: 400 });
@@ -30,7 +37,7 @@ export async function POST(request: Request) {
       .from("attendance_records")
       .select("*")
       .eq("student_id", student_id)
-      .eq("workshop_id", workshop_id)
+      .eq("workshop_id", verifiedWorkshopId)
       .maybeSingle();
     if (attendanceError) throw attendanceError;
     if (!existing || !existing.check_in_time) {
@@ -41,7 +48,7 @@ export async function POST(request: Request) {
     }
 
     const { error: feedbackError } = await supabaseAdmin.from("session_feedback").insert({
-      workshop_id,
+      workshop_id: verifiedWorkshopId,
       student_id,
       rating,
       reflection_text: feedback_text?.trim() || "Completed checkout with session feedback.",

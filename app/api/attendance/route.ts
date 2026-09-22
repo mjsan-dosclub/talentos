@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { canManageAttendance, getAttendanceSession } from "@/lib/attendance-auth";
 
@@ -44,6 +45,8 @@ export async function POST(request: Request) {
       check_in_lng,
       override_reason,
       manual_override_by,
+      session_id,
+      qr_token,
     } = body;
 
     if (!student_id || !workshop_id) {
@@ -59,12 +62,60 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This role cannot record attendance." }, { status: 403 });
     }
 
+    let verifiedWorkshopId = String(workshop_id);
+    if (session.role === "STUDENT") {
+      if (!session_id || !qr_token) return NextResponse.json({ error: "A current workshop QR token is required." }, { status: 400 });
+      const tokenHash = createHash("sha256").update(String(qr_token)).digest("hex");
+      const { data: token, error: tokenError } = await supabaseAdmin
+        .from("attendance_qr_tokens")
+        .select("session_id,workshop_id,expires_at")
+        .eq("token_hash", tokenHash)
+        .eq("session_id", String(session_id))
+        .gt("expires_at", new Date().toISOString())
+        .maybeSingle();
+      if (tokenError) return NextResponse.json({ error: tokenError.message }, { status: 500 });
+      if (!token) return NextResponse.json({ error: "The workshop QR token is invalid or expired." }, { status: 403 });
+      verifiedWorkshopId = token.workshop_id;
+
+      const { data: scheduled, error: scheduledError } = await supabaseAdmin
+        .from("scheduled_workshop_sessions")
+        .select("institution_id,institution_name")
+        .eq("id", String(session_id))
+        .maybeSingle();
+      if (scheduledError) return NextResponse.json({ error: scheduledError.message }, { status: 500 });
+      if (!scheduled) return NextResponse.json({ error: "Scheduled workshop session not found." }, { status: 404 });
+      const { data: student, error: studentError } = await supabaseAdmin
+        .from("students")
+        .select("id,group_id,institution_name")
+        .eq("id", session.id)
+        .maybeSingle();
+      if (studentError) return NextResponse.json({ error: studentError.message }, { status: 500 });
+      if (!student) return NextResponse.json({ error: "Student record not found." }, { status: 404 });
+
+      let studentInstitutionId = "";
+      if (student.group_id) {
+        const { data: group, error: groupError } = await supabaseAdmin.from("cohort_groups").select("batch_id").eq("id", student.group_id).maybeSingle();
+        if (groupError) return NextResponse.json({ error: groupError.message }, { status: 500 });
+        if (group?.batch_id) {
+          const { data: batch, error: batchError } = await supabaseAdmin.from("batches").select("institution_id").eq("id", group.batch_id).maybeSingle();
+          if (batchError) return NextResponse.json({ error: batchError.message }, { status: 500 });
+          studentInstitutionId = String(batch?.institution_id || "");
+        }
+      }
+      if (studentInstitutionId && studentInstitutionId !== scheduled.institution_id) {
+        return NextResponse.json({ error: "This student is not assigned to the scheduled workshop college." }, { status: 403 });
+      }
+      if (!studentInstitutionId && student.institution_name && !String(student.institution_name).toLowerCase().includes(String(scheduled.institution_name).toLowerCase().slice(0, 8))) {
+        return NextResponse.json({ error: "This student is not assigned to the scheduled workshop college." }, { status: 403 });
+      }
+    }
+
     // Check if an attendance record already exists for this student and workshop
     const { data: existing, error: findError } = await supabaseAdmin
       .from("attendance_records")
       .select("id")
       .eq("student_id", student_id)
-      .eq("workshop_id", workshop_id)
+      .eq("workshop_id", verifiedWorkshopId)
       .maybeSingle();
 
     if (findError) {
@@ -77,8 +128,8 @@ export async function POST(request: Request) {
       const { data: updated, error: updateError } = await supabaseAdmin
         .from("attendance_records")
         .update({
-          status: status || "CHECKED_IN",
-          source: source || "QR_SCAN",
+          status: session.role === "STUDENT" ? "CHECKED_IN" : status || "CHECKED_IN",
+          source: session.role === "STUDENT" ? "QR_SCAN" : source || "QR_SCAN",
           check_in_time: check_in_time || new Date().toISOString(),
           check_in_lat: check_in_lat !== undefined ? check_in_lat : null,
           check_in_lng: check_in_lng !== undefined ? check_in_lng : null,
@@ -100,9 +151,9 @@ export async function POST(request: Request) {
         .from("attendance_records")
         .insert({
           student_id,
-          workshop_id,
-          status: status || "CHECKED_IN",
-          source: source || "QR_SCAN",
+          workshop_id: verifiedWorkshopId,
+          status: session.role === "STUDENT" ? "CHECKED_IN" : status || "CHECKED_IN",
+          source: session.role === "STUDENT" ? "QR_SCAN" : source || "QR_SCAN",
           check_in_time: check_in_time || new Date().toISOString(),
           check_in_lat: check_in_lat !== undefined ? check_in_lat : null,
           check_in_lng: check_in_lng !== undefined ? check_in_lng : null,

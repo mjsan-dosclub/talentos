@@ -5,6 +5,7 @@ import Link from "next/link";
 import { getStudents, Student } from "@/lib/db";
 import { formatConfigTime } from "@/lib/datetime";
 import { getClientSession } from "@/lib/session";
+import QRCode from "qrcode";
 import AppHeader from "@/components/AppHeader";
 import SidebarNav, { SidebarGroup } from "@/components/SidebarNav";
 import {
@@ -32,8 +33,13 @@ interface ParticipantState {
 
 export default function TrainerDashboardPage() {
   const [participants, setParticipants] = useState<ParticipantState[]>([]);
-  const [qrToken, setQrToken] = useState<string>("TKN-ACTIVE-SYNC");
-  const [secondsLeft, setSecondsLeft] = useState<number>(30);
+  const [qrToken, setQrToken] = useState<string>("");
+  const [secondsLeft, setSecondsLeft] = useState<number>(0);
+  const [tokenExpiresAt, setTokenExpiresAt] = useState<number>(0);
+  const [activeSessionId, setActiveSessionId] = useState<string>("");
+  const [activeWorkshopCode, setActiveWorkshopCode] = useState<string>("");
+  const [qrImage, setQrImage] = useState<string>("");
+  const [qrUnavailable, setQrUnavailable] = useState<string>("Loading your assigned session…");
   const [mounted, setMounted] = useState<boolean>(false);
   const [activeModalStudent, setActiveModalStudent] = useState<ParticipantState | null>(null);
   const [exceptionReason, setExceptionReason] = useState("STUDENT_DEVICE_OFFLINE");
@@ -78,21 +84,82 @@ export default function TrainerDashboardPage() {
     });
   }, []);
 
-  // Rolling time-sensitive QR token generator (30s interval)
+  // Obtain short-lived, server-issued QR tokens for the trainer's assigned session.
   useEffect(() => {
     setMounted(true);
-    setQrToken("TKN-" + Math.random().toString(36).substring(2, 10).toUpperCase());
-    const interval = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          setQrToken("TKN-" + Math.random().toString(36).substring(2, 10).toUpperCase());
-          return 30;
+    let cancelled = false;
+
+    const issueToken = async () => {
+      try {
+        const scheduleResponse = await fetch("/api/workshops/schedule", { cache: "no-store" });
+        const schedule = await scheduleResponse.json();
+        if (!scheduleResponse.ok) throw new Error(schedule.error || "Unable to load your assigned sessions.");
+
+        const nextSession = (schedule.sessions || []).find(
+          (item: { status?: string }) => item.status === "ACTIVE_IN_SESSION" || item.status === "SCHEDULED"
+        );
+        if (!nextSession) {
+          if (!cancelled) {
+            setQrToken("");
+            setQrImage("");
+            setActiveSessionId("");
+            setActiveWorkshopCode("");
+            setTokenExpiresAt(0);
+            setQrUnavailable("No scheduled workshop is currently available for your trainer account.");
+          }
+          return;
         }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
+
+        const tokenResponse = await fetch("/api/attendance/token", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ session_id: nextSession.id }),
+        });
+        const tokenData = await tokenResponse.json();
+        if (!tokenResponse.ok) throw new Error(tokenData.error || "Unable to issue an attendance QR token.");
+        if (cancelled) return;
+
+        const sessionId = String(tokenData.sessionId);
+        const token = String(tokenData.token);
+        const workshopCode = String(tokenData.workshopCode);
+        const checkInUrl = `${window.location.origin}/checkin?token=${encodeURIComponent(token)}&session=${encodeURIComponent(sessionId)}&workshop=${encodeURIComponent(workshopCode)}`;
+        const image = await QRCode.toDataURL(checkInUrl, { width: 220, margin: 1, errorCorrectionLevel: "M" });
+        if (cancelled) return;
+
+        setActiveSessionId(sessionId);
+        setActiveWorkshopCode(workshopCode);
+        setQrToken(token);
+        setQrImage(image);
+        setTokenExpiresAt(new Date(tokenData.expiresAt).getTime());
+        setQrUnavailable("");
+      } catch (error) {
+        if (!cancelled) {
+          setQrToken("");
+          setQrImage("");
+          setTokenExpiresAt(0);
+          setQrUnavailable(error instanceof Error ? error.message : "Unable to load an attendance QR token.");
+        }
+      }
+    };
+
+    issueToken();
+    const interval = setInterval(issueToken, 25000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!tokenExpiresAt) {
+      setSecondsLeft(0);
+      return;
+    }
+    const updateCountdown = () => setSecondsLeft(Math.max(0, Math.ceil((tokenExpiresAt - Date.now()) / 1000)));
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 250);
+    return () => clearInterval(interval);
+  }, [tokenExpiresAt]);
 
   // Standout Recognition Tagger
   const toggleStandout = (dosId: string) => {
@@ -316,19 +383,12 @@ export default function TrainerDashboardPage() {
               </div>
 
               {/* High-Contrast Optical QR Code (100% Scannable by Mobile Cameras) */}
-              {(() => {
-                const effectiveOrigin = origin || "http://localhost:3000";
-                const checkInUrl = `${effectiveOrigin}/checkin?token=${qrToken}&workshop=WS-07`;
-                const qrApiUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(
-                  checkInUrl
-                )}&margin=1`;
-
-                return (
+              {qrImage && activeSessionId ? (
                   <div className="p-4 bg-white rounded-2xl shadow-sm flex flex-col items-center justify-center border-2 border-slate-200 w-full">
                     <div className="w-52 h-52 bg-white p-2 rounded-xl flex items-center justify-center border border-slate-100 shadow-2xs">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={qrApiUrl}
+                        src={qrImage}
                         alt={`Live Workshop Attendance QR - Token ${qrToken}`}
                         className="w-48 h-48 rounded-lg object-contain"
                       />
@@ -339,15 +399,18 @@ export default function TrainerDashboardPage() {
                         className="px-2.5 py-0.5 rounded bg-slate-100 border border-slate-300 text-slate-900 font-bold"
                         suppressHydrationWarning
                       >
-                        {mounted ? qrToken : "TKN-ACTIVE-SYNC"}
+                        {mounted ? qrToken : "ISSUING TOKEN"}
                       </span>
                     </div>
                     <div className="mt-2 text-[10px] text-slate-400 font-mono break-all max-w-[220px]">
-                      {effectiveOrigin}/checkin
+                      {origin || "This app"}/checkin?session={activeSessionId}&workshop={activeWorkshopCode}
                     </div>
                   </div>
-                );
-              })()}
+              ) : (
+                <div className="p-8 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 w-full min-h-60 flex items-center justify-center text-xs text-slate-500 text-center">
+                  {qrUnavailable}
+                </div>
+              )}
 
               <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
                 Students scan using the mobile PWA inside the geofence perimeter. Token refreshes every 30s to eliminate unauthorized forwarding.

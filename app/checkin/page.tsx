@@ -49,9 +49,11 @@ function CheckInContent() {
   const searchParams = useSearchParams();
   const initialStudentId = searchParams.get("dos_id") || "DOS-B3-001";
   const initialToken = searchParams.get("token") || "";
+  const initialSessionId = searchParams.get("session") || "";
 
   const [mode, setMode] = useState<"CHECK_IN" | "CHECK_OUT">("CHECK_IN");
   const [dosId, setDosId] = useState(initialStudentId);
+  const [sessionId, setSessionId] = useState(initialSessionId);
   const [currentUser, setCurrentUser] = useState<TalentosUser | null>(null);
 
   useEffect(() => {
@@ -59,6 +61,9 @@ function CheckInContent() {
     setCurrentUser(session);
     if (session && session.dos_id) {
       setDosId(session.dos_id);
+    }
+    if (!session || session.role !== "STUDENT") {
+      setErrorMessage("Please sign in as a student before scanning a workshop QR code.");
     }
   }, []);
 
@@ -144,6 +149,14 @@ function CheckInContent() {
       setErrorMessage("Please enter the rotating QR verification code displayed on screen.");
       return;
     }
+    if (!sessionId) {
+      setErrorMessage("Scan the current workshop QR code; a session-specific QR is required.");
+      return;
+    }
+    if (!currentUser?.id || currentUser.role !== "STUDENT") {
+      setErrorMessage("Please sign in as a student before recording attendance.");
+      return;
+    }
 
     if (mode === "CHECK_OUT" && feedbackRating === 0) {
       setErrorMessage("Session feedback rating is mandatory before completing check-out (TAL-063).");
@@ -164,7 +177,7 @@ function CheckInContent() {
       const matched = students?.find(
         (s: any) => s.dos_id.toUpperCase() === dosId.trim().toUpperCase() || s.email.toLowerCase() === dosId.trim().toLowerCase()
       );
-      const studentUuid = matched?.id || "a0000001-0000-0000-0000-000000000001";
+      const studentUuid = currentUser.id;
 
       // Institutional Campus Hub Restriction Check
       const studentCampus = matched?.institution || "Anna University Campus Hub";
@@ -187,6 +200,8 @@ function CheckInContent() {
           body: JSON.stringify({
             student_id: studentUuid,
             workshop_id: VENUE.workshopId,
+            session_id: sessionId,
+            qr_token: cleanToken,
             status: "CHECKED_IN",
             source: "QR_SCAN",
             check_in_time: new Date().toISOString(),
@@ -219,6 +234,8 @@ function CheckInContent() {
           body: JSON.stringify({
             student_id: studentUuid,
             workshop_id: VENUE.workshopId,
+            session_id: sessionId,
+            qr_token: cleanToken,
             check_out_lat: finalLat,
             check_out_lng: finalLng,
             feedback_rating: feedbackRating,
@@ -245,15 +262,7 @@ function CheckInContent() {
       }
     } catch (err: any) {
       setIsSubmitting(false);
-      // Fallback local receipt
-      setReceipt({
-        timestamp: new Date().toISOString(),
-        digest: "sha256:local_verified_receipt_" + Date.now(),
-        distance: finalDist,
-        status: mode === "CHECK_IN" ? "CHECKED_IN" : "PRESENT",
-        mode,
-        rating: feedbackRating || undefined,
-      });
+      setErrorMessage(err?.message || "Attendance request failed. No local receipt was created.");
     }
   };
 
@@ -608,4 +617,3 @@ export default function CheckInPage() {
     </Suspense>
   );
 }
-
