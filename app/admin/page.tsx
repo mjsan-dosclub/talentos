@@ -41,23 +41,30 @@ import GovernanceTab from "@/components/admin/GovernanceTab";
 import PopupsTab from "@/components/admin/PopupsTab";
 import PushNotificationsTab from "@/components/admin/PushNotificationsTab";
 import NotificationEngineTab from "@/components/admin/NotificationEngineTab";
+import UserManagementTab from "@/components/admin/UserManagementTab";
 
 function AdminDashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const rawTab = searchParams.get("tab") || "students";
+  const [currentSession, setCurrentSession] = useState<ReturnType<typeof getClientSession>>(null);
 
   // Enforce SUPER_ADMIN role clearance client-side
   useEffect(() => {
     const session = getClientSession();
-    if (!session || session.role !== "SUPER_ADMIN") {
+    setCurrentSession(session);
+    const permissionByTab: Record<string, string> = {
+      students: "STUDENTS", workshops: "WORKSHOPS", schedule: "WORKSHOPS", institutions: "INSTITUTIONS", mentors: "EXPERTS", experts: "EXPERTS", notifications: "NOTIFICATIONS", push: "NOTIFICATIONS", governance: "GOVERNANCE", audit: "GOVERNANCE", settings: "SETTINGS",
+    };
+    const permitted = session?.role === "SUPER_ADMIN" || (session?.role === "CUSTOM_ADMIN" && Boolean(session.permissions?.includes(permissionByTab[rawTab] as any)));
+    if (!session || !permitted || (rawTab === "users" && session.role !== "SUPER_ADMIN")) {
       router.replace(
         `/login?error=ERR_ACCESS_DENIED_ADMIN_ONLY&redirect=${encodeURIComponent(
           window.location.pathname + window.location.search
         )}`
       );
     }
-  }, [router]);
+  }, [router, rawTab]);
 
   // Core Data State
   const [students, setStudents] = useState<StudentMember[]>(INITIAL_STUDENTS);
@@ -162,7 +169,8 @@ function AdminDashboardContent() {
     | "push"
     | "notifications"
     | "cms"
-    | "governance" = "students";
+    | "governance"
+    | "users" = "students";
   let cmsSubTab: "landing" | "casestudies" | "enquiries" | "passes" = "landing";
 
   if (rawTab === "students") {
@@ -192,6 +200,8 @@ function AdminDashboardContent() {
     } else {
       cmsSubTab = "landing";
     }
+  } else if (rawTab === "users") {
+    activeModule = "users";
   } else if (rawTab === "governance" || rawTab === "audit" || rawTab === "settings") {
     activeModule = "governance";
   } else {
@@ -280,6 +290,12 @@ function AdminDashboardContent() {
     {
       title: "Platform & Security",
       items: [
+        ...(currentSession?.role === "SUPER_ADMIN" ? [{
+          id: "users",
+          label: "User Management",
+          icon: <UsersIcon className="w-4 h-4" />,
+          badge: "CUSTOM ADMINS",
+        }] : []),
         {
           id: "governance",
           label: "Platform Governance",
@@ -405,6 +421,8 @@ function AdminDashboardContent() {
               onToast={triggerToast}
             />
           )}
+
+          {activeModule === "users" && currentSession?.role === "SUPER_ADMIN" && <UserManagementTab />}
         </main>
       </div>
     </div>

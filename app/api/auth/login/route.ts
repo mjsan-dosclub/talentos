@@ -46,16 +46,15 @@ export async function POST(request: Request) {
     } else if (role === "admin") {
       const configuredEmail = process.env.SUPER_ADMIN_EMAIL?.trim().toLowerCase();
       const configuredPasswordHash = process.env.SUPER_ADMIN_PASSWORD_HASH?.trim();
-      if (!configuredEmail || !configuredPasswordHash) {
-        return NextResponse.json({ error: "Super Admin credentials are not configured for this environment." }, { status: 503 });
+      if (configuredEmail && configuredPasswordHash && cleanEmail.toLowerCase() === configuredEmail && verifyPassword(providedPwd, configuredPasswordHash)) {
+        user = { ...DEMO_ACCOUNTS.admin, email: configuredEmail };
+      } else {
+        const { data: customAdmin } = await supabaseAdmin.from("custom_admins").select("id,full_name,email,password_hash,permissions,status,must_reset_password").ilike("email", cleanEmail).maybeSingle();
+        if (!customAdmin) return NextResponse.json({ error: "Invalid administrator credentials." }, { status: 401 });
+        if (customAdmin.status !== "ACTIVE") return NextResponse.json({ error: "This administrator account is inactive." }, { status: 403 });
+        if (!customAdmin.password_hash || !verifyPassword(providedPwd, customAdmin.password_hash)) return NextResponse.json({ error: "Invalid administrator credentials." }, { status: 401 });
+        user = { id: customAdmin.id, email: customAdmin.email, name: customAdmin.full_name, role: "CUSTOM_ADMIN", permissions: customAdmin.permissions || [], requiresOnboarding: Boolean(customAdmin.must_reset_password) };
       }
-      if (cleanEmail.toLowerCase() !== configuredEmail || !verifyPassword(providedPwd, configuredPasswordHash)) {
-        return NextResponse.json({ error: "Invalid Super Admin credentials." }, { status: 401 });
-      }
-      user = {
-        ...DEMO_ACCOUNTS.admin,
-        email: configuredEmail,
-      };
     } else {
       // Student login - STRICT Credential Validation
       const cleanEmail = (email || "").trim();
@@ -109,7 +108,7 @@ export async function POST(request: Request) {
           ? "/trainer"
           : user.role === "COLLEGE_ADMIN"
           ? "/college"
-          : user.role === "SUPER_ADMIN"
+          : user.role === "SUPER_ADMIN" || user.role === "CUSTOM_ADMIN"
           ? "/admin"
           : user.requiresOnboarding
           ? "/student/setup"

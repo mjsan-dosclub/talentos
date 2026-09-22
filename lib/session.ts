@@ -1,4 +1,5 @@
-export type UserRole = "STUDENT" | "TRAINER" | "COLLEGE_ADMIN" | "SUPER_ADMIN";
+export type UserRole = "STUDENT" | "TRAINER" | "COLLEGE_ADMIN" | "SUPER_ADMIN" | "CUSTOM_ADMIN";
+export type AdminPermission = "STUDENTS" | "EXPERTS" | "INSTITUTIONS" | "WORKSHOPS" | "NOTIFICATIONS" | "GOVERNANCE" | "SETTINGS";
 
 export interface TalentosUser {
   id: string;
@@ -13,6 +14,7 @@ export interface TalentosUser {
   requiresOnboarding?: boolean;
   github_handle?: string;
   loginTime?: string;
+  permissions?: AdminPermission[];
 }
 
 export const SESSION_COOKIE_NAME = "talentos_session";
