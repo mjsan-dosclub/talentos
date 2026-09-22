@@ -3,6 +3,9 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
 import { StudentMember, INITIAL_STUDENTS } from "@/lib/admin-data";
 import { requireSuperAdmin } from "@/lib/api-auth";
+import { cookies } from "next/headers";
+import { SESSION_COOKIE_NAME } from "@/lib/session";
+import { deserializeSignedSession } from "@/lib/session-server";
 import {
   getStudents,
   addStudent,
@@ -14,6 +17,9 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
+    const sessionCookie = (await cookies()).get(SESSION_COOKIE_NAME)?.value;
+    const session = await deserializeSignedSession(sessionCookie);
+    if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const { searchParams } = new URL(request.url);
     const includeArchived = searchParams.get("includeArchived") === "true";
 
@@ -25,8 +31,33 @@ export async function GET(request: NextRequest) {
         .order("created_at", { ascending: true });
 
       if (!dbErr && dbStudents && dbStudents.length > 0) {
+        let trainerInstitutions: string[] = [];
+        if (session.role === "TRAINER") {
+          const { data: assignedSessions } = await supabaseAdmin
+            .from("scheduled_workshop_sessions")
+            .select("institution_id,institution_name")
+            .or(`trainer_id.eq.${session.id},trainer_name.ilike.${session.name}`);
+          trainerInstitutions = (assignedSessions || []).flatMap((row: any) => [row.institution_id, row.institution_name]).filter(Boolean).map(String);
+        }
+        const visibleStudents = dbStudents.filter((student: any) => {
+          if (session.role === "SUPER_ADMIN") return true;
+          if (session.role === "STUDENT") return String(student.id) === String(session.id);
+          if (session.role === "COLLEGE_ADMIN") {
+            const institution = String(student.institution_name || "").toLowerCase();
+            const college = String(session.name || "").toLowerCase();
+            return institution === college || institution.includes(college) || college.includes(institution);
+          }
+          if (session.role === "TRAINER") {
+            const institution = String(student.institution_name || "").toLowerCase();
+            return trainerInstitutions.some((value) => {
+              const assigned = value.toLowerCase();
+              return institution === assigned || institution.includes(assigned) || assigned.includes(institution);
+            });
+          }
+          return false;
+        });
         const mapped: StudentMember[] = dbStudents
-          .filter((s: any) => includeArchived || !s.is_archived)
+          .filter((s: any) => visibleStudents.includes(s) && (includeArchived || !s.is_archived))
           .map((s: any) => ({
             id: s.id,
             dosId: s.dos_id,
@@ -53,7 +84,16 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Fallback to disk store
-    const students = getStudents(includeArchived);
+    const students = getStudents(includeArchived).filter((student: any) => {
+      if (session.role === "SUPER_ADMIN") return true;
+      if (session.role === "STUDENT") return String(student.id) === String(session.id);
+      if (session.role === "COLLEGE_ADMIN") {
+        const institution = String(student.institution || "").toLowerCase();
+        const college = String(session.name || "").toLowerCase();
+        return institution === college || institution.includes(college) || college.includes(institution);
+      }
+      return false;
+    });
     return NextResponse.json({ success: true, count: students.length, students, source: "disk_cache" });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
