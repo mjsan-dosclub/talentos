@@ -228,7 +228,7 @@ export default function TrainerDashboardPage() {
     {
       title: "Tools & Resources",
       items: [
-        { id: "curriculum", label: "27-Session Curriculum", icon: <BookOpenIcon className="w-4 h-4" /> },
+        { id: "curriculum", label: "Assigned Curriculum", icon: <BookOpenIcon className="w-4 h-4" /> },
         { id: "checkin_tool", label: "Mobile Scanner Utility", icon: <SmartphoneIcon className="w-4 h-4" /> },
       ],
     },

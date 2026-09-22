@@ -207,7 +207,7 @@ function CheckInContent() {
       const studentUuid = currentUser.id;
 
       // Institutional Campus Hub Restriction Check
-      const studentCampus = matched?.institution || "Anna University Campus Hub";
+      const studentCampus = matched?.institution || "Assigned campus";
       const isCampusMatch =
         studentCampus.toLowerCase().includes("anna") ||
         activeVenue.name.toLowerCase().includes(studentCampus.toLowerCase().substring(0, 4));

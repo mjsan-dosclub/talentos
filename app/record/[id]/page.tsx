@@ -878,7 +878,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                   <div className="flex flex-wrap items-center gap-y-1.5 gap-x-4 text-xs text-slate-600">
                     <span className="flex items-center gap-1.5">
                       <BuildingIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <strong className="text-slate-800 font-semibold">Anna University, CEG Campus</strong>
+                      <strong className="text-slate-800 font-semibold">{studentInstitution}</strong>
                     </span>
                     <span className="text-slate-300 hidden sm:inline">•</span>
                     <span className="flex items-center gap-1.5">
@@ -960,16 +960,16 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                 </div>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-xl sm:text-2xl font-bold text-slate-900">{completedCount}</span>
-                  <span className="text-xs font-medium text-slate-500">/ 27 Done</span>
+                  <span className="text-xs font-medium text-slate-500">/ {campusWorkshops.length} Done</span>
                 </div>
                 <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-2">
                   <div
                     className="bg-emerald-600 h-full rounded-full transition-all duration-500"
-                    style={{ width: `${Math.round((completedCount / 27) * 100)}%` }}
+                    style={{ width: `${campusWorkshops.length ? Math.round((completedCount / campusWorkshops.length) * 100) : 0}%` }}
                   />
                 </div>
                 <span className="text-[10px] text-emerald-700 font-semibold mt-1">
-                  {Math.round((completedCount / 27) * 100)}% Completion Rate
+                  {campusWorkshops.length ? Math.round((completedCount / campusWorkshops.length) * 100) : 0}% Completion Rate
                 </span>
               </div>
 
@@ -1025,7 +1025,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
           {/* 3. Modern Tabs Navigation */}
           <div className="flex items-center gap-1 border-b border-slate-200 overflow-x-auto">
             {[
-              { id: "journey", label: "Curriculum Journey", icon: <AcademicCapIcon className="w-4 h-4" />, count: 27 },
+              { id: "journey", label: "Curriculum Journey", icon: <AcademicCapIcon className="w-4 h-4" />, count: campusWorkshops.length },
               { id: "calendar", label: "Workshop Calendar", icon: <CalendarIcon className="w-4 h-4" />, count: "NEW" },
               { id: "skills", label: "Skills & Tools", icon: <WrenchIcon className="w-4 h-4" />, count: skills.length },
               { id: "certifications", label: "Certifications", icon: <AwardIcon className="w-4 h-4" />, count: certifications.length },
@@ -1057,7 +1057,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
           </div>
 
           {/* ===================================================================== */}
-          {/* TAB 01: WORKSHOP JOURNEY (27 SESSIONS) */}
+          {/* TAB 01: WORKSHOP JOURNEY */}
           {/* ===================================================================== */}
           {activeTab === "journey" && (
             <section aria-label="Workshop Timeline" className="flex flex-col gap-4">
@@ -1066,7 +1066,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-xs font-semibold text-slate-500 mr-1">Filter:</span>
                   {[
-                    { id: "ALL", label: "All Sessions (27)" },
+                    { id: "ALL", label: `All Sessions (${campusWorkshops.length})` },
                     { id: "COMPLETED", label: `Completed (${completedCount})` },
                     { id: "IN_PROGRESS", label: `In Progress (${inProgressCount})` },
                     { id: "EXCUSED", label: `Excused (${excusedCount})` },
@@ -2014,7 +2014,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
             <span className="text-slate-300">•</span>
             <span>TalentOS Student 360 & Learning Evidence Ledger</span>
           </div>
-          <span className="text-slate-400">Anna University Campus Partner & Global Network</span>
+          <span className="text-slate-400">{studentInstitution} Partner Portal</span>
         </div>
       </footer>
     </div>
