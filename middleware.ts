@@ -51,8 +51,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/student/setup", request.url));
   }
 
-  // /admin requires SUPER_ADMIN
+  // /admin is available to Super Admins and scoped Custom Admins. The page
+  // applies the per-module permission check after this route-level gate.
   if (pathname.startsWith("/admin")) {
+    if (role === "CUSTOM_ADMIN") return NextResponse.next();
     const deniedUrl = new URL("/login", request.url);
     deniedUrl.searchParams.set("error", "ERR_ACCESS_DENIED_ADMIN_ONLY");
     return NextResponse.redirect(deniedUrl);
