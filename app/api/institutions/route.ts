@@ -3,6 +3,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
 import { PartnerInstitution } from "@/lib/admin-data";
 import { requireSuperAdmin } from "@/lib/api-auth";
+import { hashPassword } from "@/lib/password-server";
 
 export async function GET() {
   try {
@@ -52,8 +53,12 @@ export async function POST(req: NextRequest) {
     const pocEmail = (contact_email || body.pocEmail || "").trim().toLowerCase();
     const pocPhone = (contact_phone || body.pocPhone || "").trim();
 
-    if (!instName || !pocEmail || !pocPhone) {
-      return NextResponse.json({ error: "Institution Name, POC Email, and POC Phone are required." }, { status: 400 });
+    const initialPassword = String(body.password || "").trim();
+    if (!instName || !pocEmail || !pocPhone || !initialPassword) {
+      return NextResponse.json({ error: "Institution Name, POC Email, POC Phone, and an initial password are required." }, { status: 400 });
+    }
+    if (initialPassword.length < 8) {
+      return NextResponse.json({ error: "Initial password must be at least 8 characters." }, { status: 400 });
     }
 
     const newId = crypto.randomUUID();
@@ -75,17 +80,17 @@ export async function POST(req: NextRequest) {
             default_lng: Number(lng) || 80.2354,
             geofence_radius_meters: Number(geofenceRadiusMeters) || 200,
             is_active: true,
+            password_hash: hashPassword(initialPassword),
+            must_reset_password: true,
           },
         ])
         .select();
 
-      if (!error) {
-        dbSuccess = true;
-      } else {
-        console.warn("[TalentOS] Supabase institution insert notice:", error);
-      }
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+      dbSuccess = true;
     } catch (e) {
       console.warn("[TalentOS] Supabase institution insert exception:", e);
+      return NextResponse.json({ error: "Could not create the institution record." }, { status: 500 });
     }
 
     // 2. Dispatch College Partnership Welcome & Onboarding Email
@@ -201,11 +206,17 @@ export async function PATCH(req: NextRequest) {
   const { id, name, code, pocName, pocEmail, pocPhone, ...rest } = body;
   if (!id) return NextResponse.json({ error: "Institution id required." }, { status: 400 });
   const updates: any = { ...rest };
+  delete updates.password;
   if (name !== undefined) updates.name = name;
   if (code !== undefined) updates.code = code;
   if (pocName !== undefined) updates.contact_person = pocName;
   if (pocEmail !== undefined) updates.contact_email = pocEmail;
   if (pocPhone !== undefined) updates.contact_phone = pocPhone;
+  if (typeof body.password === "string" && body.password.trim()) {
+    if (body.password.trim().length < 8) return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
+    updates.password_hash = hashPassword(body.password.trim());
+    updates.must_reset_password = true;
+  }
   const { error } = await supabaseAdmin.from("institutions").update(updates).eq("id", id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

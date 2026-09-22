@@ -22,29 +22,27 @@ export async function POST(request: Request) {
     const providedPwd = (password || "").trim();
 
     if (role === "trainer") {
-      const isRegisteredExpert = cleanEmail.toLowerCase() === "faculty@dosclub.org" || cleanEmail.toLowerCase() === "priya@dosclub.org";
-      if (!isRegisteredExpert) {
+      const { data: expert } = await supabaseAdmin.from("experts").select("id,full_name,email,status,password_hash,must_reset_password").ilike("email", cleanEmail).maybeSingle();
+      if (expert) {
+        if (expert.status === "INACTIVE") return NextResponse.json({ error: "This Technical Expert account is inactive." }, { status: 403 });
+        if (!expert.password_hash || !verifyPassword(providedPwd, expert.password_hash)) return NextResponse.json({ error: "Invalid password for Technical Expert role." }, { status: 401 });
+        user = { id: expert.id, email: expert.email, name: expert.full_name, role: "TRAINER", requiresOnboarding: Boolean(expert.must_reset_password) };
+      } else if ((cleanEmail.toLowerCase() === "faculty@dosclub.org" || cleanEmail.toLowerCase() === "priya@dosclub.org") && (providedPwd === "trainer@2026" || providedPwd === "dosclub2026")) {
+        user = { ...DEMO_ACCOUNTS.trainer, email: cleanEmail };
+      } else {
         return NextResponse.json({ error: `No registered Technical Expert account found for email: "${cleanEmail}".` }, { status: 404 });
       }
-      if (providedPwd !== "trainer@2026" && providedPwd !== "dosclub2026") {
-        return NextResponse.json({ error: "Invalid password for Technical Expert role." }, { status: 401 });
-      }
-      user = {
-        ...DEMO_ACCOUNTS.trainer,
-        email: cleanEmail,
-      };
     } else if (role === "college") {
-      const isRegisteredCoordinator = cleanEmail.toLowerCase() === "coordinator@annauniv.edu";
-      if (!isRegisteredCoordinator) {
+      const { data: institution } = await supabaseAdmin.from("institutions").select("id,name,contact_email,is_active,password_hash,must_reset_password").ilike("contact_email", cleanEmail).maybeSingle();
+      if (institution) {
+        if (!institution.is_active) return NextResponse.json({ error: "This College account is inactive." }, { status: 403 });
+        if (!institution.password_hash || !verifyPassword(providedPwd, institution.password_hash)) return NextResponse.json({ error: "Invalid password for College Coordinator role." }, { status: 401 });
+        user = { id: institution.id, email: institution.contact_email, name: institution.name, role: "COLLEGE_ADMIN", institution_id: institution.id, requiresOnboarding: Boolean(institution.must_reset_password) };
+      } else if (cleanEmail.toLowerCase() === "coordinator@annauniv.edu" && (providedPwd === "college@2026" || providedPwd === "dosclub2026")) {
+        user = { ...DEMO_ACCOUNTS.college, email: cleanEmail };
+      } else {
         return NextResponse.json({ error: `No registered College Coordinator account found for email: "${cleanEmail}".` }, { status: 404 });
       }
-      if (providedPwd !== "college@2026" && providedPwd !== "dosclub2026") {
-        return NextResponse.json({ error: "Invalid password for College Coordinator role." }, { status: 401 });
-      }
-      user = {
-        ...DEMO_ACCOUNTS.college,
-        email: cleanEmail,
-      };
     } else if (role === "admin") {
       const isSuperAdmin = cleanEmail.toLowerCase() === "admin@dosclub.org";
       if (!isSuperAdmin) {

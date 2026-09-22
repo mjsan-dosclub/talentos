@@ -86,6 +86,7 @@ export default function MentorsTab({
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingExpert, setEditingExpert] = useState<ExpertMentor | null>(null);
+  const [editPassword, setEditPassword] = useState("");
 
   // New Mentor Form State (All synchronized fields)
   const initialFormState = {
@@ -98,6 +99,7 @@ export default function MentorsTab({
     avatar: "",
     linkedinUrl: "",
     githubUrl: "",
+    password: "",
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -240,6 +242,7 @@ export default function MentorsTab({
 
   const handleOpenEditModal = (exp: ExpertMentor) => {
     setEditingExpert(exp);
+    setEditPassword("");
     setEditWorkshopTags(exp.assignedWorkshops || []);
     setEditWorkshopInput("");
     setOpenKebabId(null);
@@ -247,7 +250,7 @@ export default function MentorsTab({
 
   const handleCreateMentor = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName.trim() || !formData.email.trim() || !formData.phone.trim()) return;
+    if (!formData.fullName.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.password.trim()) return;
 
     const created: ExpertMentor = {
       id: `exp-${String(experts.length + 1).padStart(3, "0")}`,
@@ -267,7 +270,7 @@ export default function MentorsTab({
       status: "ACTIVE",
     };
 
-    const response = await fetch("/api/experts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(created) });
+    const response = await fetch("/api/experts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...created, password: formData.password.trim() }) });
     const result = await response.json();
     if (!response.ok || !result.success) { onToast(`Failed to register expert: ${result.error || "Server error"}`); return; }
     setExperts([result.expert, ...experts]);
@@ -293,7 +296,7 @@ export default function MentorsTab({
       assignedWorkshops: editWorkshopTags,
     };
 
-    const response = await fetch("/api/experts", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(updated) });
+    const response = await fetch("/api/experts", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...updated, ...(editPassword.trim() ? { password: editPassword.trim() } : {}) }) });
     const result = await response.json();
     if (!response.ok || !result.success) { onToast(`Failed to save expert: ${result.error || "Server error"}`); return; }
     setExperts((prev) => prev.map((exp) => (exp.id === updated.id ? result.expert : exp)));
@@ -305,6 +308,7 @@ export default function MentorsTab({
     );
     onToast(`Saved changes for ${updated.fullName}`);
     setEditingExpert(null);
+    setEditPassword("");
   };
 
   return (
@@ -822,6 +826,14 @@ export default function MentorsTab({
                   className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800" />
               </div>
 
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Initial Portal Password:</label>
+                <input type="password" required minLength={8} value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="At least 8 characters; share securely with the expert"
+                  className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800" />
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-slate-700">Company / Organization:</label>
@@ -1116,6 +1128,14 @@ export default function MentorsTab({
                 <input type="tel" required value={editingExpert.phone || ""}
                   onChange={(e) => setEditingExpert({ ...editingExpert, phone: e.target.value })}
                   placeholder="Enter WhatsApp or mobile number"
+                  className="border border-slate-300 rounded-lg p-2" />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Reset Portal Password (optional):</label>
+                <input type="password" minLength={8} value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Leave blank to keep the current password"
                   className="border border-slate-300 rounded-lg p-2" />
               </div>
 

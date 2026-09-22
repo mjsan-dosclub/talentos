@@ -47,6 +47,7 @@ export default function InstitutionsTab({
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [editingInst, setEditingInst] = useState<PartnerInstitution | null>(null);
+  const [editPassword, setEditPassword] = useState("");
 
   const exportInstitutions = () => {
     const source = selectedIds.size > 0 ? filtered.filter((institution) => selectedIds.has(institution.id)) : filtered;
@@ -76,6 +77,7 @@ export default function InstitutionsTab({
     pocRole: "",
     pocEmail: "",
     pocPhone: "",
+    password: "",
   };
   const [formData, setFormData] = useState(initialFormState);
 
@@ -182,6 +184,7 @@ export default function InstitutionsTab({
       state: formData.state.trim() || "Tamil Nadu",
       tier: formData.tier,
       region: formData.region,
+      password: formData.password.trim(),
     };
 
     try {
@@ -234,7 +237,7 @@ export default function InstitutionsTab({
   const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingInst) return;
-    const response = await fetch("/api/institutions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(editingInst) });
+    const response = await fetch("/api/institutions", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...editingInst, ...(editPassword.trim() ? { password: editPassword.trim() } : {}) }) });
     const result = await response.json();
     if (!response.ok || !result.success) { onToast(`Failed to save college: ${result.error || "Server error"}`); return; }
     setInstitutions((prev) =>
@@ -248,6 +251,7 @@ export default function InstitutionsTab({
     );
     onToast(`Saved changes for ${editingInst.name}`);
     setEditingInst(null);
+    setEditPassword("");
   };
 
   return (
@@ -479,6 +483,7 @@ export default function InstitutionsTab({
                               <button
                                 onClick={() => {
                                   setEditingInst(inst);
+                                  setEditPassword("");
                                   setOpenKebabId(null);
                                 }}
                                 className="w-full px-3 py-1.5 text-slate-700 hover:bg-slate-50 flex items-center gap-2 cursor-pointer font-medium"
@@ -693,6 +698,19 @@ export default function InstitutionsTab({
                 </div>
               </div>
 
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Initial Portal Password:</label>
+                <input
+                  type="password"
+                  required
+                  minLength={8}
+                  value={formData.password}
+                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  placeholder="At least 8 characters; share securely with the coordinator"
+                  className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800"
+                />
+              </div>
+
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
@@ -859,6 +877,18 @@ export default function InstitutionsTab({
                     className="border border-slate-300 rounded-lg p-2"
                   />
                 </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-semibold text-slate-700">Reset Portal Password (optional):</label>
+                <input
+                  type="password"
+                  minLength={8}
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  placeholder="Leave blank to keep the current password"
+                  className="border border-slate-300 rounded-lg p-2"
+                />
               </div>
 
               <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
