@@ -53,7 +53,7 @@ function AdminDashboardContent() {
   useEffect(() => {
     let cancelled = false;
     async function checkAccess() {
-      const response = await fetch("/api/auth/session", { cache: "no-store" }).catch(() => null);
+      const response = await fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" }).catch(() => null);
       const data = response?.ok ? await response.json() : null;
       const session = data?.user || getClientSession();
       if (cancelled) return;

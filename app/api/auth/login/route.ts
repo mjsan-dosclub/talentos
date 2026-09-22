@@ -119,6 +119,7 @@ export async function POST(request: Request) {
       path: "/",
       maxAge: 604800,
       sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
       httpOnly: true,
     });
 
