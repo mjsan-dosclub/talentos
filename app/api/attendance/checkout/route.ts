@@ -61,12 +61,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This attendance record has already been checked out." }, { status: 409 });
     }
 
-    const { error: feedbackError } = await supabaseAdmin.from("session_feedback").insert({
+    const { error: feedbackError } = await supabaseAdmin.from("session_feedback").upsert({
       attendance_id: existing.id,
       rating,
       key_learning: reflectionText,
       confidence_score: 4,
-    });
+    }, { onConflict: "attendance_id" });
     if (feedbackError) throw feedbackError;
 
     const finalStatus = existing.status === "LATE" ? "LATE" : "PRESENT";
