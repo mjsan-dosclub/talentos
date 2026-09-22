@@ -5,7 +5,7 @@ Scope: `qa` branch and QA Supabase project only. Production and `main` were not 
 
 ## Verified
 
-- QA branch is at commit `27e5939`.
+- QA branch includes the verified portal isolation fixes through commit `ba7176d`.
 - Production build passes with TypeScript compilation.
 - Live QA Supabase contract checks pass: 5/5.
 - Migrations `013_role_credentials.sql` and `015_attendance_qr_tokens.sql` are applied in QA.
@@ -18,10 +18,13 @@ Scope: `qa` branch and QA Supabase project only. Production and `main` were not 
 - Remaining admin mutation routes identified in the role audit are protected server-side.
 - Student assessments, skills, certifications, and feedback reads require authentication and student ownership checks.
 - Super Admin credentials are no longer hard-coded; they are read from deployment secrets.
+- Authenticated student, expert, and college portals no longer use the legacy demo roster or 27-session fallback for live accounts.
+- Student roster API access is server-side role-scoped: students see themselves, colleges see their institution, and experts see assigned-session institutions.
+- College portal identity, roster, metrics, and workshop matrix are sourced from the authenticated college and live schedule.
 
 ## Remaining blockers
 
-- Redeploy the QA Vercel deployment from `qa` commit `27e5939` so the mandatory written-feedback checkout rule is live.
+- Redeploy the QA Vercel deployment from the latest `qa` commit so the portal-isolation and roster access fixes are live.
 - Existing expert and college records need initial passwords set after migration `013`; this is a QA data-setup task, not a code defect.
 - Actual external schedule emails to college POCs, experts, and students are not enabled. The scheduler records an in-app notification dispatch; explicit authorization is still required before sending database-derived recipients email automatically.
 - Master admin users are not implemented. The permission model must be chosen before granting custom admins access to Super Admin capabilities.
