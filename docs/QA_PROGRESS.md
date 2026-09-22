@@ -1,36 +1,31 @@
 # TalentOS QA Progress
 
-Last reviewed: 2026-09-16
-Scope: `qa` branch and QA Supabase project only.
+Last reviewed: 2026-09-22
+Scope: `qa` branch and QA Supabase project only. Production and `main` were not modified.
 
 ## Verified
 
-- QA deployment loads successfully.
-- Admin credential login works.
-- Enquiry submission is persisted in Supabase and visible in the admin enquiry roster after refresh.
-- Resend gateway dispatch works and includes the configured global CC.
-- Production build passes.
-- Repository contract checks pass: 5/5.
+- QA branch is at commit `7f10e1c`.
+- Production build passes with TypeScript compilation.
+- Live QA Supabase contract checks pass: 5/5.
+- Migrations `013_role_credentials.sql` and `015_attendance_qr_tokens.sql` are applied in QA.
+- Scheduler writes are Super Admin-only; trainer, college, and student schedule reads are role-filtered.
+- Scheduler status rules are enforced: Scheduled/Postponed are manual; Active in Session/Completed are calculated from date and time.
+- Attendance and checkout require a signed session. Student QR operations require a server-issued, expiring token bound to a scheduled session and active master workshop.
+- Checkout requires prior check-in and a 1–5 feedback rating; failed requests do not create a local receipt.
+- Core CSV exports and student bulk CSV upload are implemented.
+- Remaining admin mutation routes identified in the role audit are protected server-side.
+- Super Admin credentials are no longer hard-coded; they are read from deployment secrets.
 
-## Corrected assessment
+## Remaining blockers
 
-Seeded records are QA fixtures created by `scripts/seed-supabase.js`; they are not proof that the corresponding UI create workflows work. The seeded set currently includes 5 students, 27 workshops, and 1 college.
-
-The following acceptance basics require direct UI verification or implementation:
-
-- Workshop create workflow is not yet verified.
-- Student create workflow does not currently collect a mobile number.
-- Landing enquiry form does not clearly collect an applicant name; it is currently institution/contact oriented.
-- Full create/edit/delete persistence has not been verified for every module.
-- CSV export is implemented for enquiries; exports for the remaining modules are pending.
-
-## Security blockers
-
-- Session authorization is not cryptographically signed.
-- Demo/admin credentials remain in application code.
-- Current RLS policies include unrestricted public write policies.
-- Email test endpoint requires access control hardening.
+- The QA Vercel domain was still serving an older build at the last remote check: `GET /api/enquiry` returned `200` instead of the expected unauthenticated `403`. Redeploy the deployment sourced from `qa` commit `7f10e1c`.
+- Existing expert and college records need initial passwords set after migration `013`; this is a QA data-setup task, not a code defect.
+- Actual external schedule emails to college POCs, experts, and students are not enabled. The scheduler records an in-app notification dispatch; explicit authorization is still required before sending database-derived recipients email automatically.
+- Master admin users are not implemented. The permission model must be chosen before granting custom admins access to Super Admin capabilities.
+- Full browser regression of the complete QR check-in and feedback checkout needs one real assigned student, one assigned expert, and a currently active scheduled session.
+- QA Vercel environment must define `SESSION_SECRET`, `SUPER_ADMIN_EMAIL`, and `SUPER_ADMIN_PASSWORD_HASH`.
 
 ## Release decision
 
-**NO-GO for production.** Functional smoke tests are encouraging, but the acceptance-matrix basics and security blockers must be resolved and retested.
+**NO-GO until the QA deployment is refreshed and the remaining blockers above are closed or explicitly accepted.**
