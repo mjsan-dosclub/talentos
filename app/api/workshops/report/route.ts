@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sendEmail, buildWorkshopReportHtml } from "@/lib/email-service";
 import { supabase } from "@/lib/supabase";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 export async function POST(req: NextRequest) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await req.json();
 
