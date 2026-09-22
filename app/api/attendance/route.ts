@@ -102,10 +102,21 @@ export async function POST(request: Request) {
           studentInstitutionId = String(batch?.institution_id || "");
         }
       }
-      if (studentInstitutionId && studentInstitutionId !== scheduled.institution_id) {
-        return NextResponse.json({ error: "This student is not assigned to the scheduled workshop college." }, { status: 403 });
-      }
-      if (!studentInstitutionId && student.institution_name && !String(student.institution_name).toLowerCase().includes(String(scheduled.institution_name).toLowerCase().slice(0, 8))) {
+      const studentInstitutionName = String(student.institution_name || "").trim().toLowerCase();
+      const scheduledInstitutionName = String(scheduled.institution_name || "").trim().toLowerCase();
+      const institutionNameMatches = Boolean(
+        studentInstitutionName &&
+        scheduledInstitutionName &&
+        (studentInstitutionName.includes(scheduledInstitutionName) || scheduledInstitutionName.includes(studentInstitutionName))
+      );
+      // The explicit student institution is authoritative. Older records may
+      // still point through a stale group/batch institution, so use that link
+      // only when no explicit institution name is stored.
+      if (studentInstitutionName) {
+        if (!institutionNameMatches) {
+          return NextResponse.json({ error: "This student is not assigned to the scheduled workshop college." }, { status: 403 });
+        }
+      } else if (studentInstitutionId && studentInstitutionId !== scheduled.institution_id) {
         return NextResponse.json({ error: "This student is not assigned to the scheduled workshop college." }, { status: 403 });
       }
     }
