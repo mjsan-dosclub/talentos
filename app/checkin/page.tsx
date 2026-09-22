@@ -226,8 +226,18 @@ function CheckInContent() {
       const studentRes = await fetch("/api/students");
       const { students } = await studentRes.json();
       const matched = students?.find(
-        (s: any) => s.dos_id.toUpperCase() === dosId.trim().toUpperCase() || s.email.toLowerCase() === dosId.trim().toLowerCase()
+        (s: any) => {
+          const recordDosId = String(s?.dos_id ?? s?.dosId ?? "").trim().toUpperCase();
+          const recordEmail = String(s?.email ?? "").trim().toLowerCase();
+          const entered = dosId.trim();
+          return recordDosId === entered.toUpperCase() || recordEmail === entered.toLowerCase();
+        }
       );
+      if (!matched) {
+        setIsSubmitting(false);
+        setErrorMessage("Your student record could not be loaded. Please sign in again and retry.");
+        return;
+      }
       const studentUuid = currentUser.id;
 
       // Institutional Campus Hub Restriction Check
@@ -562,7 +572,7 @@ function CheckInContent() {
                   type="text"
                   required
                   value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value.toUpperCase())}
+              onChange={(e) => setTokenInput(e.target.value)}
                   placeholder={mode === "CHECK_IN" ? "TKN-XXXXXXXX" : "EXT-XXXXXXXX"}
                   className="border border-[#E6E8EC] bg-[#F4F5F6] rounded-2xl px-4 py-2.5 font-mono text-sm tracking-widest uppercase text-[#23262F] focus:outline-none focus:border-[#23262F]"
                 />
