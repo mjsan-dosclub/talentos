@@ -36,7 +36,7 @@ function LoginContent() {
   useEffect(() => {
     if (errorCode) {
       if (errorCode === "ERR_ACCESS_DENIED_ADMIN_ONLY") {
-        setStatusMessage("Super Admin clearance required. Please sign in with an administrator account.");
+        setStatusMessage("Administrator clearance required. Please sign in with an authorized administrator account.");
       } else if (errorCode === "ERR_ACCESS_DENIED_TRAINER_ONLY") {
         setStatusMessage("Technical Expert clearance required. Please sign in with a trainer account.");
       } else if (errorCode === "ERR_ACCESS_DENIED_COLLEGE_ONLY") {
@@ -104,7 +104,7 @@ function LoginContent() {
       const data = await res.json();
       if (data.user) {
         setClientSession(data.user);
-        const destination = redirectUrl || data.redirect;
+        const destination = data.user.role === "CUSTOM_ADMIN" ? "/admin?tab=students" : redirectUrl || data.redirect;
         window.location.href = destination;
       } else {
         setStatusMessage(data.error || "Invalid email or password. Please verify your credentials.");
