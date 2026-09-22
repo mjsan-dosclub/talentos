@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { getStudents, Student } from "@/lib/db";
 import { formatConfigTime } from "@/lib/datetime";
@@ -52,6 +52,9 @@ export default function TrainerDashboardPage() {
   const [trainerName, setTrainerName] = useState<string>("Priya Sundaram");
   const [trainerId, setTrainerId] = useState<string>("");
   const [activeSession, setActiveSession] = useState<any>(null);
+  const refreshInFlightRef = useRef(false);
+  const rosterSessionRef = useRef("");
+  const rosterRef = useRef<Student[]>([]);
 
   // Read authenticated trainer identity from session
   useEffect(() => {
@@ -75,6 +78,8 @@ export default function TrainerDashboardPage() {
     let cancelled = false;
 
     const issueToken = async () => {
+      if (refreshInFlightRef.current) return;
+      refreshInFlightRef.current = true;
       try {
         const scheduleResponse = await fetch("/api/workshops/schedule", { cache: "no-store" });
         const schedule = await scheduleResponse.json();
@@ -95,13 +100,17 @@ export default function TrainerDashboardPage() {
           return;
         }
         setActiveSession(nextSession);
-        const { students } = await getStudents();
-        const sessionInstitution = String(nextSession.institutionName || "").toLowerCase();
-        const roster = students.filter((student) => {
-          const institution = String((student as any).institution || (student as any).institution_name || "").toLowerCase();
-          return !sessionInstitution || institution === sessionInstitution || institution.includes(sessionInstitution) || sessionInstitution.includes(institution);
-        });
-        setParticipants(roster.map((student) => ({ student, status: "NOT_STARTED", source: "TRAINER_MANUAL" })));
+        let roster = rosterRef.current;
+        if (rosterSessionRef.current !== String(nextSession.id)) {
+          const { students } = await getStudents();
+          const sessionInstitution = String(nextSession.institutionName || "").toLowerCase();
+          roster = students.filter((student) => {
+            const institution = String((student as any).institution || (student as any).institution_name || "").toLowerCase();
+            return !sessionInstitution || institution === sessionInstitution || institution.includes(sessionInstitution) || sessionInstitution.includes(institution);
+          });
+          rosterRef.current = roster;
+          rosterSessionRef.current = String(nextSession.id);
+        }
 
         const tokenResponse = await fetch("/api/attendance/token", {
           method: "POST",
@@ -146,6 +155,8 @@ export default function TrainerDashboardPage() {
           setTokenExpiresAt(0);
           setQrUnavailable(error instanceof Error ? error.message : "Unable to load an attendance QR token.");
         }
+      } finally {
+        refreshInFlightRef.current = false;
       }
     };
 
