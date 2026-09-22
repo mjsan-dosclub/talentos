@@ -380,6 +380,7 @@ TalentOS Automated Dispatch
     const adminEmail = "descienceosclub@gmail.com";
     const adminEmailResult = await sendEmail({
       to: adminEmail,
+      skipGlobalCc: true,
       subject: `🚨 New Admissions Enquiry: ${name} (${currentRole})`,
       text: adminAlertText,
       html: adminAlertHtml,

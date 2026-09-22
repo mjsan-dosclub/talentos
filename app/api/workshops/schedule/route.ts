@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { deserializeSignedSession } from "@/lib/session-server";
 import { buildGoogleCalendarUrl, buildIcsDataUri, ScheduledWorkshopSession } from "@/lib/workshop-schedule";
+import { sendEmail } from "@/lib/email-service";
 
 type DbSession = {
   id: string; workshop_code: string; workshop_title: string; institution_id: string; institution_name: string;
@@ -119,7 +120,37 @@ async function recordAssignmentNotification(body: Record<string, unknown>) {
     created_at: new Date().toISOString(),
   });
   if (result.error) throw result.error;
-  return { recorded: true, emailDispatch: "PENDING_APPROVAL" as const };
+  const [expertResult, institutionResult, studentsResult] = await Promise.all([
+    supabaseAdmin.from("experts").select("full_name,email").eq("id", String(body.trainerId)).maybeSingle(),
+    supabaseAdmin.from("institutions").select("name,contact_email").eq("id", String(body.institutionId)).maybeSingle(),
+    supabaseAdmin.from("students").select("full_name,email,dos_id,institution_name").eq("institution_name", String(body.institutionName)),
+  ]);
+  if (expertResult.error) throw expertResult.error;
+  if (institutionResult.error) throw institutionResult.error;
+  if (studentsResult.error) throw studentsResult.error;
+
+  const scheduleSummary = `Workshop ${String(body.workshopCode)} — ${String(body.workshopTitle)}\nDate: ${String(body.date)}\nTime: ${String(body.startTime)}–${String(body.endTime)} IST\nVenue: ${String(body.venue)}\nFocus: ${String(body.focusTopic)}`;
+  const emailResults = { expert: false, college: false, students: 0 };
+  if (expertResult.data?.email) {
+    try {
+      await sendEmail({ to: expertResult.data.email, subject: `Workshop Assignment: ${String(body.workshopCode)} — ${String(body.workshopTitle)}`, text: `Dear ${expertResult.data.full_name},\n\nYou have been assigned to deliver this workshop.\n\n${scheduleSummary}\n\nOpen your Expert Cockpit: ${process.env.NEXT_PUBLIC_APP_URL || "https://talentos-qa.vercel.app"}/trainer\n\nDOS Club TalentOS` });
+      emailResults.expert = true;
+    } catch (error) { console.warn("[TalentOS] Scheduler expert email exception:", error); }
+  }
+  if (institutionResult.data?.contact_email) {
+    try {
+      await sendEmail({ to: institutionResult.data.contact_email, subject: `Workshop Scheduled: ${String(body.workshopCode)} — ${String(body.institutionName)}`, text: `Dear ${institutionResult.data.name || "College Coordinator"},\n\nA workshop has been scheduled for your college.\n\n${scheduleSummary}\n\nPlease coordinate the participating student batch and campus venue.\n\nDOS Club TalentOS` });
+      emailResults.college = true;
+    } catch (error) { console.warn("[TalentOS] Scheduler college email exception:", error); }
+  }
+  for (const student of studentsResult.data || []) {
+    if (!student.email) continue;
+    try {
+      await sendEmail({ to: student.email, subject: `Workshop Scheduled: ${String(body.workshopCode)} — ${String(body.date)}`, text: `Dear ${student.full_name},\n\nYour college has a scheduled TalentOS workshop for your student batch.\n\n${scheduleSummary}\nStudent ID: ${student.dos_id}\n\nYour trainer will start the workshop before check-in becomes available.\n\nDOS Club TalentOS` });
+      emailResults.students += 1;
+    } catch (error) { console.warn("[TalentOS] Scheduler student email exception:", error); }
+  }
+  return { recorded: true, emailDispatch: emailResults };
 }
 
 export async function GET(req: NextRequest) {
@@ -163,7 +194,7 @@ export async function POST(req: NextRequest) {
     if (await conflict(body)) return NextResponse.json({ success: false, error: "This expert is already assigned to an overlapping workshop on that date." }, { status: 409 });
     const result = await supabaseAdmin.from("scheduled_workshop_sessions").insert(payload(body)).select("*").single();
     if (result.error) throw result.error;
-    let notifications = { recorded: false, emailDispatch: "PENDING_APPROVAL" as const };
+    let notifications: { recorded: boolean; emailDispatch: unknown } = { recorded: false, emailDispatch: "PENDING_APPROVAL" };
     try {
       notifications = await recordAssignmentNotification(body);
     } catch (notificationError) {
