@@ -5,7 +5,7 @@ Scope: `qa` branch and QA Supabase project only. Production and `main` were not 
 
 ## Verified
 
-- QA branch is at commit `2f0fee1`.
+- QA branch is at commit `ccf288d`.
 - Production build passes with TypeScript compilation.
 - Live QA Supabase contract checks pass: 5/5.
 - Migrations `013_role_credentials.sql` and `015_attendance_qr_tokens.sql` are applied in QA.
@@ -16,6 +16,7 @@ Scope: `qa` branch and QA Supabase project only. Production and `main` were not 
 - Core CSV exports and student bulk CSV upload are implemented.
 - Workshop scheduler list/selected CSV export is implemented.
 - Remaining admin mutation routes identified in the role audit are protected server-side.
+- Student assessments, skills, certifications, and feedback reads require authentication and student ownership checks.
 - Super Admin credentials are no longer hard-coded; they are read from deployment secrets.
 
 ## Remaining blockers
