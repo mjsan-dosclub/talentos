@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { sendEmail } from "@/lib/email-service";
 import { StudentMember, INITIAL_STUDENTS } from "@/lib/admin-data";
-import { requireSuperAdmin } from "@/lib/api-auth";
+import { requireAdminPermission } from "@/lib/api-auth";
 import { cookies } from "next/headers";
 import { SESSION_COOKIE_NAME } from "@/lib/session";
 import { deserializeSignedSession } from "@/lib/session-server";
@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
           trainerInstitutions = (assignedSessions || []).flatMap((row: any) => [row.institution_id, row.institution_name]).filter(Boolean).map(String);
         }
         const visibleStudents = dbStudents.filter((student: any) => {
-          if (session.role === "SUPER_ADMIN") return true;
+          if (session.role === "SUPER_ADMIN" || (session.role === "CUSTOM_ADMIN" && session.permissions?.includes("STUDENTS"))) return true;
           if (session.role === "STUDENT") return String(student.id) === String(session.id);
           if (session.role === "COLLEGE_ADMIN") {
             const institution = String(student.institution_name || "").toLowerCase();
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
 
     // 2. Fallback to disk store
     const students = getStudents(includeArchived).filter((student: any) => {
-      if (session.role === "SUPER_ADMIN") return true;
+      if (session.role === "SUPER_ADMIN" || (session.role === "CUSTOM_ADMIN" && session.permissions?.includes("STUDENTS"))) return true;
       if (session.role === "STUDENT") return String(student.id) === String(session.id);
       if (session.role === "COLLEGE_ADMIN") {
         const institution = String(student.institution || "").toLowerCase();
@@ -111,7 +111,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
-  const denied = await requireSuperAdmin(); if (denied) return denied;
+  const denied = await requireAdminPermission("STUDENTS"); if (denied) return denied;
   try {
     const body = await request.json();
     const { dos_id, dosId, full_name, fullName, email, phone, department, institution, batch } = body;
@@ -288,7 +288,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PATCH(request: NextRequest) {
-  const denied = await requireSuperAdmin(); if (denied) return denied;
+  const denied = await requireAdminPermission("STUDENTS"); if (denied) return denied;
   try {
     const body = await request.json();
     const { id, status, restore, ...rest } = body;
@@ -333,7 +333,7 @@ export async function PATCH(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
-  const denied = await requireSuperAdmin(); if (denied) return denied;
+  const denied = await requireAdminPermission("STUDENTS"); if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     let id = searchParams.get("id");

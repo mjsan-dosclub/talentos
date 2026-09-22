@@ -38,7 +38,7 @@ export default function StudentsTab({
 
   useEffect(() => {
     const session = getClientSession();
-    setIsAdmin(session?.role === "SUPER_ADMIN");
+    setIsAdmin(session?.role === "SUPER_ADMIN" || (session?.role === "CUSTOM_ADMIN" && session.permissions?.includes("STUDENTS") === true));
   }, []);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
