@@ -34,8 +34,6 @@ interface ParticipantState {
 export default function TrainerDashboardPage() {
   const [participants, setParticipants] = useState<ParticipantState[]>([]);
   const [qrToken, setQrToken] = useState<string>("");
-  const [secondsLeft, setSecondsLeft] = useState<number>(0);
-  const [tokenExpiresAt, setTokenExpiresAt] = useState<number>(0);
   const [activeSessionId, setActiveSessionId] = useState<string>("");
   const [activeWorkshopId, setActiveWorkshopId] = useState<string>("");
   const [activeWorkshopCode, setActiveWorkshopCode] = useState<string>("");
@@ -96,7 +94,6 @@ export default function TrainerDashboardPage() {
             setQrImage("");
             setActiveSessionId("");
             setActiveWorkshopCode("");
-            setTokenExpiresAt(0);
             setQrUnavailable("No scheduled workshop is currently available for your trainer account.");
           }
           return;
@@ -125,6 +122,9 @@ export default function TrainerDashboardPage() {
 
         const attendanceResponse = await fetch(`/api/attendance?workshop_id=${encodeURIComponent(String(tokenData.workshopId))}`, { cache: "no-store" });
         const attendanceData = attendanceResponse.ok ? await attendanceResponse.json() : { attendance: [] };
+        const recognitionResponse = await fetch(`/api/recognitions?session_id=${encodeURIComponent(String(tokenData.sessionId))}`, { cache: "no-store" });
+        const recognitionData = recognitionResponse.ok ? await recognitionResponse.json() : { recognitions: [] };
+        const recognizedStudents = new Set<string>((recognitionData.recognitions || []).map((record: any) => String(record.student_id)));
         const attendanceByStudent = new Map<string, any>((attendanceData.attendance || []).map((record: any) => [String(record.student_id), record]));
         setParticipants(roster.map((student) => {
           const record = attendanceByStudent.get(String(student.id));
@@ -133,7 +133,7 @@ export default function TrainerDashboardPage() {
             : record?.status === "LATE" ? "LATE"
             : record?.status === "CHECKED_IN" ? "CHECKED_IN"
             : "NOT_STARTED";
-          return { student, status, source: record?.source === "QR_SCAN" ? "QR_SCAN" : "TRAINER_MANUAL", checkInTime: record?.check_in_time };
+          return { student, status, source: record?.source === "QR_SCAN" ? "QR_SCAN" : "TRAINER_MANUAL", checkInTime: record?.check_in_time, isStandout: recognizedStudents.has(String(student.id)) };
         }));
 
         const sessionId = String(tokenData.sessionId);
@@ -148,13 +148,11 @@ export default function TrainerDashboardPage() {
         setActiveWorkshopCode(workshopCode);
         setQrToken(token);
         setQrImage(image);
-        setTokenExpiresAt(new Date(tokenData.expiresAt).getTime());
         setQrUnavailable("");
       } catch (error) {
         if (!cancelled) {
           setQrToken("");
           setQrImage("");
-          setTokenExpiresAt(0);
           setQrUnavailable(error instanceof Error ? error.message : "Unable to load an attendance QR token.");
         }
       } finally {
@@ -168,34 +166,24 @@ export default function TrainerDashboardPage() {
     };
   }, [qrRefreshRequest]);
 
-  useEffect(() => {
-    if (!tokenExpiresAt) {
-      setSecondsLeft(0);
+  // Standout Recognition Tagger
+  const toggleStandout = async (participant: ParticipantState) => {
+    if (!activeSessionId) return;
+    const next = !participant.isStandout;
+    const response = await fetch("/api/recognitions", {
+      method: next ? "POST" : "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: activeSessionId, student_id: participant.student.id }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      setNotification(result.error || "Recognition could not be saved.");
+      setTimeout(() => setNotification(null), 4000);
       return;
     }
-    const updateCountdown = () => setSecondsLeft(Math.max(0, Math.ceil((tokenExpiresAt - Date.now()) / 1000)));
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 250);
-    return () => clearInterval(interval);
-  }, [tokenExpiresAt]);
-
-  // Standout Recognition Tagger
-  const toggleStandout = (dosId: string) => {
-    setParticipants((prev) =>
-      prev.map((p) => {
-        if (p.student.dos_id === dosId) {
-          const next = !p.isStandout;
-          setNotification(
-            next
-              ? `Standout engineering recognition awarded to ${p.student.full_name}`
-              : `Recognition tag cleared for ${p.student.full_name}`
-          );
-          setTimeout(() => setNotification(null), 3500);
-          return { ...p, isStandout: next };
-        }
-        return p;
-      })
-    );
+    setParticipants((prev) => prev.map((p) => p.student.id === participant.student.id ? { ...p, isStandout: next } : p));
+    setNotification(next ? `Standout engineering recognition awarded to ${participant.student.full_name}` : `Recognition tag cleared for ${participant.student.full_name}`);
+    setTimeout(() => setNotification(null), 3500);
   };
 
   // Manual Exception Resolution
@@ -448,9 +436,6 @@ export default function TrainerDashboardPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
                   Dynamic Attendance QR
                 </span>
-                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
-                  Expires in {String(secondsLeft).padStart(2, "0")}s
-                </span>
               </div>
 
               {/* High-Contrast Optical QR Code (100% Scannable by Mobile Cameras) */}
@@ -579,7 +564,7 @@ export default function TrainerDashboardPage() {
 
                       <button
                         type="button"
-                        onClick={() => toggleStandout(p.student.dos_id)}
+                        onClick={() => toggleStandout(p)}
                         className={`px-2.5 py-1 text-xs rounded-lg border transition-all cursor-pointer inline-flex items-center gap-1.5 shrink-0 ${
                           p.isStandout
                             ? "bg-purple-100 text-purple-900 border-purple-300 font-semibold shadow-2xs"
