@@ -131,6 +131,8 @@ async function recordAssignmentNotification(body: Record<string, unknown>) {
 
   const scheduleSummary = `Workshop ${String(body.workshopCode)} — ${String(body.workshopTitle)}\nDate: ${String(body.date)}\nTime: ${String(body.startTime)}–${String(body.endTime)} IST\nVenue: ${String(body.venue)}\nFocus: ${String(body.focusTopic)}`;
   const emailResults = { expert: false, college: false, students: 0 };
+  const studentBatchSize = 5;
+  const studentBatchGapMs = 2000;
   if (expertResult.data?.email) {
     try {
       await sendEmail({ to: expertResult.data.email, subject: `Workshop Assignment: ${String(body.workshopCode)} — ${String(body.workshopTitle)}`, text: `Dear ${expertResult.data.full_name},\n\nYou have been assigned to deliver this workshop.\n\n${scheduleSummary}\n\nOpen your Expert Cockpit: ${process.env.NEXT_PUBLIC_APP_URL || "https://talentos-qa.vercel.app"}/trainer\n\nDOS Club TalentOS` });
@@ -143,14 +145,25 @@ async function recordAssignmentNotification(body: Record<string, unknown>) {
       emailResults.college = true;
     } catch (error) { console.warn("[TalentOS] Scheduler college email exception:", error); }
   }
-  for (const student of studentsResult.data || []) {
-    if (!student.email) continue;
+  const students = (studentsResult.data || []).filter((student) => Boolean(student.email));
+  for (const [index, student] of students.entries()) {
     try {
       await sendEmail({ to: student.email, subject: `Workshop Scheduled: ${String(body.workshopCode)} — ${String(body.date)}`, text: `Dear ${student.full_name},\n\nYour college has a scheduled TalentOS workshop for your student batch.\n\n${scheduleSummary}\nStudent ID: ${student.dos_id}\n\nYour trainer will start the workshop before check-in becomes available.\n\nDOS Club TalentOS` });
       emailResults.students += 1;
     } catch (error) { console.warn("[TalentOS] Scheduler student email exception:", error); }
+    if ((index + 1) % studentBatchSize === 0 && index + 1 < students.length) {
+      await new Promise((resolve) => setTimeout(resolve, studentBatchGapMs));
+    }
   }
-  return { recorded: true, emailDispatch: emailResults };
+  return {
+    recorded: true,
+    emailDispatch: {
+      ...emailResults,
+      studentBatchSize,
+      studentBatchGapMs,
+      studentBatches: Math.ceil(students.length / studentBatchSize),
+    },
+  };
 }
 
 export async function GET(req: NextRequest) {

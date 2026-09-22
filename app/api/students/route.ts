@@ -30,7 +30,9 @@ export async function GET(request: NextRequest) {
         .select("*")
         .order("created_at", { ascending: true });
 
-      if (!dbErr && dbStudents && dbStudents.length > 0) {
+      // A successful empty Supabase result is authoritative. Do not fall back to
+      // the legacy disk fixture, otherwise deleted/empty live data reappears in admin.
+      if (!dbErr && dbStudents) {
         const { data: attendanceRows } = await supabaseAdmin
           .from("attendance_records")
           .select("student_id,status,check_in_time,check_out_time")
