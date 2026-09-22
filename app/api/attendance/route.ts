@@ -24,7 +24,16 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ attendance: data, isLiveDb: true });
+    const workshopIds = [...new Set((data || []).map((row: any) => String(row.workshop_id)).filter(Boolean))];
+    const workshopCodes = new Map<string, string>();
+    if (workshopIds.length) {
+      const { data: workshops } = await supabaseAdmin.from("workshops").select("id,code").in("id", workshopIds);
+      (workshops || []).forEach((workshop: any) => workshopCodes.set(String(workshop.id), String(workshop.code || "")));
+    }
+    return NextResponse.json({
+      attendance: (data || []).map((row: any) => ({ ...row, workshop_code: workshopCodes.get(String(row.workshop_id)) || "" })),
+      isLiveDb: true,
+    });
   } catch (err: any) {
     return NextResponse.json({ error: err?.message || "Server Error" }, { status: 500 });
   }

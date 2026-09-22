@@ -109,6 +109,19 @@ export default function TrainerDashboardPage() {
         if (!tokenResponse.ok) throw new Error(tokenData.error || "Unable to issue an attendance QR token.");
         if (cancelled) return;
 
+        const attendanceResponse = await fetch(`/api/attendance?workshop_id=${encodeURIComponent(String(tokenData.workshopId))}`, { cache: "no-store" });
+        const attendanceData = attendanceResponse.ok ? await attendanceResponse.json() : { attendance: [] };
+        const attendanceByStudent = new Map<string, any>((attendanceData.attendance || []).map((record: any) => [String(record.student_id), record]));
+        setParticipants(roster.map((student) => {
+          const record = attendanceByStudent.get(String(student.id));
+          const status = record?.status === "PRESENT" || record?.status === "COMPLETED" || record?.status === "MANUALLY_CONFIRMED"
+            ? "COMPLETED"
+            : record?.status === "LATE" ? "LATE"
+            : record?.status === "CHECKED_IN" ? "CHECKED_IN"
+            : "NOT_STARTED";
+          return { student, status, source: record?.source === "QR_SCAN" ? "QR_SCAN" : "TRAINER_MANUAL", checkInTime: record?.check_in_time };
+        }));
+
         const sessionId = String(tokenData.sessionId);
         const token = String(tokenData.token);
         const workshopCode = String(tokenData.workshopCode);

@@ -31,6 +31,14 @@ export async function GET(request: NextRequest) {
         .order("created_at", { ascending: true });
 
       if (!dbErr && dbStudents && dbStudents.length > 0) {
+        const { data: attendanceRows } = await supabaseAdmin
+          .from("attendance_records")
+          .select("student_id,status,check_in_time,check_out_time")
+          .in("status", ["CHECKED_IN", "PRESENT", "LATE", "COMPLETED", "MANUALLY_CONFIRMED"]);
+        const progressByStudent = new Map<string, number>();
+        (attendanceRows || []).forEach((row: any) => {
+          progressByStudent.set(String(row.student_id), (progressByStudent.get(String(row.student_id)) || 0) + 1);
+        });
         let trainerInstitutions: string[] = [];
         if (session.role === "TRAINER") {
           const { data: assignedSessions } = await supabaseAdmin
@@ -67,7 +75,7 @@ export async function GET(request: NextRequest) {
             department: s.department || "Computer Science & Engineering",
             institution: s.institution_name || (s.department?.includes("Anna") ? "Anna University Campus Hub" : s.department || "Partner Institution Hub"),
             batch: "Batch 3 - 2026",
-            completedWorkshops: 0,
+            completedWorkshops: progressByStudent.get(String(s.id)) || 0,
             status: s.is_archived ? "ARCHIVED" : "ACTIVE",
             avatar: s.avatar_url || "",
           }));

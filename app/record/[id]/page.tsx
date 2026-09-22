@@ -491,15 +491,18 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
   // it must never be used as a fallback for a real student or college account.
   useEffect(() => {
     if (!currentUser) return;
-    fetch("/api/workshops/schedule", { cache: "no-store" })
-      .then((response) => response.json())
-      .then((data) => {
+    Promise.all([
+      fetch("/api/workshops/schedule", { cache: "no-store" }).then((response) => response.json()),
+      fetch("/api/attendance", { cache: "no-store" }).then((response) => response.ok ? response.json() : { attendance: [] }),
+    ]).then(([data, attendanceData]) => {
+        const attendanceByCode = new Map<string, any>((attendanceData.attendance || []).map((record: any) => [String(record.workshop_code || "").toUpperCase(), record]));
         const records = (data.sessions || []).map((session: any, index: number): WorkshopRecord => ({
           index: index + 1,
           code: String(session.workshopCode || ""),
           title: String(session.workshopTitle || "Workshop"),
           topic: String(session.focusTopic || ""),
-          state: session.status === "COMPLETED" ? "COMPLETED" : session.status === "ACTIVE_IN_SESSION" ? "CHECKED_IN" : session.status === "POSTPONED" ? "INCOMPLETE" : "REGISTERED",
+          state: attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.status === "PRESENT" || attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.status === "COMPLETED" ? "COMPLETED" : attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.status === "LATE" ? "LATE" : attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.status === "CHECKED_IN" ? "CHECKED_IN" : session.status === "COMPLETED" ? "COMPLETED" : session.status === "ACTIVE_IN_SESSION" ? "CHECKED_IN" : session.status === "POSTPONED" ? "INCOMPLETE" : "REGISTERED",
+          attendanceId: attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.id,
         }));
         setLiveWorkshopRecords(records);
       })
