@@ -37,6 +37,7 @@ export default function TrainerDashboardPage() {
   const [secondsLeft, setSecondsLeft] = useState<number>(0);
   const [tokenExpiresAt, setTokenExpiresAt] = useState<number>(0);
   const [activeSessionId, setActiveSessionId] = useState<string>("");
+  const [activeWorkshopId, setActiveWorkshopId] = useState<string>("");
   const [activeWorkshopCode, setActiveWorkshopCode] = useState<string>("");
   const [qrImage, setQrImage] = useState<string>("");
   const [qrUnavailable, setQrUnavailable] = useState<string>("Loading your assigned session…");
@@ -130,6 +131,7 @@ export default function TrainerDashboardPage() {
         if (cancelled) return;
 
         setActiveSessionId(sessionId);
+        setActiveWorkshopId(String(tokenData.workshopId));
         setActiveWorkshopCode(workshopCode);
         setQrToken(token);
         setQrImage(image);
@@ -184,12 +186,33 @@ export default function TrainerDashboardPage() {
   };
 
   // Manual Exception Resolution
-  const handleResolveException = (e: React.FormEvent) => {
+  const handleResolveException = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!activeModalStudent) return;
 
     const reason = exceptionReason === "OTHER" ? customReasonText.trim() : exceptionReason;
     if (!reason) return;
+
+    const response = await fetch("/api/attendance", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        student_id: activeModalStudent.student.id,
+        workshop_id: activeWorkshopId,
+        session_id: activeSessionId,
+        status: "CHECKED_IN",
+        source: "TRAINER_MANUAL",
+        check_in_time: new Date().toISOString(),
+        override_reason: reason,
+        manual_override_by: trainerName,
+      }),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      setNotification(result.error || "Manual attendance could not be saved.");
+      setTimeout(() => setNotification(null), 4000);
+      return;
+    }
 
     setParticipants((prev) =>
       prev.map((p) => {
@@ -396,10 +419,10 @@ export default function TrainerDashboardPage() {
                         className="w-48 h-48 rounded-lg object-contain"
                       />
                     </div>
-                    <div className="font-mono text-xs text-slate-800 mt-3 font-bold tracking-wider flex items-center gap-2">
+                    <div className="font-mono text-xs text-slate-800 mt-3 font-bold tracking-wider flex items-start gap-2 w-full min-w-0">
                       <span className="text-slate-400">TOKEN:</span>
                       <span
-                        className="px-2.5 py-0.5 rounded bg-slate-100 border border-slate-300 text-slate-900 font-bold"
+                        className="px-2.5 py-0.5 rounded bg-slate-100 border border-slate-300 text-slate-900 font-bold break-all text-left min-w-0"
                         suppressHydrationWarning
                       >
                         {mounted ? qrToken : "ISSUING TOKEN"}

@@ -203,15 +203,18 @@ export async function DELETE(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   const denied = await requireSuperAdmin(); if (denied) return denied;
   const body = await req.json();
-  const { id, name, code, pocName, pocEmail, pocPhone, ...rest } = body;
+  const { id, name, code, pocName, pocEmail, pocPhone } = body;
   if (!id) return NextResponse.json({ error: "Institution id required." }, { status: 400 });
-  const updates: any = { ...rest };
-  delete updates.password;
+  const updates: Record<string, unknown> = {};
   if (name !== undefined) updates.name = name;
   if (code !== undefined) updates.code = code;
   if (pocName !== undefined) updates.contact_person = pocName;
   if (pocEmail !== undefined) updates.contact_email = pocEmail;
   if (pocPhone !== undefined) updates.contact_phone = pocPhone;
+  if (body.lat !== undefined) updates.default_lat = Number(body.lat);
+  if (body.lng !== undefined) updates.default_lng = Number(body.lng);
+  if (body.geofenceRadiusMeters !== undefined) updates.geofence_radius_meters = Number(body.geofenceRadiusMeters);
+  if (body.status !== undefined) updates.is_active = body.status === "ACTIVE";
   if (typeof body.password === "string" && body.password.trim()) {
     if (body.password.trim().length < 8) return NextResponse.json({ error: "Password must be at least 8 characters." }, { status: 400 });
     updates.password_hash = hashPassword(body.password.trim());
