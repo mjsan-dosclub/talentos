@@ -16,7 +16,7 @@ export default function PwaRegister() {
   useEffect(() => {
     // Keep the install prompt hidden in QA/preview. Enable it explicitly in the
     // production deployment with NEXT_PUBLIC_ENABLE_PWA_INSTALL=true.
-    const installPromptEnabled = process.env.NEXT_PUBLIC_ENABLE_PWA_INSTALL === "true";
+    const installPromptEnabled = process.env.NEXT_PUBLIC_ENABLE_PWA_INSTALL === "true" && process.env.NEXT_PUBLIC_APP_ENV === "production";
     // 1. Check if already running standalone PWA
     if (typeof window !== "undefined") {
       const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (window.navigator as any).standalone;

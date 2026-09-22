@@ -64,7 +64,7 @@ function LoginContent() {
       const data = await res.json();
       if (data.user) {
         setClientSession(data.user);
-        const destination = redirectUrl || data.redirect;
+        const destination = data.user.role === "CUSTOM_ADMIN" ? "/admin?tab=students" : redirectUrl || data.redirect;
         window.location.href = destination;
       } else {
         setStatusMessage("Could not sign in with demo credentials. Please try again.");
