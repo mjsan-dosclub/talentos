@@ -61,7 +61,12 @@ function AdminDashboardContent() {
       const permissionByTab: Record<string, string> = {
         students: "STUDENTS", workshops: "WORKSHOPS", schedule: "WORKSHOPS", institutions: "INSTITUTIONS", mentors: "EXPERTS", experts: "EXPERTS", notifications: "NOTIFICATIONS", push: "NOTIFICATIONS", governance: "GOVERNANCE", audit: "GOVERNANCE", settings: "SETTINGS",
       };
-      const permitted = session?.role === "SUPER_ADMIN" || (session?.role === "CUSTOM_ADMIN" && Boolean(session.permissions?.includes(permissionByTab[rawTab] as any)));
+      const permission = permissionByTab[rawTab];
+      const permissions = (session?.permissions || []).map((item) => item.toUpperCase());
+      const permitted = session?.role === "SUPER_ADMIN" || (
+        session?.role === "CUSTOM_ADMIN" &&
+        ((permission && permissions.includes(permission)) || (!permission && rawTab === "students"))
+      );
       if (!session || !permitted || (rawTab === "users" && session.role !== "SUPER_ADMIN")) {
         router.replace(
           `/login?error=ERR_ACCESS_DENIED_ADMIN_ONLY&redirect=${encodeURIComponent(
