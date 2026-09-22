@@ -71,6 +71,24 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "This role cannot record attendance." }, { status: 403 });
     }
 
+    // Never trust the browser's display name for the audit foreign key. The
+    // trainer UI may have an older local-session cache, while the signed
+    // server session remains authoritative. Resolve the trainer UUID on the
+    // server before writing a manual attendance record.
+    let verifiedManualOverrideBy: string | null = null;
+    if (session.role === "TRAINER" && source === "TRAINER_MANUAL") {
+      const { data: trainer, error: trainerError } = await supabaseAdmin
+        .from("experts")
+        .select("id")
+        .eq("email", String(session.email || "").trim().toLowerCase())
+        .maybeSingle();
+      if (trainerError) return NextResponse.json({ error: trainerError.message }, { status: 500 });
+      verifiedManualOverrideBy = trainer?.id ? String(trainer.id) : null;
+      if (!verifiedManualOverrideBy) {
+        return NextResponse.json({ error: "Authenticated trainer record could not be resolved." }, { status: 403 });
+      }
+    }
+
     let verifiedWorkshopId = String(workshop_id);
     if (session.role === "STUDENT") {
       if (!session_id || !qr_token) return NextResponse.json({ error: "A current workshop QR token is required." }, { status: 400 });
@@ -154,7 +172,7 @@ export async function POST(request: Request) {
           check_in_lat: check_in_lat !== undefined ? check_in_lat : null,
           check_in_lng: check_in_lng !== undefined ? check_in_lng : null,
           override_reason: override_reason !== undefined ? override_reason : null,
-          manual_override_by: manual_override_by !== undefined ? manual_override_by : null,
+          manual_override_by: verifiedManualOverrideBy || (session.role === "SUPER_ADMIN" ? manual_override_by || null : null),
           updated_at: new Date().toISOString(),
         })
         .eq("id", existing.id)
@@ -178,7 +196,7 @@ export async function POST(request: Request) {
           check_in_lat: check_in_lat !== undefined ? check_in_lat : null,
           check_in_lng: check_in_lng !== undefined ? check_in_lng : null,
           override_reason: override_reason !== undefined ? override_reason : null,
-          manual_override_by: manual_override_by !== undefined ? manual_override_by : null,
+          manual_override_by: verifiedManualOverrideBy || (session.role === "SUPER_ADMIN" ? manual_override_by || null : null),
           updated_at: new Date().toISOString(),
         })
         .select()

@@ -217,7 +217,6 @@ export default function TrainerDashboardPage() {
         source: "TRAINER_MANUAL",
         check_in_time: new Date().toISOString(),
         override_reason: reason,
-        manual_override_by: trainerId || null,
       }),
     });
     const result = await response.json();
