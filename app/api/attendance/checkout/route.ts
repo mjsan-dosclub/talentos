@@ -69,7 +69,7 @@ export async function POST(request: Request) {
     }, { onConflict: "attendance_id" });
     if (feedbackError) throw feedbackError;
 
-    const finalStatus = existing.status === "LATE" ? "LATE" : "PRESENT";
+    const finalStatus = existing.status === "LATE" ? "LATE" : "COMPLETED";
     const { data: updatedRecord, error: updateError } = await supabaseAdmin
       .from("attendance_records")
       .update({

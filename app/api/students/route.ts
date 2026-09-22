@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
         const { data: attendanceRows } = await supabaseAdmin
           .from("attendance_records")
           .select("student_id,status,check_in_time,check_out_time")
-          .in("status", ["CHECKED_IN", "PRESENT", "LATE", "COMPLETED", "MANUALLY_CONFIRMED"]);
+          .in("status", ["CHECKED_IN", "LATE", "COMPLETED", "MANUALLY_CONFIRMED"]);
         const progressByStudent = new Map<string, number>();
         (attendanceRows || []).forEach((row: any) => {
           progressByStudent.set(String(row.student_id), (progressByStudent.get(String(row.student_id)) || 0) + 1);

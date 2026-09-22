@@ -33,7 +33,6 @@ export type SubmissionStatus =
 export type AttendanceStatus =
   | "NOT_STARTED"
   | "CHECKED_IN"
-  | "PRESENT"
   | "LATE"
   | "PARTIAL"
   | "PARTIAL_ATTENDANCE"
