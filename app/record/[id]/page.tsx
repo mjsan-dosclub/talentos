@@ -440,7 +440,7 @@ function getAssessedBadge(level: string) {
 
 export default function RecordPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
-  const identifier = decodeURIComponent(resolvedParams.id || "DOS-B3-001");
+  const identifier = decodeURIComponent(resolvedParams.id || "");
 
   // Dynamic Student Profile State
   const [student, setStudent] = useState<Student | null>(null);
@@ -486,11 +486,11 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
     setCurrentUser(session);
   }, [identifier]);
 
-  // Authenticated students must see only sessions assigned by the scheduler.
-  // The legacy 27-session curriculum remains available only for public/demo
-  // record views; it must never be used as a fallback for a real student.
+  // All authenticated portals must see only sessions assigned by the scheduler.
+  // The legacy 27-session curriculum is reserved for public/demo ledger views;
+  // it must never be used as a fallback for a real student or college account.
   useEffect(() => {
-    if (currentUser?.role !== "STUDENT") return;
+    if (!currentUser) return;
     fetch("/api/workshops/schedule", { cache: "no-store" })
       .then((response) => response.json())
       .then((data) => {
@@ -638,7 +638,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
   );
 
   // Longitudinal Counts for assigned workshops
-  const campusWorkshops = currentUser?.role === "STUDENT"
+  const campusWorkshops = currentUser
     ? liveWorkshopRecords
     : WORKSHOP_CURRICULUM.filter(
         (w) => assignedWorkshopCodes.size === 0 || assignedWorkshopCodes.has(w.code) || w.state === "COMPLETED" || w.state === "LATE" || w.state === "CHECKED_IN"
