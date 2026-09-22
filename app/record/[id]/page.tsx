@@ -68,6 +68,7 @@ interface WorkshopRecord {
   testOutcome?: string;
   peerReviewSignoff?: string;
   attendanceId?: string;
+  scheduledDate?: string;
 }
 
 // 27-Workshop Curriculum Audit Trail
@@ -503,6 +504,8 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
           topic: String(session.focusTopic || ""),
           state: attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.status === "PRESENT" || attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.status === "COMPLETED" ? "COMPLETED" : attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.status === "LATE" ? "LATE" : attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.status === "CHECKED_IN" ? "CHECKED_IN" : session.status === "COMPLETED" ? "COMPLETED" : session.status === "ACTIVE_IN_SESSION" ? "CHECKED_IN" : session.status === "POSTPONED" ? "INCOMPLETE" : "REGISTERED",
           attendanceId: attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.id,
+          scheduledDate: String(session.date || ""),
+          checkInTime: attendanceByCode.get(String(session.workshopCode || "").toUpperCase())?.check_in_time,
         }));
         setLiveWorkshopRecords(records);
       })
@@ -1138,6 +1141,11 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                     <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
                       {ws.topic}
                     </p>
+                    {ws.scheduledDate && (
+                      <p className="text-xs text-slate-500">
+                        Scheduled date: <span className="font-semibold text-slate-700">{ws.scheduledDate}</span>
+                      </p>
+                    )}
 
                     {/* Bottom Evidence Strip */}
                     <div className="flex flex-wrap items-center justify-between gap-y-2 gap-x-4 pt-3 border-t border-slate-100 text-xs">
@@ -1407,7 +1415,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {assessments.length > 0 ? <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {assessments.map((ass) => (
                     <div
                       key={ass.id}
@@ -1448,7 +1456,9 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                       </div>
                     </div>
                   ))}
-                </div>
+                </div> : <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
+                  No diagnostic assessments have been recorded for this student.
+                </div>}
               </div>
 
               {/* 2. Trainer Standout Recognitions */}
@@ -1462,7 +1472,10 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                   </p>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-500">
+                  No faculty observations or standout recognitions have been recorded for this student.
+                </div>
+                {false && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-xs flex flex-col gap-3">
                     <div className="flex justify-between items-center text-xs">
                       <span className="px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-semibold">
@@ -1500,7 +1513,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                       Observed by: Faculty Lead + Senior Peer Auditor
                     </div>
                   </div>
-                </div>
+                </div>}
               </div>
             </section>
           )}
@@ -1551,6 +1564,11 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                     <p className="text-xs text-slate-600">
                       {selectedWorkshop.topic}
                     </p>
+                    {selectedWorkshop.scheduledDate && (
+                      <p className="text-xs text-slate-500">
+                        Scheduled date: <span className="font-semibold text-slate-700">{selectedWorkshop.scheduledDate}</span>
+                      </p>
+                    )}
                   </div>
 
                   <button
