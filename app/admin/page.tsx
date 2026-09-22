@@ -62,7 +62,7 @@ function AdminDashboardContent() {
         students: "STUDENTS", workshops: "WORKSHOPS", schedule: "WORKSHOPS", institutions: "INSTITUTIONS", mentors: "EXPERTS", experts: "EXPERTS", notifications: "NOTIFICATIONS", push: "NOTIFICATIONS", governance: "GOVERNANCE", audit: "GOVERNANCE", settings: "SETTINGS",
       };
       const permission = permissionByTab[rawTab];
-      const permissions = (session?.permissions || []).map((item) => item.toUpperCase());
+      const permissions = (session?.permissions || []).map((item: string) => item.toUpperCase());
       const permitted = session?.role === "SUPER_ADMIN" || (
         session?.role === "CUSTOM_ADMIN" &&
         ((permission && permissions.includes(permission)) || (!permission && rawTab === "students"))
