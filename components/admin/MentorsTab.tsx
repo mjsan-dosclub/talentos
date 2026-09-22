@@ -85,6 +85,7 @@ export default function MentorsTab({
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const [editingExpert, setEditingExpert] = useState<ExpertMentor | null>(null);
   const [editPassword, setEditPassword] = useState("");
 
@@ -250,6 +251,7 @@ export default function MentorsTab({
 
   const handleCreateMentor = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     if (!formData.fullName.trim() || !formData.email.trim() || !formData.phone.trim() || !formData.password.trim()) return;
 
     const created: ExpertMentor = {
@@ -272,7 +274,7 @@ export default function MentorsTab({
 
     const response = await fetch("/api/experts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...created, password: formData.password.trim() }) });
     const result = await response.json();
-    if (!response.ok || !result.success) { onToast(`Failed to register expert: ${result.error || "Server error"}`); return; }
+    if (!response.ok || !result.success) { setFormMessage(result.error || "Failed to register expert."); return; }
     setExperts([result.expert, ...experts]);
     setIsAddOpen(false);
     setFormData(initialFormState);
@@ -354,7 +356,7 @@ export default function MentorsTab({
           </div>
 
           <button
-            onClick={() => setIsAddOpen(true)}
+            onClick={() => { setFormMessage(null); setIsAddOpen(true); }}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <span>+ Add Mentor</span>
@@ -792,6 +794,7 @@ export default function MentorsTab({
             </div>
 
             <form onSubmit={handleCreateMentor} className="flex flex-col gap-3 text-xs">
+              {formMessage && <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{formMessage}</div>}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-slate-700">Full Name:</label>

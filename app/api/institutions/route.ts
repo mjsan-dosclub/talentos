@@ -61,6 +61,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Initial password must be at least 8 characters." }, { status: 400 });
     }
 
+    const latitude = Number(lat ?? body.default_lat);
+    const longitude = Number(lng ?? body.default_lng);
+    const geofenceRadius = Number(geofenceRadiusMeters ?? body.geofence_radius_meters);
+    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90) {
+      return NextResponse.json({ error: "A valid latitude between -90 and 90 is required." }, { status: 400 });
+    }
+    if (!Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+      return NextResponse.json({ error: "A valid longitude between -180 and 180 is required." }, { status: 400 });
+    }
+    if (!Number.isInteger(geofenceRadius) || geofenceRadius < 1 || geofenceRadius > 10000) {
+      return NextResponse.json({ error: "Geofence radius must be a whole number between 1 and 10,000 meters." }, { status: 400 });
+    }
+
     const newId = crypto.randomUUID();
 
     // 1. Insert into Supabase
@@ -76,9 +89,9 @@ export async function POST(req: NextRequest) {
             contact_person: pocName,
             contact_email: pocEmail,
             contact_phone: pocPhone,
-            default_lat: Number(lat) || 13.011,
-            default_lng: Number(lng) || 80.2354,
-            geofence_radius_meters: Number(geofenceRadiusMeters) || 200,
+            default_lat: latitude,
+            default_lng: longitude,
+            geofence_radius_meters: geofenceRadius,
             is_active: true,
             password_hash: hashPassword(initialPassword),
             must_reset_password: true,
@@ -120,7 +133,7 @@ export async function POST(req: NextRequest) {
                 ${instName}
               </div>
               <div style="font-size: 13px; color: #0284c7; margin-top: 4px; font-family: monospace; font-weight: 700;">
-                Hub Code: ${instCode} &bull; Geofence: ${geofenceRadiusMeters || 200}m
+                Hub Code: ${instCode} &bull; Geofence: ${geofenceRadius}m
               </div>
             </div>
 
@@ -156,9 +169,9 @@ export async function POST(req: NextRequest) {
       state: "Tamil Nadu",
       tier: "Partner Institution Hub",
       region: "Tamil Nadu, India",
-      lat: Number(lat) || 13.011,
-      lng: Number(lng) || 80.2354,
-      geofenceRadiusMeters: Number(geofenceRadiusMeters) || 200,
+      lat: latitude,
+      lng: longitude,
+      geofenceRadiusMeters: geofenceRadius,
       studentCount: 0,
       status: "ACTIVE",
       pocName,

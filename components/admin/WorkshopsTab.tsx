@@ -69,6 +69,7 @@ export default function WorkshopsTab({
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const [editingWorkshop, setEditingWorkshop] = useState<WorkshopItem | null>(null);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
 
@@ -215,6 +216,7 @@ export default function WorkshopsTab({
 
   const handleCreateWorkshop = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     if (!formData.title.trim()) return;
 
     const code =
@@ -246,7 +248,7 @@ export default function WorkshopsTab({
     });
     const result = await response.json();
     if (!response.ok || !result.success) {
-      onToast(`Failed to create workshop: ${result.error || "Server error"}`);
+      setFormMessage(result.error || "Failed to create workshop.");
       return;
     }
     setWorkshops([...workshops, created]);
@@ -332,7 +334,7 @@ export default function WorkshopsTab({
           </div>
 
           <button
-            onClick={() => setIsAddOpen(true)}
+            onClick={() => { setFormMessage(null); setIsAddOpen(true); }}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <span>+ Create Workshop</span>
@@ -630,6 +632,7 @@ export default function WorkshopsTab({
             </div>
 
             <form onSubmit={handleCreateWorkshop} className="flex flex-col gap-4 text-xs">
+              {formMessage && <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{formMessage}</div>}
               {/* Master records are created directly; scheduling is handled separately. */}
               <div className="hidden">
                 <label className="block font-semibold text-slate-700 mb-1">

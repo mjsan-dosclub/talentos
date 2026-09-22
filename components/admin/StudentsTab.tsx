@@ -51,6 +51,7 @@ export default function StudentsTab({
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const [editingStudent, setEditingStudent] = useState<StudentMember | null>(null);
   const [openKebabId, setOpenKebabId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -268,6 +269,7 @@ export default function StudentsTab({
 
   const handleCreateStudent = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     if (!newStudent.fullName.trim() || !newStudent.email.trim() || !newStudent.phone.trim()) return;
 
     setIsSubmitting(true);
@@ -310,10 +312,10 @@ export default function StudentsTab({
         );
         onToast(`CONFIRMED // Enrolled ${data.student.fullName} (${data.student.dosId}) in DB`);
       } else {
-        onToast(`ERROR // Failed to enroll: ${data.error || "Unknown error"}`);
+        setFormMessage(data.error || "Failed to enroll student.");
       }
     } catch (e: any) {
-      onToast(`ERROR // ${e.message}`);
+      setFormMessage(e.message || "The student could not be enrolled. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -369,7 +371,7 @@ export default function StudentsTab({
         {isAdmin && (
           <div className="flex items-center gap-2.5">
             <button
-              onClick={() => setIsAddOpen(true)}
+              onClick={() => { setFormMessage(null); setIsAddOpen(true); }}
               className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
             >
               <span>+ Enroll Student</span>
@@ -695,6 +697,7 @@ export default function StudentsTab({
             </div>
 
             <form onSubmit={handleCreateStudent} className="flex flex-col gap-3 text-xs">
+              {formMessage && <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{formMessage}</div>}
               <div className="flex flex-col gap-1">
                 <label className="font-semibold text-slate-700">Full Name:</label>
                 <input

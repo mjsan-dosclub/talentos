@@ -46,6 +46,7 @@ export default function InstitutionsTab({
 
   // Modal states
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const [editingInst, setEditingInst] = useState<PartnerInstitution | null>(null);
   const [editPassword, setEditPassword] = useState("");
 
@@ -73,6 +74,9 @@ export default function InstitutionsTab({
     state: "Tamil Nadu",
     tier: "",
     region: "Tamil Nadu, India",
+    lat: "",
+    lng: "",
+    geofenceRadiusMeters: "",
     pocName: "",
     pocRole: "",
     pocEmail: "",
@@ -171,6 +175,7 @@ export default function InstitutionsTab({
 
   const handleCreatePartner = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     if (!formData.name.trim() || !formData.code.trim()) return;
 
     setIsSubmitting(true);
@@ -199,13 +204,13 @@ export default function InstitutionsTab({
           id: data.institution?.id || `inst-${Date.now()}`,
           code: formData.code.trim().toUpperCase(),
           name: formData.name.trim(),
-          city: formData.city.trim() || "Chennai",
-          state: formData.state.trim() || "Tamil Nadu",
-          tier: formData.tier,
-          region: formData.region,
-          lat: 13.011,
-          lng: 80.2354,
-          geofenceRadiusMeters: 250,
+      city: formData.city.trim() || "Chennai",
+      state: formData.state.trim() || "Tamil Nadu",
+      tier: formData.tier,
+      region: formData.region,
+      lat: Number(formData.lat),
+      lng: Number(formData.lng),
+      geofenceRadiusMeters: Number(formData.geofenceRadiusMeters),
           studentCount: 0,
           status: "ACTIVE",
           pocName: formData.pocName.trim(),
@@ -225,10 +230,10 @@ export default function InstitutionsTab({
         );
         onToast(`CONFIRMED // Onboarded ${created.name} (${created.code}) in DB`);
       } else {
-        onToast(`ERROR // ${data.error || "Failed to add institution"}`);
+        setFormMessage(data.error || "Failed to add institution.");
       }
     } catch (err: any) {
-      onToast(`ERROR // ${err.message}`);
+      setFormMessage(err.message || "The college could not be saved. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -278,7 +283,7 @@ export default function InstitutionsTab({
 
         <div className="flex items-center gap-2.5">
           <button
-            onClick={() => setIsAddOpen(true)}
+            onClick={() => { setFormMessage(null); setIsAddOpen(true); }}
             className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors cursor-pointer flex items-center gap-1.5"
           >
             <span>+ Add Partner Campus</span>
@@ -574,6 +579,7 @@ export default function InstitutionsTab({
             </div>
 
             <form onSubmit={handleCreatePartner} className="flex flex-col gap-4 text-xs">
+              {formMessage && <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{formMessage}</div>}
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                 1. Institution Information
               </div>
@@ -645,7 +651,26 @@ export default function InstitutionsTab({
               </div>
 
               <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider pt-2 border-t border-slate-100">
-                2. Point of Contact (PoC) Details
+                2. Campus Geofence
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Latitude:</label>
+                  <input type="number" required min="-90" max="90" step="any" value={formData.lat} onChange={(e) => setFormData({ ...formData, lat: e.target.value })} placeholder="e.g. 13.0827" className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Longitude:</label>
+                  <input type="number" required min="-180" max="180" step="any" value={formData.lng} onChange={(e) => setFormData({ ...formData, lng: e.target.value })} placeholder="e.g. 80.2707" className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Geofence Radius (meters):</label>
+                  <input type="number" required min="1" max="10000" step="1" value={formData.geofenceRadiusMeters} onChange={(e) => setFormData({ ...formData, geofenceRadiusMeters: e.target.value })} placeholder="e.g. 200" className="border border-slate-300 rounded-lg p-2 focus:ring-1 focus:ring-slate-800" />
+                </div>
+              </div>
+
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider pt-2 border-t border-slate-100">
+                3. Point of Contact (PoC) Details
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -880,6 +905,24 @@ export default function InstitutionsTab({
                     onChange={(e) => setEditingInst({ ...editingInst, pocPhone: e.target.value })}
                     className="border border-slate-300 rounded-lg p-2"
                   />
+                </div>
+              </div>
+
+              <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider pt-2 border-t border-slate-100">
+                Campus Geofence
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Latitude:</label>
+                  <input type="number" required min="-90" max="90" step="any" value={editingInst.lat} onChange={(e) => setEditingInst({ ...editingInst, lat: Number(e.target.value) })} className="border border-slate-300 rounded-lg p-2" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Longitude:</label>
+                  <input type="number" required min="-180" max="180" step="any" value={editingInst.lng} onChange={(e) => setEditingInst({ ...editingInst, lng: Number(e.target.value) })} className="border border-slate-300 rounded-lg p-2" />
+                </div>
+                <div className="flex flex-col gap-1">
+                  <label className="font-semibold text-slate-700">Geofence Radius (meters):</label>
+                  <input type="number" required min="1" max="10000" step="1" value={editingInst.geofenceRadiusMeters} onChange={(e) => setEditingInst({ ...editingInst, geofenceRadiusMeters: Number(e.target.value) })} className="border border-slate-300 rounded-lg p-2" />
                 </div>
               </div>
 

@@ -41,6 +41,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
   const [selectedTrainer, setSelectedTrainer] = useState<string>("ALL");
   const [viewMode, setViewMode] = useState<"CALENDAR" | "TIMELINE">("TIMELINE");
   const [isAssignModalOpen, setIsAssignModalOpen] = useState<boolean>(false);
+  const [formMessage, setFormMessage] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
 
@@ -102,13 +103,14 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
 
   const handleAssignSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setFormMessage(null);
     const requiredFields: Array<[string, string]> = [["target college", formData.institutionName], ["workshop", formData.workshopCode], ["expert", formData.trainerName], ["date", formData.date], ["start time", formData.startTime], ["end time", formData.endTime], ["venue", formData.venue], ["curriculum focus topic", formData.focusTopic]];
     const missing = requiredFields.filter(([, value]) => !String(value || "").trim()).map(([label]) => label);
-    if (missing.length > 0) { alert(`Please complete the form. Missing: ${missing.join(", ")}.`); return; }
+    if (missing.length > 0) { setFormMessage(`Please complete the form. Missing: ${missing.join(", ")}.`); return; }
     const timePattern = /^(0?[1-9]|1[0-2]):[0-5][0-9]\s(AM|PM)$/i;
-    if (!timePattern.test(formData.startTime) || !timePattern.test(formData.endTime)) { alert("Use 12-hour time format, for example 09:00 AM."); return; }
+    if (!timePattern.test(formData.startTime) || !timePattern.test(formData.endTime)) { setFormMessage("Use 12-hour time format, for example 09:00 AM."); return; }
     const toMinutes = (value: string) => { const m = value.match(/^(\d+):(\d+)\s(AM|PM)$/i)!; let h = Number(m[1]) % 12; if (m[3].toUpperCase() === "PM") h += 12; return h * 60 + Number(m[2]); };
-    if (toMinutes(formData.startTime) >= toMinutes(formData.endTime)) { alert("End time must be later than start time."); return; }
+    if (toMinutes(formData.startTime) >= toMinutes(formData.endTime)) { setFormMessage("End time must be later than start time."); return; }
     setSubmitting(true);
     try {
       const res = await fetch("/api/workshops/schedule", {
@@ -129,10 +131,10 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
         );
         setTimeout(() => setNotification(null), 4000);
       } else {
-        alert(data.error || "Failed to schedule workshop");
+        setFormMessage(data.error || "Failed to schedule workshop.");
       }
     } catch (err: any) {
-      alert("Scheduling error: " + err.message);
+      setFormMessage("Scheduling error: " + err.message);
     } finally {
       setSubmitting(false);
     }
@@ -469,7 +471,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
           </div>
 
           <button
-            onClick={() => setIsAssignModalOpen(true)}
+            onClick={() => { setFormMessage(null); setIsAssignModalOpen(true); }}
             className="flex items-center gap-2 px-4 py-2 bg-[#3772FF] hover:bg-[#285cdb] text-white text-xs font-bold rounded-xl transition-all shadow-sm hover:shadow"
           >
             <SparklesIcon className="w-4 h-4" />
@@ -766,6 +768,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
             </div>
 
             <form onSubmit={handleAssignSubmit} className="mt-4 space-y-4">
+              {formMessage && <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm font-medium text-rose-700">{formMessage}</div>}
               {/* College Selection */}
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
