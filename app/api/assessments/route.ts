@@ -1,9 +1,16 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getAttendanceSession } from "@/lib/attendance-auth";
 
 export async function GET(request: Request) {
+  const session = await getAttendanceSession();
+  if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   const { searchParams } = new URL(request.url);
-  const studentId = searchParams.get("student_id");
+  const requestedStudentId = searchParams.get("student_id");
+  if (session.role === "STUDENT" && requestedStudentId && ![session.id, session.dos_id, session.email].includes(requestedStudentId)) {
+    return NextResponse.json({ error: "Students may only view their own assessments." }, { status: 403 });
+  }
+  const studentId = session.role === "STUDENT" ? session.id : requestedStudentId;
 
   try {
     let resolvedId = studentId;

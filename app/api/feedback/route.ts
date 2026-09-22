@@ -3,6 +3,8 @@ import { supabaseAdmin } from "@/lib/supabase-admin";
 import { getAttendanceSession } from "@/lib/attendance-auth";
 
 export async function GET(request: Request) {
+  const session = await getAttendanceSession();
+  if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
   const { searchParams } = new URL(request.url);
   const attendanceId = searchParams.get("attendance_id");
 
@@ -19,6 +21,17 @@ export async function GET(request: Request) {
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+    if (session.role === "STUDENT" && data) {
+      const { data: attendance, error: attendanceError } = await supabaseAdmin
+        .from("attendance_records")
+        .select("student_id")
+        .eq("id", attendanceId)
+        .maybeSingle();
+      if (attendanceError) return NextResponse.json({ error: attendanceError.message }, { status: 500 });
+      if (!attendance || attendance.student_id !== session.id) {
+        return NextResponse.json({ error: "Students may only view their own feedback." }, { status: 403 });
+      }
     }
 
     return NextResponse.json({ feedback: data });
