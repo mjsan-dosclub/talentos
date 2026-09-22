@@ -117,16 +117,10 @@ export default function StudentsTab({
     fullName: "",
     email: "",
     phone: "",
-    department: "Computer Science & Engineering",
-    institution: institutions.length > 0 ? institutions[0].name : "",
-    batch: "Batch 3 - 2026",
+    department: "",
+    institution: "",
+    batch: "",
   });
-
-  useEffect(() => {
-    if (institutions.length > 0 && !newStudent.institution) {
-      setNewStudent((prev) => ({ ...prev, institution: institutions[0].name }));
-    }
-  }, [institutions]);
 
   // Filter logic
   const filtered = students.filter((s) => {
@@ -304,9 +298,9 @@ export default function StudentsTab({
           fullName: "",
           email: "",
           phone: "",
-          department: "Computer Science & Engineering",
-          institution: institutions.length > 0 ? institutions[0].name : "",
-          batch: "Batch 3 - 2026",
+          department: "",
+          institution: "",
+          batch: "",
         });
         onAuditLog?.(
           "Students",
@@ -739,6 +733,7 @@ export default function StudentsTab({
                   onChange={(e) => setNewStudent({ ...newStudent, institution: e.target.value })}
                   className="border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
                 >
+                  <option value="" disabled>Select campus hub</option>
                   {institutions.length > 0 ? (
                     institutions.map((inst) => (
                       <option key={inst.id} value={inst.name}>
@@ -761,6 +756,7 @@ export default function StudentsTab({
                   onChange={(e) => setNewStudent({ ...newStudent, department: e.target.value })}
                   className="border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
                 >
+                  <option value="" disabled>Select department</option>
                   <option value="Computer Science & Engineering">Computer Science & Engineering</option>
                   <option value="Information Technology">Information Technology</option>
                   <option value="Artificial Intelligence & Data Science">Artificial Intelligence & Data Science</option>
@@ -778,6 +774,7 @@ export default function StudentsTab({
                   onChange={(e) => setNewStudent({ ...newStudent, batch: e.target.value })}
                   className="border border-slate-300 rounded-lg p-2 bg-white focus:outline-none focus:ring-1 focus:ring-slate-900"
                 >
+                  <option value="" disabled>Select cohort batch</option>
                   <option value="Batch 3 - 2026">Batch 3 - 2026</option>
                   <option value="Batch 2 - 2025">Batch 2 - 2025</option>
                   <option value="Batch 1 - 2024">Batch 1 - 2024</option>

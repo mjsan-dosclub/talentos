@@ -94,17 +94,11 @@ export default function WorkshopsTab({
     code: "",
     title: "",
     focusArea: "",
-    expertName: experts.length > 0 ? experts[0].fullName : "",
-    mode: "IN_PERSON" as WorkshopItem["mode"],
+    expertName: "",
+    mode: "" as WorkshopItem["mode"],
     date: new Date().toISOString().slice(0, 10),
   };
   const [formData, setFormData] = useState(initialFormState);
-
-  useEffect(() => {
-    if (experts.length > 0 && !formData.expertName) {
-      setFormData((prev) => ({ ...prev, expertName: experts[0].fullName }));
-    }
-  }, [experts]);
 
   // Filter suggestions based on dual-field fuzzy search (Code + Title)
   const suggestions = CURRICULUM_CATALOG_REF.filter((item) => {
@@ -746,12 +740,14 @@ export default function WorkshopsTab({
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-slate-700">Delivery Mode:</label>
                   <select
+                    required
                     value={formData.mode}
                     onChange={(e) =>
                       setFormData({ ...formData, mode: e.target.value as WorkshopItem["mode"] })
                     }
                     className="border border-slate-300 rounded-lg p-2 bg-white"
                   >
+                    <option value="" disabled>Select delivery mode</option>
                     <option value="IN_PERSON">In-Person Campus Lab</option>
                     <option value="HYBRID">Hybrid</option>
                     <option value="VIRTUAL">Virtual War Room</option>

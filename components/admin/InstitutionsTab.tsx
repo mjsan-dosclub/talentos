@@ -71,7 +71,7 @@ export default function InstitutionsTab({
     code: "",
     city: "",
     state: "Tamil Nadu",
-    tier: "Autonomous",
+    tier: "",
     region: "Tamil Nadu, India",
     pocName: "",
     pocRole: "",
@@ -620,10 +620,12 @@ export default function InstitutionsTab({
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-slate-700">Tier / Type:</label>
                   <select
+                    required
                     value={formData.tier}
                     onChange={(e) => setFormData({ ...formData, tier: e.target.value })}
                     className="border border-slate-300 rounded-lg p-2 bg-white"
                   >
+                    <option value="" disabled>Select tier / type</option>
                     <option value="Affiliated">Affiliated</option>
                     <option value="Autonomous">Autonomous</option>
                     <option value="University">University</option>
@@ -790,10 +792,12 @@ export default function InstitutionsTab({
                 <div className="flex flex-col gap-1">
                   <label className="font-semibold text-slate-700">Tier / Type:</label>
                   <select
-                    value={editingInst.tier || "Autonomous"}
+                    required
+                    value={editingInst.tier || ""}
                     onChange={(e) => setEditingInst({ ...editingInst, tier: e.target.value })}
                     className="border border-slate-300 rounded-lg p-2 bg-white"
                   >
+                    <option value="" disabled>Select tier / type</option>
                     <option value="Affiliated">Affiliated</option>
                     <option value="Autonomous">Autonomous</option>
                     <option value="University">University</option>

@@ -65,8 +65,8 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
   const [formData, setFormData] = useState({
     workshopCode: "",
     workshopTitle: "",
-    institutionName: institutions.length > 0 ? institutions[0].name : "",
-    institutionId: institutions.length > 0 ? institutions[0].id : "",
+    institutionName: "",
+    institutionId: "",
     trainerName: "",
     trainerId: "",
     date: "",
@@ -76,16 +76,6 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
     focusTopic: "",
     cohortSize: 0,
   });
-
-  useEffect(() => {
-    if (institutions.length > 0 && !formData.institutionName) {
-      setFormData((prev) => ({
-        ...prev,
-        institutionName: institutions[0].name,
-        institutionId: institutions[0].id,
-      }));
-    }
-  }, [institutions]);
 
   const refreshSessions = async () => {
     setLoading(true);
@@ -782,6 +772,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                   Target Partner College / Hub
                 </label>
                 <select
+                  required
                   value={formData.institutionName}
                   onChange={(e) => {
                     const inst = e.target.value;
@@ -795,6 +786,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                   }}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                 >
+                  <option value="" disabled>Select target college / hub</option>
                   {institutions.length > 0 ? (
                     institutions.map((inst) => (
                       <option key={inst.id} value={inst.name}>
@@ -816,6 +808,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                     Workshop Module
                   </label>
                   <select
+                    required
                     value={formData.workshopCode}
                     onChange={(e) => {
                       const code = e.target.value;
@@ -826,6 +819,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                     }}
                     className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                   >
+                    <option value="" disabled>Select active workshop</option>
                     {activeWorkshops.length > 0 ? activeWorkshops.map((workshop) => (
                       <option key={workshop.code} value={workshop.code}>{workshop.code}: {workshop.title}</option>
                   )) : <option value="" disabled>No active master workshops available</option>}
@@ -840,6 +834,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                   Assigned Expert Trainer
                 </label>
                 <select
+                  required
                   value={formData.trainerName}
                   onChange={(e) => {
                     const tName = e.target.value;
@@ -852,6 +847,7 @@ export default function WorkshopScheduleTab({ institutions = [], workshops = [],
                   }}
                   className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800 font-medium focus:ring-2 focus:ring-[#3772FF] focus:outline-none"
                 >
+                  <option value="" disabled>Select assigned expert</option>
                   {activeExperts.length > 0 ? activeExperts.map((expert) => (
                     <option key={expert.id} value={expert.fullName}>{expert.fullName}</option>
                   )) : <option value="" disabled>No active experts available</option>}
