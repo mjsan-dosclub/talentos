@@ -111,7 +111,16 @@ export async function getStudents(): Promise<{ students: Student[]; isLiveDb: bo
       if (res.ok) {
         const json = await res.json();
         if (json.students && json.students.length > 0) {
-          return { students: json.students, isLiveDb: true };
+          const students = json.students.map((record: any) => ({
+            ...record,
+            id: record.id,
+            dos_id: record.dos_id || record.dosId || "",
+            full_name: record.full_name || record.fullName || "",
+            institution_name: record.institution_name || record.institution || "",
+            institution: record.institution || record.institution_name || "",
+            phone: record.phone || "",
+          }));
+          return { students, isLiveDb: true };
         }
       }
     }
@@ -131,7 +140,7 @@ export async function getStudentByIdOrEmail(query: string): Promise<{ student: S
   try {
     const { students, isLiveDb } = await getStudents();
     const found = students.find(
-      (s) => s.dos_id.toLowerCase() === clean || s.email.toLowerCase() === clean
+      (s) => String(s.dos_id || "").toLowerCase() === clean || String(s.email || "").toLowerCase() === clean
     );
     if (found) {
       return { student: found, isLiveDb };
