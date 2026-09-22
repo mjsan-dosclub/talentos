@@ -5,7 +5,7 @@ Scope: `qa` branch and QA Supabase project only. Production and `main` were not 
 
 ## Verified
 
-- QA branch is at commit `7f10e1c`.
+- QA branch is at commit `2f0fee1`.
 - Production build passes with TypeScript compilation.
 - Live QA Supabase contract checks pass: 5/5.
 - Migrations `013_role_credentials.sql` and `015_attendance_qr_tokens.sql` are applied in QA.
@@ -14,6 +14,7 @@ Scope: `qa` branch and QA Supabase project only. Production and `main` were not 
 - Attendance and checkout require a signed session. Student QR operations require a server-issued, expiring token bound to a scheduled session and active master workshop.
 - Checkout requires prior check-in and a 1–5 feedback rating; failed requests do not create a local receipt.
 - Core CSV exports and student bulk CSV upload are implemented.
+- Workshop scheduler list/selected CSV export is implemented.
 - Remaining admin mutation routes identified in the role audit are protected server-side.
 - Super Admin credentials are no longer hard-coded; they are read from deployment secrets.
 
