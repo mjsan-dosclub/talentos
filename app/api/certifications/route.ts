@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getAttendanceSession } from "@/lib/attendance-auth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -43,11 +44,19 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getAttendanceSession();
+    if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const body = await request.json();
     const { student_id, title, provider, category, level, completed_date, credential_url } = body;
 
     if (!student_id || !title || !provider) {
       return NextResponse.json({ error: "student_id, title, and provider are required" }, { status: 400 });
+    }
+    if (session.role === "STUDENT" && student_id !== session.id) {
+      return NextResponse.json({ error: "Students may only add certifications to their own profile." }, { status: 403 });
+    }
+    if (!["STUDENT", "TRAINER", "SUPER_ADMIN"].includes(session.role)) {
+      return NextResponse.json({ error: "This role cannot add certifications." }, { status: 403 });
     }
 
     const { data, error } = await supabaseAdmin

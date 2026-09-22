@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCaseStudies, getCaseStudyBySlug, addCaseStudy, updateCaseStudy, deleteCaseStudy } from "@/lib/casestudies";
+import { requireSuperAdmin } from "@/lib/api-auth";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
@@ -54,6 +55,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     if (!body.title || !body.student || !body.summary) {
@@ -77,6 +80,8 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { id, ...updates } = body;
@@ -108,6 +113,8 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

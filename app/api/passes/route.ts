@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireSuperAdmin } from "@/lib/api-auth";
 import {
   getAccessPasses,
   getAccessPassByCode,
@@ -57,6 +58,8 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     if (!body.candidate_name || !body.candidate_email) {
@@ -95,6 +98,8 @@ export async function POST(request: Request) {
 }
 
 export async function PATCH(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const body = await request.json();
     const { id, status } = body;
@@ -127,6 +132,8 @@ export async function PATCH(request: Request) {
 }
 
 export async function DELETE(request: Request) {
+  const denied = await requireSuperAdmin();
+  if (denied) return denied;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");

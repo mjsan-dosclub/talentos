@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getAttendanceSession } from "@/lib/attendance-auth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -43,11 +44,19 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getAttendanceSession();
+    if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const body = await request.json();
     const { student_id, tool_name, self_confidence, evidence_backed_maturity, assessed_level, evidence_count } = body;
 
     if (!student_id || !tool_name) {
       return NextResponse.json({ error: "student_id and tool_name required" }, { status: 400 });
+    }
+    if (session.role === "STUDENT" && student_id !== session.id) {
+      return NextResponse.json({ error: "Students may only update their own skills." }, { status: 403 });
+    }
+    if (!["STUDENT", "TRAINER", "SUPER_ADMIN"].includes(session.role)) {
+      return NextResponse.json({ error: "This role cannot update student skills." }, { status: 403 });
     }
 
     const { data, error } = await supabaseAdmin

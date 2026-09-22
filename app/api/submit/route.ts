@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getAttendanceSession } from "@/lib/attendance-auth";
 
 export async function POST(request: Request) {
   try {
+    const session = await getAttendanceSession();
+    if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const body = await request.json();
     const { workshop_id, student_id, artifact_url, notes } = body;
 
@@ -11,6 +14,12 @@ export async function POST(request: Request) {
         { error: "Missing required fields: workshop_id, student_id, artifact_url" },
         { status: 400 }
       );
+    }
+    if (session.role === "STUDENT" && student_id !== session.id) {
+      return NextResponse.json({ error: "Students may only submit evidence for their own profile." }, { status: 403 });
+    }
+    if (!["STUDENT", "TRAINER", "SUPER_ADMIN"].includes(session.role)) {
+      return NextResponse.json({ error: "This role cannot submit evidence." }, { status: 403 });
     }
 
     // Check if submission already exists for this workshop and student

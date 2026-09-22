@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase-admin";
+import { getAttendanceSession } from "@/lib/attendance-auth";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -28,6 +29,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    const session = await getAttendanceSession();
+    if (!session) return NextResponse.json({ error: "Authentication required." }, { status: 401 });
     const body = await request.json();
     const { attendance_id, rating, key_learning, confidence_score } = body;
 
@@ -36,6 +39,19 @@ export async function POST(request: Request) {
         { error: "attendance_id, rating (1-4), and key_learning are required" },
         { status: 400 }
       );
+    }
+    const { data: attendance, error: attendanceError } = await supabaseAdmin
+      .from("attendance_records")
+      .select("student_id")
+      .eq("id", attendance_id)
+      .maybeSingle();
+    if (attendanceError) return NextResponse.json({ error: attendanceError.message }, { status: 500 });
+    if (!attendance) return NextResponse.json({ error: "Attendance record not found." }, { status: 404 });
+    if (session.role === "STUDENT" && attendance.student_id !== session.id) {
+      return NextResponse.json({ error: "Students may only submit feedback for their own attendance." }, { status: 403 });
+    }
+    if (!["STUDENT", "TRAINER", "SUPER_ADMIN"].includes(session.role)) {
+      return NextResponse.json({ error: "This role cannot submit session feedback." }, { status: 403 });
     }
 
     const { data, error } = await supabaseAdmin
