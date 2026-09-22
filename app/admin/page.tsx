@@ -18,7 +18,7 @@ import {
   XIcon,
 } from "@/components/Icons";
 
-import { getClientSession } from "@/lib/session";
+import { AdminPermission, getClientSession } from "@/lib/session";
 import {
   StudentMember,
   ExpertMentor,
@@ -47,7 +47,7 @@ function AdminDashboardContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const rawTab = searchParams.get("tab") || "students";
-  const [currentSession, setCurrentSession] = useState<ReturnType<typeof getClientSession>>(null);
+  const [currentSession, setCurrentSession] = useState<ReturnType<typeof getClientSession>>(() => getClientSession());
 
   // Enforce SUPER_ADMIN role clearance client-side
   useEffect(() => {
@@ -324,6 +324,29 @@ function AdminDashboardContent() {
     },
   ];
 
+  const permissionByMenu: Record<string, AdminPermission> = {
+    students: "STUDENTS",
+    institutions: "INSTITUTIONS",
+    workshops: "WORKSHOPS",
+    mentors: "EXPERTS",
+    notifications: "NOTIFICATIONS",
+    push: "NOTIFICATIONS",
+    governance: "GOVERNANCE",
+    audit: "GOVERNANCE",
+    settings: "SETTINGS",
+  };
+  const visibleSidebarGroups = currentSession?.role === "SUPER_ADMIN"
+    ? sidebarGroups
+    : sidebarGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => {
+            const permission = permissionByMenu[item.id];
+            return Boolean(permission && currentSession?.permissions?.includes(permission));
+          }),
+        }))
+        .filter((group) => group.items.length > 0);
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans flex flex-col">
       <AppHeader />
@@ -331,7 +354,7 @@ function AdminDashboardContent() {
       {/* Main Workspace Layout with HubSpot-style Left Sidebar */}
       <div className="flex-1 flex max-w-7xl w-full mx-auto">
         <SidebarNav
-          groups={sidebarGroups}
+          groups={visibleSidebarGroups}
           activeId={rawTab || "students"}
           onSelect={(id) => {
             if (id === "settings") {
