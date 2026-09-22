@@ -52,10 +52,9 @@ export async function POST(request: Request) {
     }
 
     const { error: feedbackError } = await supabaseAdmin.from("session_feedback").insert({
-      workshop_id: verifiedWorkshopId,
-      student_id,
+      attendance_id: existing.id,
       rating,
-      reflection_text: reflectionText,
+      key_learning: reflectionText,
       confidence_score: 4,
     });
     if (feedbackError) throw feedbackError;

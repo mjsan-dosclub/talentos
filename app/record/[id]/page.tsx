@@ -943,7 +943,7 @@ export default function RecordPage({ params }: { params: Promise<{ id: string }>
                     className="flex-1 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-lg text-xs font-semibold text-center transition-colors flex items-center justify-center gap-1"
                   >
                     <PhoneIcon className="w-3.5 h-3.5 shrink-0" />
-                    <span>Check In</span>
+                    <span>Check In / Check Out</span>
                   </Link>
                   <Link
                     href="/submit"

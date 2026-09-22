@@ -52,6 +52,7 @@ export default function TrainerDashboardPage() {
   const [trainerName, setTrainerName] = useState<string>("Priya Sundaram");
   const [trainerId, setTrainerId] = useState<string>("");
   const [activeSession, setActiveSession] = useState<any>(null);
+  const [qrRefreshRequest, setQrRefreshRequest] = useState(0);
   const refreshInFlightRef = useRef(false);
   const rosterSessionRef = useRef("");
   const rosterRef = useRef<Student[]>([]);
@@ -86,7 +87,7 @@ export default function TrainerDashboardPage() {
         if (!scheduleResponse.ok) throw new Error(schedule.error || "Unable to load your assigned sessions.");
 
         const nextSession = (schedule.sessions || []).find(
-          (item: { status?: string }) => item.status === "ACTIVE_IN_SESSION" || item.status === "SCHEDULED"
+          (item: { status?: string }) => item.status === "ACTIVE_IN_SESSION" || item.status === "SCHEDULED" || item.status === "COMPLETED"
         );
         if (!nextSession) {
           if (!cancelled) {
@@ -161,12 +162,10 @@ export default function TrainerDashboardPage() {
     };
 
     issueToken();
-    const interval = setInterval(issueToken, 25000);
     return () => {
       cancelled = true;
-      clearInterval(interval);
     };
-  }, []);
+  }, [qrRefreshRequest]);
 
   useEffect(() => {
     if (!tokenExpiresAt) {
@@ -415,8 +414,8 @@ export default function TrainerDashboardPage() {
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
                   Dynamic Attendance QR
                 </span>
-                <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
-                  Rolls in {String(secondsLeft).padStart(2, "0")}s
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono">
+                  Expires in {String(secondsLeft).padStart(2, "0")}s
                 </span>
               </div>
 
@@ -451,8 +450,16 @@ export default function TrainerDashboardPage() {
               )}
 
               <p className="text-xs text-slate-500 leading-relaxed max-w-xs">
-                Students scan using the mobile PWA inside the geofence perimeter. Token refreshes every 30s to eliminate unauthorized forwarding.
+                Students scan using the mobile PWA inside the geofence perimeter. Generate a new token when you are ready for the next check-in or checkout group.
               </p>
+              <button
+                type="button"
+                onClick={() => setQrRefreshRequest((value) => value + 1)}
+                disabled={refreshInFlightRef.current}
+                className="w-full rounded-full border border-slate-300 bg-white px-4 py-2 text-xs font-bold text-slate-700 hover:border-slate-500 disabled:opacity-50"
+              >
+                Generate New Attendance QR
+              </button>
 
               <Link
                 href="/checkin"

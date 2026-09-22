@@ -33,7 +33,10 @@ export async function POST(request: NextRequest) {
     if (!workshop || !workshop.is_active) return NextResponse.json({ error: "The scheduled master workshop is not active." }, { status: 400 });
 
     const rawToken = randomBytes(24).toString("base64url");
-    const expiresAt = new Date(Date.now() + 45_000).toISOString();
+    // Keep the trainer-controlled token valid long enough for a classroom
+    // group to complete entry or departure checkout. The trainer can revoke
+    // the window at any time by generating a new token.
+    const expiresAt = new Date(Date.now() + 10 * 60_000).toISOString();
     const tokenHash = createHash("sha256").update(rawToken).digest("hex");
     const { error: insertError } = await supabaseAdmin.from("attendance_qr_tokens").insert({
       session_id: scheduled.id,
