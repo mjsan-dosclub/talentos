@@ -36,18 +36,18 @@ function computeDistanceMeters(
 
 // Canonical Anna University Campus Venue coordinates
 const VENUE = {
-  name: "Anna University & DOS Club Hub",
+  name: "",
   lat: 13.011,
   lng: 80.2354,
   radiusMeters: 200,
-  workshopCode: "WS-07",
-  workshopTitle: "Build Arena — Day 1: Architecture & Data Modelling",
-  workshopId: "c0000000-0000-0000-0000-000000000007",
+  workshopCode: "",
+  workshopTitle: "",
+  workshopId: "",
 };
 
 function CheckInContent() {
   const searchParams = useSearchParams();
-  const initialStudentId = searchParams.get("dos_id") || "DOS-B3-001";
+  const initialStudentId = searchParams.get("dos_id") || "";
   const initialToken = searchParams.get("token") || "";
   const initialSessionId = searchParams.get("session") || "";
 
@@ -56,6 +56,9 @@ function CheckInContent() {
   const [sessionId, setSessionId] = useState(initialSessionId);
   const [currentUser, setCurrentUser] = useState<TalentosUser | null>(null);
   const [activeVenue, setActiveVenue] = useState(VENUE);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
+  const [scheduleNotice, setScheduleNotice] = useState("");
+  const [scheduledStatus, setScheduledStatus] = useState("");
 
   useEffect(() => {
     const session = getClientSession();
@@ -72,12 +75,26 @@ function CheckInContent() {
   // The fallback is used only until the schedule response arrives; it is never
   // used to authorize attendance because the API validates the session/token.
   useEffect(() => {
-    if (!initialSessionId) return;
+    let cancelled = false;
+    setScheduleLoading(true);
+    setActiveVenue(VENUE);
+    setScheduleNotice("");
     fetch("/api/workshops/schedule", { cache: "no-store" })
-      .then((response) => response.json())
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Unable to load assigned workshops. Please try again.");
+        return data;
+      })
       .then((data) => {
-        const scheduled = (data.sessions || []).find((item: any) => String(item.id) === initialSessionId);
+        if (cancelled) return;
+        const sessions = data.sessions || [];
+        const scheduled = initialSessionId
+          ? sessions.find((item: any) => String(item.id) === initialSessionId)
+          : sessions.find((item: any) => item.status === "ACTIVE_IN_SESSION") || sessions.find((item: any) => item.status === "SCHEDULED");
         if (scheduled) {
+          setSessionId(scheduled.id);
+          setScheduledStatus(scheduled.status);
+          setScheduleNotice(initialSessionId ? "" : "Scan the QR displayed by your assigned expert to mark attendance.");
           setActiveVenue((current) => ({
             ...current,
             name: scheduled.institutionName || current.name,
@@ -85,9 +102,16 @@ function CheckInContent() {
             workshopTitle: scheduled.workshopTitle || current.workshopTitle,
             workshopId: scheduled.workshopCode || current.workshopId,
           }));
+        } else {
+          setSessionId("");
+          setScheduleNotice(initialSessionId
+            ? "This workshop is not assigned to your college. Scan the QR for your assigned workshop."
+            : "No active or upcoming workshop is assigned to your college. Please contact your college coordinator.");
         }
       })
-      .catch(() => undefined);
+      .catch((error) => { if (!cancelled) setScheduleNotice(error.message); })
+      .finally(() => { if (!cancelled) setScheduleLoading(false); });
+    return () => { cancelled = true; };
   }, [initialSessionId]);
 
   useEffect(() => {
@@ -167,7 +191,7 @@ function CheckInContent() {
     e.preventDefault();
     setErrorMessage(null);
 
-    const cleanToken = tokenInput.trim().toUpperCase();
+    const cleanToken = tokenInput.trim();
     if (!cleanToken) {
       setErrorMessage("Please enter the rotating QR verification code displayed on screen.");
       return;
@@ -299,6 +323,10 @@ function CheckInContent() {
     3: "Good / Effective",
     4: "Exceptional / High Impact",
   };
+
+  if (scheduleLoading || !activeVenue.workshopCode) {
+    return <main className="max-w-xl mx-auto p-8"><h1 className="text-xl font-bold">Workshop attendance</h1><p role="status" className="my-4">{scheduleLoading ? "Loading your assigned workshops…" : scheduleNotice}</p><Link href={dashboardReturn?.url || "/login"}>Back to dashboard</Link></main>;
+  }
 
   return (
     <div className="min-h-screen bg-[#FCFCFD] text-[#23262F] font-['Poppins',sans-serif] selection:bg-[#FF592C]/20 selection:text-[#23262F] flex flex-col justify-between">
@@ -453,7 +481,7 @@ function CheckInContent() {
             <div className="flex flex-col gap-1.5 border-b border-[#E6E8EC] pb-4">
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#45B26B]/10 text-[#2f8a36] border border-[#45B26B]/20 text-[10px] font-bold uppercase tracking-wider self-start">
                 <span className="h-1.5 w-1.5 rounded-full bg-[#45B26B] animate-pulse" />
-                Active Session
+                {scheduledStatus.replaceAll("_", " ")}
               </div>
               <h1 className="text-base font-bold text-[#23262F]">
                 {activeVenue.workshopCode}: {activeVenue.workshopTitle}
@@ -464,6 +492,7 @@ function CheckInContent() {
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+              {scheduleNotice && <p role="status" className="p-3 bg-blue-50 text-blue-900 rounded-xl">{scheduleNotice}</p>}
               {/* Student DOS ID */}
               <div className="flex flex-col gap-1.5">
                 <label className="text-xs font-bold uppercase tracking-wider text-[#777E90]">
