@@ -211,6 +211,18 @@ function LoginContent() {
             ))}
           </div>
 
+          {/* Fast-Auth 1-Click Login for Super Admin */}
+          {role === "admin" && (
+            <button
+              type="button"
+              onClick={() => handleFastLogin("admin")}
+              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <BoltIcon className="w-4 h-4" />
+              1-Click Super Admin Instant Access
+            </button>
+          )}
+
           {/* Form */}
           <form onSubmit={handleAuthenticate} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">

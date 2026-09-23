@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         ...DEMO_ACCOUNTS.college,
         email: cleanEmail || DEMO_ACCOUNTS.college.email,
       };
-    } else if (role === "admin" || demoKey === "admin") {
+    } else if (role === "admin" || demoKey === "admin" || cleanEmail === "admin@dosclub.org") {
       const dbAdmin = await getAdminUserByEmail(cleanEmail || DEMO_ACCOUNTS.admin.email);
 
       if (dbAdmin) {
