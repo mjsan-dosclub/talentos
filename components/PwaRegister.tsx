@@ -89,7 +89,10 @@ export default function PwaRegister() {
     }
   };
 
-  if (!showInstallBanner || isInstalled) {
+  // Hide PWA install banner until explicitly enabled or in production mode
+  const enablePwaPrompt = process.env.NEXT_PUBLIC_ENABLE_PWA_PROMPT === "true";
+
+  if (!enablePwaPrompt || !showInstallBanner || isInstalled) {
     return null;
   }
 
